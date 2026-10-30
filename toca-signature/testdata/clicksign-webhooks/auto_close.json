@@ -1,0 +1,16 @@
+{
+  "event": {
+    "name": "auto_close",
+    "occurred_at": "2026-05-10T18:35:00Z",
+    "delivery_id": "delivery-autoclose-1"
+  },
+  "envelope": {
+    "id": "cs-env-1",
+    "status": "closed"
+  },
+  "document": {
+    "key": "cs-doc-1",
+    "filename": "contrato-CONT-001.pdf",
+    "signed_file_url": "https://app.clicksign.com/documents/cs-doc-1/signed.pdf"
+  }
+}

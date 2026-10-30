@@ -1,0 +1,125 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'Comissoes, repasses e razao. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__amends_contract_id text [note: 'metadata.amends_contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+}
+
+Table financial.charges [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  tenant_id text [note: 'Coluna fisica referenciada']
+}
+
+Table financial.commissions [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__payout_order_id text [note: 'metadata.payout_order_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__ledger_transaction_id text [note: 'metadata.ledger_transaction_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+}
+
+Table financial.managed_bills [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260820234459_create_financial_managed_bills.sql']
+  tenant_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  source_charge_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  source_transfer_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+}
+
+Table financial.payout_orders [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/payout_order/payout_order.go']
+}
+
+Table financial.transfer_deduction_claims [headercolor: #15803D] {
+  account_id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  tenant_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  transfer_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+}
+
+Table financial.transfers [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__source_charge_id text [note: 'metadata.source_charge_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  json__source_transaction_id text [note: 'metadata.source_transaction_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  tenant_id text [note: 'Coluna fisica referenciada']
+}
+
+Table financial.journal_entries [headercolor: #B45309] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+  json__reversal_of text [note: 'metadata.reversal_of; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+  json__reversed_by text [note: 'metadata.reversed_by; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+}
+
+Table financial.transactions [headercolor: #B45309] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transaction/transaction.go']
+}
+
+Ref logical_15: deal.contracts.json__amends_contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_25: financial.charges.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_31: financial.commissions.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_33: financial.commissions.json__payout_order_id > financial.payout_orders.id [color: #94A3B8]
+
+Ref logical_34: financial.commissions.json__ledger_transaction_id > financial.transactions.id [color: #94A3B8]
+
+Ref logical_35: financial.transfers.json__source_charge_id > financial.charges.id [color: #94A3B8]
+
+Ref logical_36: financial.transfers.json__source_transaction_id > financial.transactions.id [color: #94A3B8]
+
+Ref logical_37: financial.transfers.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_39: financial.transactions.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_47: financial.journal_entries.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_48: financial.journal_entries.json__reversal_of > financial.journal_entries.id [color: #94A3B8]
+
+Ref logical_49: financial.journal_entries.json__reversed_by > financial.journal_entries.id [color: #94A3B8]
+
+Ref logical_50: financial.payout_orders.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_55: financial.managed_bills.contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref physical_3: financial.managed_bills.(tenant_id, source_charge_id) > financial.charges.(tenant_id, id) [color: #334155]
+
+Ref physical_4: financial.managed_bills.(tenant_id, source_transfer_id) > financial.transfers.(tenant_id, id) [color: #334155]
+
+Ref physical_5: financial.transfer_deduction_claims.(tenant_id, transfer_id) > financial.transfers.(tenant_id, id) [color: #334155]
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+}
+
+TableGroup "06 Financeiro - cobranca" [color: #0F766E] {
+  financial.charges
+}
+
+TableGroup "07 Financeiro - repasses e comissoes" [color: #15803D] {
+  financial.commissions
+  financial.managed_bills
+  financial.payout_orders
+  financial.transfer_deduction_claims
+  financial.transfers
+}
+
+TableGroup "08 Financeiro - razao e fiscal" [color: #B45309] {
+  financial.journal_entries
+  financial.transactions
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 9 tabelas; 17 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

@@ -1,0 +1,39 @@
+{
+  "ciCritical": [
+    "appearancePersistence.spec.ts",
+    "calendar-portal-ux.spec.ts",
+    "contrastDarkMode.spec.ts",
+    "forgot-password.spec.ts",
+    "home.spec.ts",
+    "leads.spec.ts",
+    "login.spec.ts",
+    "new-lead.spec.ts",
+    "onboarding.spec.ts",
+    "chat-message-actions.spec.ts",
+    "runtime-smoke.spec.ts",
+    "settings-consistency.spec.ts",
+    "signup-step1.spec.ts",
+    "signup-step2.spec.ts",
+    "signup-step3.spec.ts",
+    "signup-step4.spec.ts",
+    "inspection-suppliers.spec.ts",
+    "partnership-agreements.spec.ts",
+    "portal-appointment-picker.spec.ts",
+    "home-agenda-timeline.spec.ts",
+    "esteira-deal-panel.spec.ts",
+    "portal-deal-tracking.spec.ts",
+    "portal-persona-copy.spec.ts",
+    "properties-header.spec.ts",
+    "a11y-navigation.spec.ts"
+  ],
+  "mockedUiDeferred": [
+    "help-screenshots.spec.ts"
+  ],
+  "fullStack": [
+    "auth.spec.ts",
+    "contract-financial.spec.ts",
+    "deal-pipeline.spec.ts",
+    "health.spec.ts",
+    "roulette-pipeline.spec.ts"
+  ]
+}

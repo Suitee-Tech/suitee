@@ -1,0 +1,88 @@
+# Override de beta. Deve ser aplicado depois de docker-compose.prod.yml.
+# Beta e producao usam hosts/diretorios distintos na Hostinger para que filas,
+# cache, certificados e dados operacionais nunca sejam compartilhados.
+services:
+  toka-frontend:
+    environment:
+      - VITE_API_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}/api/v1
+      - VITE_MEDIA_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+      - VITE_MULTI_PARTY_UI=${VITE_MULTI_PARTY_UI:-true}
+      # Beta nunca deve aparecer em mecanismos de busca: o entrypoint gera
+      # robots.txt (Disallow: /) e injeta <meta name="robots" content="noindex">
+      # em runtime. Produção (docker-compose.prod.yml) mantém indexação.
+      - SITE_NOINDEX=true
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST:?FRONTEND_HOST_required}`)"
+
+  toca-web:
+    environment:
+      # O host público da vitrine não deve ser indexado em beta. O toca-web
+      # aplica noindex em metadata, X-Robots-Tag, robots.txt e sitemap.
+      - SITE_NOINDEX=true
+      # O pooler do Supabase de beta usa certificado self-signed no Postgres.
+      - DATABASE_SSL_REJECT_UNAUTHORIZED=false
+
+  toca-web-migrate:
+    environment:
+      - DATABASE_SSL_REJECT_UNAUTHORIZED=false
+
+  gateway:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - GATEWAY_METRICS_PORT=9091
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-true}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:?PUBLIC_FRONTEND_URL_required}
+    labels:
+      # P2/B1: sem router público para /metrics. O scrape é interno
+      # (gateway:9091), então não há superfície de métricas na borda.
+      - "traefik.http.routers.gateway.rule=Host(`${API_HOST:?API_HOST_required}`) && !PathPrefix(`/metrics`)"
+
+  toca-auth:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:?PUBLIC_FRONTEND_URL_required}
+  toca-core:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-financial:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - PLATFORM_SUBSCRIPTIONS_ENABLED=${PLATFORM_SUBSCRIPTIONS_ENABLED:-true}
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-true}
+      - ABACATEPAY_DEV_MODE=true
+  toca-crm:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-deal:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-comm:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:?PUBLIC_FRONTEND_URL_required}
+      - GATEWAY_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+      # Beta usa Resend; o SMTP do compose base é só do ambiente local.
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+  toca-ops:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-calendar:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-portal:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - FEED_BASE_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+  toca-mcp:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-ai:
+    environment: ["APP_ENV=beta", "APP_MODE=release"]
+  toca-signature:
+    environment:
+      - APP_ENV=beta
+      - APP_MODE=release
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - PUBLIC_GATEWAY_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+      - CLICKSIGN_ENVIRONMENT=${CLICKSIGN_ENVIRONMENT:-sandbox}

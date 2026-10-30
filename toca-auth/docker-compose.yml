@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    container_name: toca-auth-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: toca
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../scripts/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

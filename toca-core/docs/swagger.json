@@ -1,0 +1,2892 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Core service for Toca ecosystem (Properties, etc)",
+        "title": "Toca Core API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8082",
+    "basePath": "/api/v1",
+    "paths": {
+        "/captacao": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "One-shot captação: cria Property + owners + capturing_brokers e emite property.captured",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "captacao"
+                ],
+                "summary": "Captar imóvel",
+                "parameters": [
+                    {
+                        "description": "Captação Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.CaptacaoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List partnerships for the current company context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "List partnerships",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new partnership agreement",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Create partnership",
+                "parameters": [
+                    {
+                        "description": "Create Partnership Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.CreatePartnershipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/shared/properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aggregates the shared portfolio across every ACTIVE partnership the caller participates in (and that grants shared_portfolio view). Each property is privacy-projected; the response carries the originating partnership id and source company id.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "List all partner-shared properties",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca-core_internal_services.SharedProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get partnership details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Get partnership by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/accept": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The invited (target) company accepts a pending partnership/franchise invitation, moving it to active",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Accept partnership invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/financial-config": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update royalties, fees, etc.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Update financial configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Config",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.UpdateFinancialConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/permissions": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update access rights for the partner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Update permissions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Permissions",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.UpdatePermissionsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The invited (target) company rejects a pending partnership/franchise invitation, moving it to inactive",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Reject partnership invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/shared-portfolio": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the COUNTERPART company's shared properties for an active partnership the caller belongs to. Each property is privacy-projected (PII stripped, address coarsened). Requires the partnership to grant shared_portfolio view.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Get the partner's shared portfolio",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partnerships/{id}/sharing-config": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the partnership's shared-portfolio rules (owner-contact PII visibility, co-brokering, property type/region whitelists)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "partnerships"
+                ],
+                "summary": "Update sharing configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Partnership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Sharing Config",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.UpdateSharingConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all properties with pagination and filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Get all properties",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property Type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Listing Type",
+                        "name": "listing_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Available business type",
+                        "name": "available_for",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Min Price",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Max Price",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Min Bedrooms",
+                        "name": "min_bedrooms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Min Bathrooms",
+                        "name": "min_bathrooms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Min Area",
+                        "name": "min_area",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Max Area",
+                        "name": "max_area",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new property",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Create property",
+                "parameters": [
+                    {
+                        "description": "Create Property Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.CreatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a property by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Get property by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a property by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Update property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Property Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.UpdatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a property by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Delete property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}/active-deal": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Link or unlink an active deal/negotiation to a property",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Link active deal to property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Set Active Deal",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.SetActiveDealRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}/capturing-brokers": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a capturing broker on a property from the time of captação",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Add capturing broker to property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Capturing Broker",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.AddCapturingBrokerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}/interested-leads": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a lead as interested in a property (single source of truth)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Add interested lead to property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Interested Lead",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.AddInterestedLeadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}/interested-leads/{leadId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a lead from the property's interest list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Remove interested lead from property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lead ID",
+                        "name": "leadId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{id}/owners": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add an owner to the property's owners list with optional percentage",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "properties"
+                ],
+                "summary": "Add owner to property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Owner",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.AddOwnerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_oginoino_toca-core_internal_domain_core_address.Address": {
+            "type": "object",
+            "required": [
+                "city",
+                "country",
+                "countryCode",
+                "neighborhood",
+                "number",
+                "postalCode",
+                "state",
+                "stateCode",
+                "street"
+            ],
+            "properties": {
+                "city": {
+                    "description": "cidade",
+                    "type": "string"
+                },
+                "complement": {
+                    "description": "complemento (apto, bloco, sala)",
+                    "type": "string"
+                },
+                "country": {
+                    "description": "país",
+                    "type": "string"
+                },
+                "countryCode": {
+                    "description": "código ISO do país",
+                    "type": "string"
+                },
+                "district": {
+                    "description": "distrito ou região administrativa",
+                    "type": "string"
+                },
+                "formatted_address": {
+                    "description": "endereço formatado",
+                    "type": "string"
+                },
+                "is_verified": {
+                    "description": "se o endereço foi verificado",
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "description": "latitude",
+                    "type": "string"
+                },
+                "longitude": {
+                    "description": "longitude",
+                    "type": "string"
+                },
+                "neighborhood": {
+                    "description": "bairro",
+                    "type": "string"
+                },
+                "number": {
+                    "description": "número",
+                    "type": "string"
+                },
+                "postalCode": {
+                    "description": "CEP",
+                    "type": "string"
+                },
+                "reference_point": {
+                    "description": "ponto de referência",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "estado",
+                    "type": "string"
+                },
+                "stateCode": {
+                    "description": "sigla do estado (SP, RJ)",
+                    "type": "string"
+                },
+                "street": {
+                    "description": "nome da rua",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.AuditLog": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "after": {},
+                "before": {},
+                "details": {
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.CommissionModel": {
+            "type": "object",
+            "properties": {
+                "closing_company_pct": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "owner_company_pct": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.Company": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig": {
+            "type": "object",
+            "properties": {
+                "admin_fee": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "commission_model": {
+                    "description": "CommissionModel is the structured cross-company commission split.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.CommissionModel"
+                        }
+                    ]
+                },
+                "commission_split": {
+                    "description": "CommissionSplit is the legacy \"X/Y\" string. No longer required — kept\nonly so old rows keep deserialising. Prefer CommissionModel.",
+                    "type": "string"
+                },
+                "fee_payer": {
+                    "type": "string"
+                },
+                "royalty_base": {
+                    "description": "RoyaltyBase is the base the royalty percentage is applied to. Empty\nis treated as gross_commission by EffectiveRoyaltyBase().",
+                    "enum": [
+                        "gross_commission",
+                        "net_commission",
+                        "revenue"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.RoyaltyBase"
+                        }
+                    ]
+                },
+                "royalty_percentage": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "transaction_fee": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialProposal": {
+            "type": "object",
+            "properties": {
+                "financial_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig"
+                },
+                "proposed_by": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership": {
+            "type": "object",
+            "required": [
+                "requester_id",
+                "status",
+                "target_id",
+                "type"
+            ],
+            "properties": {
+                "audit_logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.AuditLog"
+                    }
+                },
+                "companies": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Company"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "financial_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig"
+                },
+                "financial_version": {
+                    "type": "integer"
+                },
+                "grants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/partnershipaccess.Grant"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "pending_financial": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialProposal"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission"
+                    }
+                },
+                "requester_id": {
+                    "description": "Franchisor or Initiator",
+                    "type": "string"
+                },
+                "sharing_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipStatus"
+                },
+                "target_id": {
+                    "description": "Franchisee or Partner",
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "pending",
+                "inactive"
+            ],
+            "x-enum-varnames": [
+                "PartnershipStatusActive",
+                "PartnershipStatusPending",
+                "PartnershipStatusInactive"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType": {
+            "type": "string",
+            "enum": [
+                "franchise",
+                "partner"
+            ],
+            "x-enum-varnames": [
+                "PartnershipTypeFranchise",
+                "PartnershipTypePartner"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.Permission": {
+            "type": "object",
+            "properties": {
+                "access_level": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.RoyaltyBase": {
+            "type": "string",
+            "enum": [
+                "gross_commission",
+                "net_commission",
+                "revenue"
+            ],
+            "x-enum-varnames": [
+                "RoyaltyBaseGrossCommission",
+                "RoyaltyBaseNetCommission",
+                "RoyaltyBaseRevenue"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig": {
+            "type": "object",
+            "properties": {
+                "allow_co_brokering": {
+                    "type": "boolean"
+                },
+                "share_lead_contact": {
+                    "type": "boolean"
+                },
+                "share_owner_contact": {
+                    "type": "boolean"
+                },
+                "shared_property_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "shared_regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Areas": {
+            "type": "object",
+            "properties": {
+                "built_area_m2": {
+                    "type": "number"
+                },
+                "land_area_m2": {
+                    "type": "number"
+                },
+                "total_area_m2": {
+                    "type": "number"
+                },
+                "usable_area_m2": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef": {
+            "type": "object",
+            "properties": {
+                "creci": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.BrokerRole": {
+            "type": "string",
+            "enum": [
+                "captador",
+                "visitador",
+                "atendente",
+                "fechamento",
+                "co_captador",
+                "imobiliaria"
+            ],
+            "x-enum-comments": {
+                "BrokerRoleAtendente": "Lead service broker",
+                "BrokerRoleCaptador": "Capturing broker",
+                "BrokerRoleCoCaptador": "Co-capturing broker",
+                "BrokerRoleFechamento": "Closing broker",
+                "BrokerRoleImobiliaria": "Agency retained share",
+                "BrokerRoleVisitador": "Visiting broker"
+            },
+            "x-enum-descriptions": [
+                "Capturing broker",
+                "Visiting broker",
+                "Lead service broker",
+                "Closing broker",
+                "Co-capturing broker",
+                "Agency retained share"
+            ],
+            "x-enum-varnames": [
+                "BrokerRoleCaptador",
+                "BrokerRoleVisitador",
+                "BrokerRoleAtendente",
+                "BrokerRoleFechamento",
+                "BrokerRoleCoCaptador",
+                "BrokerRoleImobiliaria"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity": {
+            "type": "string",
+            "enum": [
+                "open",
+                "exclusive"
+            ],
+            "x-enum-varnames": [
+                "CaptureExclusivityOpen",
+                "CaptureExclusivityExclusive"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef": {
+            "type": "object",
+            "properties": {
+                "captured_at": {
+                    "type": "string"
+                },
+                "commission_pct": {
+                    "type": "number"
+                },
+                "creci": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "description": "captador, co_captador, etc.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRole"
+                        }
+                    ]
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef": {
+            "type": "object",
+            "properties": {
+                "business_unit_id": {
+                    "type": "string"
+                },
+                "division_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Features": {
+            "type": "object",
+            "properties": {
+                "bathrooms": {
+                    "type": "integer"
+                },
+                "bedrooms": {
+                    "type": "integer"
+                },
+                "floor_number": {
+                    "type": "integer"
+                },
+                "floors": {
+                    "type": "integer"
+                },
+                "furnished": {
+                    "type": "boolean"
+                },
+                "has_elevator": {
+                    "type": "boolean"
+                },
+                "parking_spaces": {
+                    "type": "integer"
+                },
+                "pets_allowed": {
+                    "type": "boolean"
+                },
+                "suites": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Image": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.InterestedLeadRef": {
+            "type": "object",
+            "properties": {
+                "interested_at": {
+                    "type": "string"
+                },
+                "lead_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "description": "\"manual\", \"website\", etc.",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Legal": {
+            "type": "object",
+            "properties": {
+                "deed_status": {
+                    "type": "string"
+                },
+                "notary_office": {
+                    "type": "string"
+                },
+                "registration_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.ListingType": {
+            "type": "string",
+            "enum": [
+                "sale",
+                "rent",
+                "exchange"
+            ],
+            "x-enum-varnames": [
+                "ListingTypeSale",
+                "ListingTypeRent",
+                "ListingTypeExchange"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Media": {
+            "type": "object",
+            "properties": {
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Image"
+                    }
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Video"
+                    }
+                },
+                "virtual_tours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.VirtualTour"
+                    }
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Money": {
+            "type": "object",
+            "required": [
+                "currency",
+                "current_amount",
+                "original_amount"
+            ],
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "current_amount": {
+                    "type": "number"
+                },
+                "original_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "percentage": {
+                    "description": "ownership share (0–100)",
+                    "type": "number"
+                },
+                "since": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"person\", \"company\"",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Pricing": {
+            "type": "object",
+            "properties": {
+                "condominium_fee": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money"
+                },
+                "property_tax": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money"
+                },
+                "rent_price": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money"
+                },
+                "sale_price": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Property": {
+            "type": "object",
+            "required": [
+                "condition",
+                "id",
+                "listing_type",
+                "property_type",
+                "publication_status",
+                "status",
+                "tenant_id",
+                "title"
+            ],
+            "properties": {
+                "active_deal_id": {
+                    "description": "ActiveDealID references the current active deal (negotiation) for this property",
+                    "type": "string"
+                },
+                "address": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address"
+                },
+                "amenities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "areas": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas"
+                },
+                "available_for": {
+                    "description": "Available business types: a property can be available for sale, rent and/or exchange simultaneously",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                    }
+                },
+                "broker": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef"
+                },
+                "capture_exclusivity": {
+                    "description": "CaptureExclusivity is the brokerage exclusivity of the capture. Empty\nis treated as \"open\". An \"exclusive\" capture can never be shared in\nthe partnership portfolio (see CanSharePartnershipPortfolio).",
+                    "enum": [
+                        "open",
+                        "exclusive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity"
+                        }
+                    ]
+                },
+                "capturing_brokers": {
+                    "description": "Capturing brokers: multiple brokers with roles (captador, co_captador, etc.)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef"
+                    }
+                },
+                "company": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef"
+                },
+                "condition": {
+                    "enum": [
+                        "new",
+                        "used",
+                        "under_construction"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "display_id": {
+                    "type": "string"
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "features": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "interested_leads": {
+                    "description": "InterestedLeads lists leads that expressed interest in this property",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.InterestedLeadRef"
+                    }
+                },
+                "intermediation_contract_id": {
+                    "description": "IntermediationContractID references the intermediation/administration/brokerage contract",
+                    "type": "string"
+                },
+                "legal": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal"
+                },
+                "listing_type": {
+                    "enum": [
+                        "sale",
+                        "rent"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                        }
+                    ]
+                },
+                "media": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media"
+                },
+                "owner": {
+                    "description": "Legacy single owner/broker (kept for backward compatibility)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                        }
+                    ]
+                },
+                "owners": {
+                    "description": "Multi-owner support: multiple owners with ownership percentage",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                    }
+                },
+                "partnership_portfolio": {
+                    "description": "PartnershipPortfolio indicates this property is shared in the partnership portfolio",
+                    "type": "boolean"
+                },
+                "pricing": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing"
+                },
+                "property_type": {
+                    "enum": [
+                        "apartment",
+                        "house",
+                        "land",
+                        "commercial"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType"
+                        }
+                    ]
+                },
+                "publication_status": {
+                    "enum": [
+                        "draft",
+                        "published"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus"
+                        }
+                    ]
+                },
+                "status": {
+                    "enum": [
+                        "prospecting",
+                        "in_portfolio",
+                        "published",
+                        "attending",
+                        "negotiating",
+                        "proposal",
+                        "analysis",
+                        "contract",
+                        "rented",
+                        "sold",
+                        "administered",
+                        "rescission",
+                        "available",
+                        "inactive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus"
+                        }
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenant_id": {
+                    "description": "TenantID is the identifier for multi-tenancy context (AccountID)",
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition": {
+            "type": "string",
+            "enum": [
+                "new",
+                "used",
+                "under_construction"
+            ],
+            "x-enum-varnames": [
+                "PropertyConditionNew",
+                "PropertyConditionUsed",
+                "PropertyConditionUnderConstruction"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus": {
+            "type": "string",
+            "enum": [
+                "prospecting",
+                "in_portfolio",
+                "published",
+                "attending",
+                "negotiating",
+                "proposal",
+                "analysis",
+                "contract",
+                "rented",
+                "sold",
+                "administered",
+                "rescission",
+                "available",
+                "inactive"
+            ],
+            "x-enum-comments": {
+                "PropertyStatusAdministered": "Em Administração",
+                "PropertyStatusAnalysis": "Em Análise",
+                "PropertyStatusAttending": "Em Atendimento",
+                "PropertyStatusAvailable": "Disponível",
+                "PropertyStatusContract": "Em Contrato",
+                "PropertyStatusInPortfolio": "Em Portfólio",
+                "PropertyStatusInactive": "Inativo",
+                "PropertyStatusNegotiating": "Em Negociação",
+                "PropertyStatusProposal": "Em Proposta",
+                "PropertyStatusProspecting": "Em Captação",
+                "PropertyStatusPublished": "Anunciado",
+                "PropertyStatusRented": "Alugado",
+                "PropertyStatusRescission": "Em Rescisão",
+                "PropertyStatusSold": "Vendido"
+            },
+            "x-enum-descriptions": [
+                "Em Captação",
+                "Em Portfólio",
+                "Anunciado",
+                "Em Atendimento",
+                "Em Negociação",
+                "Em Proposta",
+                "Em Análise",
+                "Em Contrato",
+                "Alugado",
+                "Vendido",
+                "Em Administração",
+                "Em Rescisão",
+                "Disponível",
+                "Inativo"
+            ],
+            "x-enum-varnames": [
+                "PropertyStatusProspecting",
+                "PropertyStatusInPortfolio",
+                "PropertyStatusPublished",
+                "PropertyStatusAttending",
+                "PropertyStatusNegotiating",
+                "PropertyStatusProposal",
+                "PropertyStatusAnalysis",
+                "PropertyStatusContract",
+                "PropertyStatusRented",
+                "PropertyStatusSold",
+                "PropertyStatusAdministered",
+                "PropertyStatusRescission",
+                "PropertyStatusAvailable",
+                "PropertyStatusInactive"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.PropertyType": {
+            "type": "string",
+            "enum": [
+                "apartment",
+                "house",
+                "land",
+                "commercial"
+            ],
+            "x-enum-varnames": [
+                "PropertyTypeApartment",
+                "PropertyTypeHouse",
+                "PropertyTypeLand",
+                "PropertyTypeCommercial"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "published"
+            ],
+            "x-enum-varnames": [
+                "PublicationStatusDraft",
+                "PublicationStatusPublished"
+            ]
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.Video": {
+            "type": "object",
+            "properties": {
+                "platform": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_domain_core_property.VirtualTour": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-core_internal_services.SharedProperty": {
+            "type": "object",
+            "properties": {
+                "partnership_id": {
+                    "type": "string"
+                },
+                "property": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property"
+                },
+                "source_company_id": {
+                    "type": "string"
+                },
+                "source_company_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.AddCapturingBrokerRequest": {
+            "type": "object",
+            "required": [
+                "broker_id",
+                "role"
+            ],
+            "properties": {
+                "broker_id": {
+                    "type": "string"
+                },
+                "commission_pct": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "creci": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "captador",
+                        "co_captador",
+                        "visitador",
+                        "atendente",
+                        "fechamento",
+                        "imobiliaria"
+                    ]
+                }
+            }
+        },
+        "internal_handlers.AddInterestedLeadRequest": {
+            "type": "object",
+            "required": [
+                "lead_id"
+            ],
+            "properties": {
+                "lead_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.AddOwnerRequest": {
+            "type": "object",
+            "required": [
+                "owner_id",
+                "owner_type"
+            ],
+            "properties": {
+                "owner_id": {
+                    "type": "string"
+                },
+                "owner_type": {
+                    "type": "string",
+                    "enum": [
+                        "person",
+                        "company"
+                    ]
+                },
+                "percentage": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_handlers.CaptacaoRequest": {
+            "type": "object",
+            "required": [
+                "capturing_brokers",
+                "owners",
+                "property"
+            ],
+            "properties": {
+                "capturing_brokers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/internal_handlers.AddCapturingBrokerRequest"
+                    }
+                },
+                "owners": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/internal_handlers.AddOwnerRequest"
+                    }
+                },
+                "property": {
+                    "$ref": "#/definitions/internal_handlers.CreatePropertyRequest"
+                }
+            }
+        },
+        "internal_handlers.CreatePartnershipRequest": {
+            "type": "object",
+            "required": [
+                "target_id",
+                "type"
+            ],
+            "properties": {
+                "financial_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission"
+                    }
+                },
+                "sharing_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig"
+                },
+                "target_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType"
+                }
+            }
+        },
+        "internal_handlers.CreatePropertyRequest": {
+            "type": "object",
+            "required": [
+                "condition",
+                "listing_type",
+                "property_type",
+                "publication_status",
+                "status",
+                "title"
+            ],
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address"
+                },
+                "amenities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "areas": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas"
+                },
+                "available_for": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                    }
+                },
+                "broker": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef"
+                },
+                "capture_exclusivity": {
+                    "description": "CaptureExclusivity — \"open\" (default) or \"exclusive\". An exclusive\ncapture can never be shared in the partnership portfolio.",
+                    "enum": [
+                        "open",
+                        "exclusive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity"
+                        }
+                    ]
+                },
+                "capturing_brokers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef"
+                    }
+                },
+                "company": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef"
+                },
+                "condition": {
+                    "enum": [
+                        "new",
+                        "used",
+                        "under_construction"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "features": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features"
+                },
+                "legal": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal"
+                },
+                "listing_type": {
+                    "enum": [
+                        "sale",
+                        "rent",
+                        "exchange"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                        }
+                    ]
+                },
+                "media": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media"
+                },
+                "owner": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                    }
+                },
+                "partnership_portfolio": {
+                    "description": "PartnershipPortfolio opts this property into the shared partnership\nportfolio. Rejected by the service when CaptureExclusivity=exclusive.",
+                    "type": "boolean"
+                },
+                "pricing": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing"
+                },
+                "property_type": {
+                    "enum": [
+                        "apartment",
+                        "house",
+                        "land",
+                        "commercial"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType"
+                        }
+                    ]
+                },
+                "publication_status": {
+                    "enum": [
+                        "draft",
+                        "published"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus"
+                        }
+                    ]
+                },
+                "status": {
+                    "enum": [
+                        "prospecting",
+                        "in_portfolio",
+                        "published",
+                        "attending",
+                        "negotiating",
+                        "proposal",
+                        "analysis",
+                        "contract",
+                        "rented",
+                        "sold",
+                        "administered",
+                        "rescission",
+                        "available",
+                        "inactive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus"
+                        }
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.SetActiveDealRequest": {
+            "type": "object",
+            "properties": {
+                "deal_id": {
+                    "description": "empty string clears the active deal",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.UpdateFinancialConfigRequest": {
+            "type": "object",
+            "required": [
+                "financial_config"
+            ],
+            "properties": {
+                "financial_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig"
+                }
+            }
+        },
+        "internal_handlers.UpdatePermissionsRequest": {
+            "type": "object",
+            "required": [
+                "permissions"
+            ],
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission"
+                    }
+                }
+            }
+        },
+        "internal_handlers.UpdatePropertyRequest": {
+            "type": "object",
+            "required": [
+                "condition",
+                "listing_type",
+                "property_type",
+                "publication_status",
+                "status",
+                "title"
+            ],
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address"
+                },
+                "amenities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "areas": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas"
+                },
+                "available_for": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                    }
+                },
+                "broker": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef"
+                },
+                "capture_exclusivity": {
+                    "description": "CaptureExclusivity — \"open\" (default) or \"exclusive\". An exclusive\ncapture can never be shared in the partnership portfolio.",
+                    "enum": [
+                        "open",
+                        "exclusive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity"
+                        }
+                    ]
+                },
+                "capturing_brokers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef"
+                    }
+                },
+                "company": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef"
+                },
+                "condition": {
+                    "enum": [
+                        "new",
+                        "used",
+                        "under_construction"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "features": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features"
+                },
+                "legal": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal"
+                },
+                "listing_type": {
+                    "enum": [
+                        "sale",
+                        "rent",
+                        "exchange"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType"
+                        }
+                    ]
+                },
+                "media": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media"
+                },
+                "owner": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef"
+                    }
+                },
+                "partnership_portfolio": {
+                    "description": "PartnershipPortfolio opts this property into the shared partnership\nportfolio. Rejected by the service when CaptureExclusivity=exclusive.",
+                    "type": "boolean"
+                },
+                "pricing": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing"
+                },
+                "property_type": {
+                    "enum": [
+                        "apartment",
+                        "house",
+                        "land",
+                        "commercial"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType"
+                        }
+                    ]
+                },
+                "publication_status": {
+                    "enum": [
+                        "draft",
+                        "published"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus"
+                        }
+                    ]
+                },
+                "status": {
+                    "enum": [
+                        "prospecting",
+                        "in_portfolio",
+                        "published",
+                        "attending",
+                        "negotiating",
+                        "proposal",
+                        "analysis",
+                        "contract",
+                        "rented",
+                        "sold",
+                        "administered",
+                        "rescission",
+                        "available",
+                        "inactive"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus"
+                        }
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.UpdateSharingConfigRequest": {
+            "type": "object",
+            "required": [
+                "sharing_config"
+            ],
+            "properties": {
+                "sharing_config": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig"
+                }
+            }
+        },
+        "partnershipaccess.Grant": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/partnershipaccess.Permission"
+                    }
+                },
+                "sharing_config": {
+                    "$ref": "#/definitions/partnershipaccess.Sharing"
+                }
+            }
+        },
+        "partnershipaccess.Permission": {
+            "type": "object",
+            "properties": {
+                "access_level": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        },
+        "partnershipaccess.Sharing": {
+            "type": "object",
+            "properties": {
+                "allow_co_brokering": {
+                    "type": "boolean"
+                },
+                "share_lead_contact": {
+                    "type": "boolean"
+                },
+                "share_owner_contact": {
+                    "type": "boolean"
+                },
+                "shared_property_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "shared_regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                },
+                "statusCode": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

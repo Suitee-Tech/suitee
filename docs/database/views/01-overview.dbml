@@ -1,0 +1,100 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'Visao geral. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table crm.leads [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table core.properties [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+}
+
+Table deal.deals [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+}
+
+Table signature.envelopes [headercolor: #9333EA] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260510120400_create_signature_schema.sql']
+}
+
+Table financial.charges [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+}
+
+Table financial.commissions [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__payout_order_id text [note: 'metadata.payout_order_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+}
+
+Table financial.payout_orders [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table financial.transfers [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__source_charge_id text [note: 'metadata.source_charge_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+}
+
+Ref logical_6: deal.deals.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_8: deal.deals.json__customer_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_12: deal.contracts.deal_id > deal.deals.id [color: #94A3B8]
+
+Ref logical_25: financial.charges.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_31: financial.commissions.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_33: financial.commissions.json__payout_order_id > financial.payout_orders.id [color: #94A3B8]
+
+Ref logical_35: financial.transfers.json__source_charge_id > financial.charges.id [color: #94A3B8]
+
+Ref logical_57: signature.envelopes.contract_id > deal.contracts.id [color: #94A3B8]
+
+TableGroup "02 CRM e atendimento" [color: #2563EB] {
+  crm.leads
+}
+
+TableGroup "03 Imoveis e empresa" [color: #0891B2] {
+  core.properties
+}
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+  deal.deals
+}
+
+TableGroup "05 Assinatura" [color: #9333EA] {
+  signature.envelopes
+}
+
+TableGroup "06 Financeiro - cobranca" [color: #0F766E] {
+  financial.charges
+}
+
+TableGroup "07 Financeiro - repasses e comissoes" [color: #15803D] {
+  financial.commissions
+  financial.payout_orders
+  financial.transfers
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 9 tabelas; 8 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

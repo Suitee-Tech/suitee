@@ -1,0 +1,16 @@
+{
+  "event": {
+    "name": "refusal",
+    "occurred_at": "2026-05-10T18:32:00Z",
+    "delivery_id": "delivery-refusal-1"
+  },
+  "envelope": {
+    "id": "cs-env-1",
+    "status": "canceled"
+  },
+  "signer": {
+    "key": "cs-sig-2",
+    "email": "prop@example.com",
+    "refused_reason": "documento incorreto"
+  }
+}

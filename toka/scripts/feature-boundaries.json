@@ -1,0 +1,4 @@
+{
+  "enforced_paths": ["src/shared", "src/features/esteira"],
+  "forbidden_roots": ["app"]
+}

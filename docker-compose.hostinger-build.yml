@@ -1,0 +1,59 @@
+services:
+  toka-frontend:
+    build:
+      context: ./toka
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+        VITE_MEDIA_URL: ""
+        VITE_MULTI_PARTY_UI: "true"
+        BUILD_MINIFY: esbuild
+
+  gateway:
+    build: { context: ., dockerfile: gateway/Dockerfile }
+  toca-auth:
+    build: { context: ., dockerfile: toca-auth/Dockerfile }
+  toca-core:
+    build: { context: ., dockerfile: toca-core/Dockerfile }
+  toca-financial:
+    build: { context: ., dockerfile: toca-financial/Dockerfile }
+  toca-crm:
+    build: { context: ., dockerfile: toca-crm/Dockerfile }
+  toca-deal:
+    build: { context: ., dockerfile: toca-deal/Dockerfile }
+  toca-comm:
+    build: { context: ., dockerfile: toca-comm/Dockerfile }
+  toca-ops:
+    build: { context: ., dockerfile: toca-ops/Dockerfile }
+  toca-calendar:
+    build: { context: ., dockerfile: toca-calendar/Dockerfile }
+  toca-portal:
+    build: { context: ., dockerfile: toca-portal/Dockerfile }
+  toca-mcp:
+    build: { context: ., dockerfile: toca-mcp/Dockerfile }
+  toca-ai:
+    build: { context: ., dockerfile: toca-ai/Dockerfile }
+  toca-signature:
+    build: { context: ., dockerfile: toca-signature/Dockerfile }
+  toca-ocr:
+    build:
+      context: ./toca-ocr
+      dockerfile: Dockerfile
+
+  # Vitrine (ADR 0006). Estes serviços entraram depois do compose original de
+  # release e precisam de build explícito para o pipeline congelar suas imagens.
+  toca-sites:
+    build: { context: ., dockerfile: toca-sites/Dockerfile }
+  toca-web:
+    build:
+      context: ./toca-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITES_API_URL: ${PUBLIC_API_URL:-}
+        NEXT_PUBLIC_SITE_HOST_SUFFIX: ${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+        PUBLIC_SITE_HOST_SUFFIX: ${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+  toca-web-migrate:
+    build:
+      context: ./toca-web
+      dockerfile: Dockerfile
+      target: migrator

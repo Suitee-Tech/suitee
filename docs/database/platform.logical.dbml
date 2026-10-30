@@ -1,0 +1,523 @@
+// VISAO LOGICA: projecoes JSONB nao sao colunas SQL nem novas FKs.
+Project suitee_logical {
+  database_type: 'PostgreSQL'
+  Note: 'Visao conceitual parcial dos vinculos comprovados no codigo. Campos json__ sao projecoes, nao colunas. Identificadores normalizados como text apenas neste diagrama. Nao exportar como migration.'
+}
+
+Table toca_auth.accounts [headercolor: #475569] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table toca_auth.credentials [headercolor: #475569] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-auth/internal/repository/credential_postgres.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table toca_auth.user_preferences [headercolor: #475569] {
+  account_id text [pk, note: 'coluna; vinculo logico sem FK; fonte: toca-auth/internal/repository/preferences_postgres.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table crm.brokers [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table crm.leads [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__AccountID text [note: 'metadata.AccountID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+  json__AssignedBrokerID text [note: 'metadata.AssignedBrokerID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+  json__ContractID text [note: 'metadata.ContractID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table core.partnerships [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table core.properties [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__amends_contract_id text [note: 'metadata.amends_contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__entry_inspection_id text [note: 'metadata.entry_inspection_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table deal.deals [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__owner_id text [note: 'metadata.owner_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__lead_id text [note: 'metadata.lead_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__broker_id text [note: 'metadata.broker_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__recommended_property_id text [note: 'metadata.recommended_property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table deal.documents [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/document/document.go']
+  json__parent_id text [note: 'metadata.parent_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/document/document.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table signature.envelopes [headercolor: #9333EA] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260510120400_create_signature_schema.sql']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260510120400_create_signature_schema.sql']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.charges [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  json__lead_id text [note: 'metadata.lead_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  tenant_id text [note: 'Coluna fisica referenciada']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.collections [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/collection/collection.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.rental_charge_configs [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental_charge_config/rental_charge_config.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental_charge_config/rental_charge_config.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.rentals [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__tenant_lead_id text [note: 'metadata.tenant_lead_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__owner_lead_id text [note: 'metadata.owner_lead_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__broker_id text [note: 'metadata.broker_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.sale_billing_plan_drafts [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/sale_billing_plan_draft/draft.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.utility_accounts [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/utility_account/utility_account.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/utility_account/utility_account.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.commissions [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__broker_id text [note: 'metadata.broker_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__payout_order_id text [note: 'metadata.payout_order_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  json__ledger_transaction_id text [note: 'metadata.ledger_transaction_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/commission/commission.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.managed_bills [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260820234459_create_financial_managed_bills.sql']
+  property_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260820234459_create_financial_managed_bills.sql']
+  tenant_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  source_charge_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  source_transfer_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.partner_royalties [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  partnership_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260522120001_partner_royalties.sql']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260522120001_partner_royalties.sql']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260522120001_partner_royalties.sql']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.payout_orders [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/payout_order/payout_order.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.transfer_deduction_claims [headercolor: #15803D] {
+  account_id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  tenant_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  transfer_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.transfers [headercolor: #15803D] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__source_charge_id text [note: 'metadata.source_charge_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  json__source_transaction_id text [note: 'metadata.source_transaction_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transfer/transfer.go']
+  tenant_id text [note: 'Coluna fisica referenciada']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.journal_entries [headercolor: #B45309] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+  json__reversal_of text [note: 'metadata.reversal_of; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+  json__reversed_by text [note: 'metadata.reversed_by; vinculo logico sem FK; fonte: toca-financial/internal/domain/journal/journal.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table financial.transactions [headercolor: #B45309] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transaction/transaction.go']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transaction/transaction.go']
+  json__broker_id text [note: 'metadata.broker_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/transaction/transaction.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ops.inspections [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/inspection/inspection.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-ops/internal/models/inspection/inspection.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ops.keys [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/key/key.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ops.maintenance [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__rental_id text [note: 'metadata.rental_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__requester_lead_id text [note: 'metadata.requester_lead_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__supplier_id text [note: 'metadata.supplier_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ops.suppliers [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ops.tickets [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-ops/internal/models/ticket/ticket.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/ticket/ticket.go']
+  json__requester_account_id text [note: 'metadata.requester_account_id; vinculo logico sem FK; fonte: toca-ops/internal/models/ticket/ticket.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table calendar.appointments [headercolor: #BE123C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__lead_id text [note: 'metadata.lead_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+  json__deal_id text [note: 'metadata.deal_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+  json__customer_account_id text [note: 'metadata.customer_account_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table comm.channels [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table comm.inapp_notifications [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__user_id text [note: 'metadata.user_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/notification/inapp.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table comm.messages [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__channel_id text [note: 'metadata.channel_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+  json__sender_id text [note: 'metadata.sender_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+  json__reply_to_id text [note: 'metadata.reply_to_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ai.conversations [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-ai/internal/repositories/conversation_postgres.go']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ai.messages [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  conversation_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+Table ai.tool_invocations [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260426120000_create_ai_tool_invocations.sql']
+  conversation_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+  Note: 'Projecao para leitura dos relacionamentos. Estrutura completa em platform.dbml.'
+}
+
+// LOGICO: coluna; toca-auth/internal/repository/credential_postgres.go
+Ref logical_1: toca_auth.credentials.account_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: coluna; toca-auth/internal/repository/preferences_postgres.go
+Ref logical_2: toca_auth.user_preferences.account_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.AccountID; toca-crm/internal/repository/lead_postgres.go
+Ref logical_3: crm.leads.json__AccountID > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.AssignedBrokerID; toca-crm/internal/repository/lead_postgres.go
+Ref logical_4: crm.leads.json__AssignedBrokerID > crm.brokers.id [color: #94A3B8]
+// LOGICO: metadata.ContractID; toca-crm/internal/repository/lead_postgres.go
+Ref logical_5: crm.leads.json__ContractID > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_6: deal.deals.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.owner_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_7: deal.deals.json__owner_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.customer_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_8: deal.deals.json__customer_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.lead_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_9: deal.deals.json__lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.broker_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_10: deal.deals.json__broker_id > crm.brokers.id [color: #94A3B8]
+// LOGICO: metadata.recommended_property_id; toca-deal/internal/domain/deal/deal.go
+Ref logical_11: deal.deals.json__recommended_property_id > core.properties.id [color: #94A3B8]
+// LOGICO: coluna; toca-deal/internal/domain/contract/contract.go
+Ref logical_12: deal.contracts.deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-deal/internal/domain/contract/contract.go
+Ref logical_13: deal.contracts.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.customer_id; toca-deal/internal/domain/contract/contract.go
+Ref logical_14: deal.contracts.json__customer_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.amends_contract_id; toca-deal/internal/domain/contract/contract.go
+Ref logical_15: deal.contracts.json__amends_contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.entry_inspection_id; toca-deal/internal/domain/contract/contract.go
+Ref logical_16: deal.contracts.json__entry_inspection_id > ops.inspections.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-deal/internal/domain/document/document.go
+Ref logical_17: deal.documents.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.parent_id; toca-deal/internal/domain/document/document.go
+Ref logical_18: deal.documents.json__parent_id > deal.documents.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_19: financial.rentals.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_20: financial.rentals.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_21: financial.rentals.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.tenant_lead_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_22: financial.rentals.json__tenant_lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.owner_lead_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_23: financial.rentals.json__owner_lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.broker_id; toca-financial/internal/domain/rental/rental.go
+Ref logical_24: financial.rentals.json__broker_id > crm.brokers.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/charge/charge.go
+Ref logical_25: financial.charges.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-financial/internal/domain/charge/charge.go
+Ref logical_26: financial.charges.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.lead_id; toca-financial/internal/domain/charge/charge.go
+Ref logical_27: financial.charges.json__lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/charge/charge.go
+Ref logical_28: financial.charges.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_29: financial.commissions.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.broker_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_30: financial.commissions.json__broker_id > crm.brokers.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_31: financial.commissions.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_32: financial.commissions.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.payout_order_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_33: financial.commissions.json__payout_order_id > financial.payout_orders.id [color: #94A3B8]
+// LOGICO: metadata.ledger_transaction_id; toca-financial/internal/domain/commission/commission.go
+Ref logical_34: financial.commissions.json__ledger_transaction_id > financial.transactions.id [color: #94A3B8]
+// LOGICO: metadata.source_charge_id; toca-financial/internal/domain/transfer/transfer.go
+Ref logical_35: financial.transfers.json__source_charge_id > financial.charges.id [color: #94A3B8]
+// LOGICO: metadata.source_transaction_id; toca-financial/internal/domain/transfer/transfer.go
+Ref logical_36: financial.transfers.json__source_transaction_id > financial.transactions.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/transfer/transfer.go
+Ref logical_37: financial.transfers.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/transfer/transfer.go
+Ref logical_38: financial.transfers.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/transaction/transaction.go
+Ref logical_39: financial.transactions.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-financial/internal/domain/transaction/transaction.go
+Ref logical_40: financial.transactions.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.broker_id; toca-financial/internal/domain/transaction/transaction.go
+Ref logical_41: financial.transactions.json__broker_id > crm.brokers.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/rental_charge_config/rental_charge_config.go
+Ref logical_42: financial.rental_charge_configs.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/rental_charge_config/rental_charge_config.go
+Ref logical_43: financial.rental_charge_configs.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/utility_account/utility_account.go
+Ref logical_44: financial.utility_accounts.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-financial/internal/domain/utility_account/utility_account.go
+Ref logical_45: financial.utility_accounts.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/collection/collection.go
+Ref logical_46: financial.collections.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/journal/journal.go
+Ref logical_47: financial.journal_entries.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.reversal_of; toca-financial/internal/domain/journal/journal.go
+Ref logical_48: financial.journal_entries.json__reversal_of > financial.journal_entries.id [color: #94A3B8]
+// LOGICO: metadata.reversed_by; toca-financial/internal/domain/journal/journal.go
+Ref logical_49: financial.journal_entries.json__reversed_by > financial.journal_entries.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-financial/internal/domain/payout_order/payout_order.go
+Ref logical_50: financial.payout_orders.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-financial/internal/domain/sale_billing_plan_draft/draft.go
+Ref logical_51: financial.sale_billing_plan_drafts.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260522120001_partner_royalties.sql
+Ref logical_52: financial.partner_royalties.partnership_id > core.partnerships.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260522120001_partner_royalties.sql
+Ref logical_53: financial.partner_royalties.deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260522120001_partner_royalties.sql
+Ref logical_54: financial.partner_royalties.contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260820234459_create_financial_managed_bills.sql
+Ref logical_55: financial.managed_bills.contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260820234459_create_financial_managed_bills.sql
+Ref logical_56: financial.managed_bills.property_id > core.properties.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260510120400_create_signature_schema.sql
+Ref logical_57: signature.envelopes.contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260510120400_create_signature_schema.sql
+Ref logical_58: signature.envelopes.deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.channel_id; toca-comm/internal/domain/message/message.go
+Ref logical_59: comm.messages.json__channel_id > comm.channels.id [color: #94A3B8]
+// LOGICO: metadata.sender_id; toca-comm/internal/domain/message/message.go
+Ref logical_60: comm.messages.json__sender_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.reply_to_id; toca-comm/internal/domain/message/message.go
+Ref logical_61: comm.messages.json__reply_to_id > comm.messages.id [color: #94A3B8]
+// LOGICO: metadata.user_id; toca-comm/internal/domain/notification/inapp.go
+Ref logical_62: comm.inapp_notifications.json__user_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.lead_id; toca-calendar/internal/models/appointment/appointment.go
+Ref logical_63: calendar.appointments.json__lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-calendar/internal/models/appointment/appointment.go
+Ref logical_64: calendar.appointments.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-calendar/internal/models/appointment/appointment.go
+Ref logical_65: calendar.appointments.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.customer_account_id; toca-calendar/internal/models/appointment/appointment.go
+Ref logical_66: calendar.appointments.json__customer_account_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-ops/internal/models/maintenance/maintenance.go
+Ref logical_67: ops.maintenance.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-ops/internal/models/maintenance/maintenance.go
+Ref logical_68: ops.maintenance.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.rental_id; toca-ops/internal/models/maintenance/maintenance.go
+Ref logical_69: ops.maintenance.json__rental_id > financial.rentals.id [color: #94A3B8]
+// LOGICO: metadata.requester_lead_id; toca-ops/internal/models/maintenance/maintenance.go
+Ref logical_70: ops.maintenance.json__requester_lead_id > crm.leads.id [color: #94A3B8]
+// LOGICO: metadata.supplier_id; toca-ops/internal/models/maintenance/maintenance.go
+Ref logical_71: ops.maintenance.json__supplier_id > ops.suppliers.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-ops/internal/models/inspection/inspection.go
+Ref logical_72: ops.inspections.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.contract_id; toca-ops/internal/models/inspection/inspection.go
+Ref logical_73: ops.inspections.json__contract_id > deal.contracts.id [color: #94A3B8]
+// LOGICO: metadata.deal_id; toca-ops/internal/models/ticket/ticket.go
+Ref logical_74: ops.tickets.json__deal_id > deal.deals.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-ops/internal/models/ticket/ticket.go
+Ref logical_75: ops.tickets.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: metadata.requester_account_id; toca-ops/internal/models/ticket/ticket.go
+Ref logical_76: ops.tickets.json__requester_account_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: metadata.property_id; toca-ops/internal/models/key/key.go
+Ref logical_77: ops.keys.json__property_id > core.properties.id [color: #94A3B8]
+// LOGICO: coluna; toca-ai/internal/repositories/conversation_postgres.go
+Ref logical_78: ai.conversations.account_id > toca_auth.accounts.id [color: #94A3B8]
+// LOGICO: coluna; supabase/migrations/20260426120000_create_ai_tool_invocations.sql
+Ref logical_79: ai.tool_invocations.account_id > toca_auth.accounts.id [color: #94A3B8]
+// FK SQL real; a cardinalidade por tenant deve ser preservada.
+Ref physical_1: ai.messages.(conversation_id) > ai.conversations.(id) [color: #334155]
+// FK SQL real; a cardinalidade por tenant deve ser preservada.
+Ref physical_2: ai.tool_invocations.(conversation_id) > ai.conversations.(id) [color: #334155]
+// FK SQL real; a cardinalidade por tenant deve ser preservada.
+Ref physical_3: financial.managed_bills.(tenant_id, source_charge_id) > financial.charges.(tenant_id, id) [color: #334155]
+// FK SQL real; a cardinalidade por tenant deve ser preservada.
+Ref physical_4: financial.managed_bills.(tenant_id, source_transfer_id) > financial.transfers.(tenant_id, id) [color: #334155]
+// FK SQL real; a cardinalidade por tenant deve ser preservada.
+Ref physical_5: financial.transfer_deduction_claims.(tenant_id, transfer_id) > financial.transfers.(tenant_id, id) [color: #334155]
+
+TableGroup "01 Identidade" [color: #475569] {
+  toca_auth.accounts
+  toca_auth.credentials
+  toca_auth.user_preferences
+}
+
+TableGroup "02 CRM e atendimento" [color: #2563EB] {
+  crm.brokers
+  crm.leads
+}
+
+TableGroup "03 Imoveis e empresa" [color: #0891B2] {
+  core.partnerships
+  core.properties
+}
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+  deal.deals
+  deal.documents
+}
+
+TableGroup "05 Assinatura" [color: #9333EA] {
+  signature.envelopes
+}
+
+TableGroup "06 Financeiro - cobranca" [color: #0F766E] {
+  financial.charges
+  financial.collections
+  financial.rental_charge_configs
+  financial.rentals
+  financial.sale_billing_plan_drafts
+  financial.utility_accounts
+}
+
+TableGroup "07 Financeiro - repasses e comissoes" [color: #15803D] {
+  financial.commissions
+  financial.managed_bills
+  financial.partner_royalties
+  financial.payout_orders
+  financial.transfer_deduction_claims
+  financial.transfers
+}
+
+TableGroup "08 Financeiro - razao e fiscal" [color: #B45309] {
+  financial.journal_entries
+  financial.transactions
+}
+
+TableGroup "10 Operacoes" [color: #C2410C] {
+  ops.inspections
+  ops.keys
+  ops.maintenance
+  ops.suppliers
+  ops.tickets
+}
+
+TableGroup "11 Agenda" [color: #BE123C] {
+  calendar.appointments
+}
+
+TableGroup "12 Comunicacao" [color: #0369A1] {
+  comm.channels
+  comm.inapp_notifications
+  comm.messages
+}
+
+TableGroup "13 Assistente IA" [color: #4F46E5] {
+  ai.conversations
+  ai.messages
+  ai.tool_invocations
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. Use views/01-overview.dbml para iniciar a leitura.'
+}

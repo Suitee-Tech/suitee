@@ -1,0 +1,2291 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Authentication service for Toca ecosystem",
+        "title": "Toca Auth API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/auth/accept-invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Accept an invitation to join a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Accept invitation",
+                "parameters": [
+                    {
+                        "description": "Accept Invitation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_invitation.AcceptInvitationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/companies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all companies the user belongs to",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "List user companies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.AccountResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "description": "Request a password reset email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Request password reset",
+                "parameters": [
+                    {
+                        "description": "Forgot Password Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Login with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.TokenPair"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Invalidates the current session and clears the refresh token cookie",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout current session",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Invalidates all sessions for the current user across all devices",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout all sessions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get information about the currently logged in user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Get a new access token using a refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh Token Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.TokenPair"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register a new user with the provided details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "Register Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.TokenPair"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "description": "Applies a new password using the access/refresh pair from the Supabase recovery link fragment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Reset password with a recovery session",
+                "parameters": [
+                    {
+                        "description": "Recovery session and new password",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.ResetPasswordWithSessionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/switch-context": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Switch the active company context and get new tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Switch company context",
+                "parameters": [
+                    {
+                        "description": "Switch Context Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "company_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.TokenPair"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new company for the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Create a new company",
+                "parameters": [
+                    {
+                        "description": "Create Company Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.CreateCompanyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.AccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/lookup": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Find a company by its CNPJ (tax_id). Returns a minimal, non-sensitive projection so a company can be identified before sending a partnership/franchise invite. The tax_id query param accepts masked or unmasked CNPJ.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Lookup company by CNPJ",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company CNPJ (masked or digits-only)",
+                        "name": "tax_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_api_v1_handlers.CompanyLookupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Get company details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.AccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update details of a specific company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Update company details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Company Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.UpdateCompanyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/invitations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all pending/accepted/canceled invitations for a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "List invitations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/invitations/{invitation_id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel a pending invitation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Cancel invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invitation ID",
+                        "name": "invitation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/invitations/{invitation_id}/resend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resend an invitation email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Resend invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invitation ID",
+                        "name": "invitation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Invite a user to join a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Create invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Invitation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_invitation.CreateInvitationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_invitation.Invitation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/members": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all active members with details for a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "List company members",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/members/{member_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a member from the company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Remove member",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Member ID",
+                        "name": "member_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Change the functional role/access profile of a member or suspend/reactivate their membership",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Update company member",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Member ID",
+                        "name": "member_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change (all optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.UpdateMemberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add an existing user to a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Add user to company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add User Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_auth.AddUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.AccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/lgpd/me/account": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Anonimiza os dados pessoais do usuário corrente em\nTODOS os domains registrados (auth, crm.lead, deal.party,\netc.). PII é substituído por hash determinístico do\npkg/gdpr; foreign keys (account_id) preservadas pra que\nhistórico de negócio continue íntegro. Requer\nconfirmação textual no body. Irreversível.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lgpd"
+                ],
+                "summary": "LGPD Art. 18 — direito ao esquecimento (#476)",
+                "parameters": [
+                    {
+                        "description": "Confirmação",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.DeleteMyAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "confirmação inválida",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/lgpd/me/data": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna em JSON tudo que toca-auth tem sobre o usuário\nautenticado: identity (cadastro), preferences, companies\nassociadas + referências para dados em outros services.\nCada chamada é auditada (lgpd.data_export_requested).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lgpd"
+                ],
+                "summary": "LGPD Art. 9 — direito de acesso aos próprios dados (#475)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_api_v1_handlers.PersonalDataResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_oginoino_toca-auth_internal_api_v1_dto.AccountResponse": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.CompanyResponse"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "individual": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.UserResponse"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_api_v1_dto.CompanyMember": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_api_v1_dto.CompanyResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_company.Address"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.CompanyMember"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_api_v1_dto.UpdateCompanyRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "email",
+                "legal_name",
+                "name",
+                "phone",
+                "tax_id"
+            ],
+            "properties": {
+                "address": {
+                    "type": "object",
+                    "required": [
+                        "city",
+                        "district",
+                        "number",
+                        "state",
+                        "street",
+                        "zip_code"
+                    ],
+                    "properties": {
+                        "city": {
+                            "type": "string"
+                        },
+                        "complement": {
+                            "type": "string"
+                        },
+                        "district": {
+                            "type": "string"
+                        },
+                        "number": {
+                            "type": "string"
+                        },
+                        "state": {
+                            "type": "string"
+                        },
+                        "street": {
+                            "type": "string"
+                        },
+                        "zip_code": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_api_v1_dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_user.Address"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "banking": {
+                    "description": "Banking exposed via GET /auth/me para que o portal e o admin\nrenderizem o formulário pré-preenchido. PATCH /auth/me aceita\nupdates via UpdateMeRequest.Banking. Issue #463.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_user.BankingInfo"
+                        }
+                    ]
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "fullname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "notifications": {
+                    "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_user.Notifications"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.AddUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "firstname",
+                "lastname",
+                "password"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "profile": {
+                    "description": "company access level (e.g. admin, manager)",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "functional role (e.g. broker, staff)",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.CreateCompanyRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "email",
+                "legal_name",
+                "name",
+                "phone",
+                "tax_id"
+            ],
+            "properties": {
+                "address": {
+                    "type": "object",
+                    "required": [
+                        "city",
+                        "district",
+                        "number",
+                        "state",
+                        "street",
+                        "zip_code"
+                    ],
+                    "properties": {
+                        "city": {
+                            "type": "string"
+                        },
+                        "complement": {
+                            "type": "string"
+                        },
+                        "district": {
+                            "type": "string"
+                        },
+                        "number": {
+                            "type": "string"
+                        },
+                        "state": {
+                            "type": "string"
+                        },
+                        "street": {
+                            "type": "string"
+                        },
+                        "zip_code": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "franchisor, franchisee",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "email",
+                "password",
+                "type"
+            ],
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "company_name": {
+                    "description": "For Company",
+                    "type": "string"
+                },
+                "confirm_password": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "description": "For Individual",
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "description": "Functional role (e.g. Administrador, Corretor, Gerente)",
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "individual",
+                        "company"
+                    ]
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.ResetPasswordWithSessionRequest": {
+            "type": "object",
+            "required": [
+                "access_token",
+                "new_password",
+                "refresh_token"
+            ],
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.TokenPair": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_auth.UpdateMemberRequest": {
+            "type": "object",
+            "properties": {
+                "functional_role": {
+                    "description": "FunctionalRole é o papel de catálogo (admin, gestor, corretor, ...).",
+                    "type": "string"
+                },
+                "is_active": {
+                    "description": "IsActive — nil não mexe; false suspende o vínculo; true reativa.",
+                    "type": "boolean"
+                },
+                "profile": {
+                    "description": "Profile é o nível de acesso na empresa (member, viewer, admin).",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_company.Address": {
+            "type": "object",
+            "required": [
+                "city",
+                "district",
+                "number",
+                "state",
+                "street",
+                "zip_code"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "complement": {
+                    "type": "string"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_invitation.AcceptInvitationRequest": {
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_invitation.CreateInvitationRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_invitation.Invitation": {
+            "type": "object",
+            "required": [
+                "company_id",
+                "email",
+                "role"
+            ],
+            "properties": {
+                "company_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "group_ids": {
+                    "description": "Groups to join upon accepting",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "description": "staff, manager, admin",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending, accepted, expired",
+                    "type": "string"
+                },
+                "token": {
+                    "description": "unique token for invite link",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_user.Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "complement": {
+                    "type": "string"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_user.BankAccountType": {
+            "type": "string",
+            "enum": [
+                "checking",
+                "savings"
+            ],
+            "x-enum-varnames": [
+                "BankAccountTypeChecking",
+                "BankAccountTypeSavings"
+            ]
+        },
+        "github_com_oginoino_toca-auth_internal_domain_user.BankingInfo": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "type": "string"
+                },
+                "account_digit": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "description": "AccountType — corrente ou poupança.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_user.BankAccountType"
+                        }
+                    ]
+                },
+                "agency": {
+                    "description": "Agência — só dígitos, sem dígito verificador (o BR não tem padrão\nuniforme — alguns bancos têm 4 dígitos, outros 5; alguns têm\nDV, outros não — não validamos aqui).",
+                    "type": "string"
+                },
+                "agency_digit": {
+                    "type": "string"
+                },
+                "bank_code": {
+                    "description": "Banco — código compe (3 dígitos, ex.: 341 Itaú) ou ISPB (8\ndígitos para participantes do SPB que não têm compe).\nMantemos como string porque alguns bancos digitais usam ISPB.",
+                    "type": "string"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "holder_document": {
+                    "type": "string"
+                },
+                "holder_name": {
+                    "description": "Holder — titular da conta. Quando vazio, assumimos que é o\npróprio usuário (FullName). Document é CPF (PF) ou CNPJ (PJ).",
+                    "type": "string"
+                },
+                "pix_key": {
+                    "type": "string"
+                },
+                "pix_key_type": {
+                    "description": "PIX — chave de transferência instantânea. Tipo separado do valor\nporque a validação muda por tipo (CPF vs. email vs. EVP).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_domain_user.PixKeyType"
+                        }
+                    ]
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_user.Notifications": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "boolean"
+                },
+                "push": {
+                    "type": "boolean"
+                },
+                "sms": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_oginoino_toca-auth_internal_domain_user.PixKeyType": {
+            "type": "string",
+            "enum": [
+                "cpf",
+                "cnpj",
+                "email",
+                "phone",
+                "evp"
+            ],
+            "x-enum-comments": {
+                "PixKeyTypeEVP": "chave aleatória (UUID v4)"
+            },
+            "x-enum-descriptions": [
+                "",
+                "",
+                "",
+                "",
+                "chave aleatória (UUID v4)"
+            ],
+            "x-enum-varnames": [
+                "PixKeyTypeCPF",
+                "PixKeyTypeCNPJ",
+                "PixKeyTypeEmail",
+                "PixKeyTypePhone",
+                "PixKeyTypeEVP"
+            ]
+        },
+        "internal_api_v1_handlers.CompanyLookupResponse": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.DeleteMyAccountRequest": {
+            "type": "object",
+            "required": [
+                "confirm"
+            ],
+            "properties": {
+                "confirm": {
+                    "description": "Confirm — texto literal \"EXCLUIR MINHA CONTA\" exigido pelo\nfrontend. Backend re-valida pra impedir bypass.",
+                    "type": "string"
+                },
+                "reason": {
+                    "description": "Reason — motivo livre. Opcional mas LGPD exige rastrear pra que\npossamos identificar padrões (ex.: bug específico levando users\na sair).",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.PersonalDataResponse": {
+            "type": "object",
+            "properties": {
+                "companies": {
+                    "description": "Companies — empresas que o usuário pertence (membership).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.CompanyResponse"
+                    }
+                },
+                "generated_at": {
+                    "description": "Generated — quando o snapshot foi montado (UTC RFC3339).",
+                    "type": "string"
+                },
+                "identity": {
+                    "description": "Identity — dados de cadastro mantidos pelo toca-auth.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca-auth_internal_api_v1_dto.UserResponse"
+                        }
+                    ]
+                },
+                "notice": {
+                    "description": "Notice — disclaimer LGPD com link para política completa.",
+                    "type": "string"
+                },
+                "other_data_sources": {
+                    "description": "OtherDataSources — referência para dados que vivem em outros\nservices. UI pode renderizar instruções ao usuário sobre como\nacessar (ex.: export async #474, contato com DPO etc.).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.dataSourceRef"
+                    }
+                },
+                "preferences": {
+                    "description": "Preferences — preferências + consentimentos LGPD (Art. 8).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_api_v1_handlers.preferencesSection"
+                        }
+                    ]
+                }
+            }
+        },
+        "internal_api_v1_handlers.dataSourceRef": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "how_to_access": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.preferencesSection": {
+            "type": "object",
+            "properties": {
+                "consent": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "date_format": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                },
+                "statusCode": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

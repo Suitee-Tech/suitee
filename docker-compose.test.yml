@@ -1,0 +1,163 @@
+# Docker Compose override for E2E testing
+# Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+x-test-health: &test-health
+  start_period: 120s
+  interval: 10s
+  timeout: 20s
+  retries: 12
+
+services:
+  test-auth:
+    build:
+      context: ./scripts/test-stack-fixture
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:9000/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    networks:
+      - toca-network
+
+  postgres:
+    environment:
+      - POSTGRES_DB=toca_test
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d toca_test" ]
+    volumes:
+      - ./supabase/migrations/20260517120000_lead_updated_seq.sql:/docker-entrypoint-initdb.d/005_lead_updated_seq.sql:ro
+      - ./supabase/migrations/20260514120100_outbox_backoff_and_status.sql:/docker-entrypoint-initdb.d/006_outbox_backoff.sql:ro
+
+  rabbitmq:
+    environment:
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=+S 2:2
+
+  toka-frontend:
+    healthcheck:
+      <<: *test-health
+    build:
+      args:
+        BUILD_MINIFY: esbuild
+
+  toca-auth:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - DATABASE_NAME=toca_auth_test
+      - APP_ENV=test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-core:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - DATABASE_NAME=toca_core_test
+      - APP_ENV=test
+      # A2: o core tem rota interna (fuso do tenant, consumido pelos fluxos).
+      # Sem estas variáveis ele fica no modelo antigo, de chave compartilhada e
+      # sem allowlist de tenant.
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      # A5: invalidação do cache de permissões ao salvar a matriz. Opcional —
+      # sem isto a revogação propaga apenas pelo TTL de 30s dos consumidores.
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  toca-financial:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - DATABASE_NAME=toca_financial_test
+      - APP_ENV=test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-crm:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - DATABASE_NAME=toca_crm_test
+      - APP_ENV=test
+    depends_on:
+      test-auth:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  toca-deal:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - DATABASE_NAME=toca_deal_test
+      - APP_ENV=test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-comm:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - DATABASE_NAME=toca_comm_test
+      - APP_ENV=test
+      - SMTP_HOST=
+      - SMTP_PORT=
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-ops:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - DATABASE_NAME=toca_ops_test
+      - APP_ENV=test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-calendar:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - DATABASE_NAME=toca_calendar_test
+      - APP_ENV=test
+    depends_on:
+      test-auth:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  toca-portal:
+    healthcheck:
+      <<: *test-health
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  toca-signature:
+    healthcheck:
+      <<: *test-health
+    environment:
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy

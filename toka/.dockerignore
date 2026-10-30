@@ -1,0 +1,17 @@
+# Dependências locais (causam conflito no COPY durante o build)
+node_modules
+
+# Saídas de build/artefatos
+dist
+playwright-report
+test-results
+
+# Cache/temporários
+.vite
+coverage
+.DS_Store
+
+# NUNCA copiar env local para a imagem: build args são a única fonte de
+# configuração de build (ver docs/deployment/hostinger.md § env.js).
+.env
+.env.*

@@ -1,0 +1,408 @@
+/* =============================================================
+   suitee - Global Dark Mode Overrides
+   Applied when .dark class is on <html> via ThemeContext
+
+   NOTE: This file is intentionally a *residue*. The bulk of the
+   dark-mode handling now lives in semantic tokens (tailwind.css
+   `.dark {}` block) — `bg-card`, `text-foreground`, `bg-muted`,
+   `border-border`, `bg-status-*` invert automatically. The rules
+   below only patch surfaces that still rely on raw HTML elements
+   or third-party markup we don't control:
+     - raw <input>/<textarea>/<select> (not yet migrated to <Input>)
+     - raw <table> head/body striping
+     - recharts SVG, sonner toasts, WebKit scrollbars
+     - accent palette classes still used by badges/status pills
+   Every slate / gray / indigo / bg-white override was removed
+   after `grep` confirmed 0 occurrences in src/app.
+   ============================================================= */
+
+/* --- Inputs / Interactive Elements ---
+   ATENÇÃO ao editar este comentário: nunca escreva a sequência asterisco +
+   barra (`*` seguido de `/`) no meio do texto — ela FECHA o comentário ali, e o
+   que sobra é lido como seletor, engolindo a PRÓXIMA regra até o primeiro `{`.
+   Foi o que aconteceu nesta linha: o comentário trazia três dessas sequências
+   (listando as famílias de cor removidas) e a regra abaixo ficou morta sem
+   ninguém notar. Efeitos: o texto digitado herdava preto no fundo escuro e a
+   seta nativa do select sumia, o que levou alguém a "resolver" pintando uma
+   seta por CSS (e aí o campo ficou com duas).
+
+   Aqui só a COR: é ela que o componente não dá em todo campo cru — a seta
+   nativa do <select> é desenhada com a cor do texto, então preto = seta
+   invisível no fundo escuro, e um <input> sem `text-*` fica com texto ilegível.
+   Fundo e borda ficam com quem já os define (`bg-card`/`border-border`/
+   `bg-muted`): ressuscitar o `background-color: slate-700` desta regra repintava
+   TODO campo cru do app de cinza, um restyle de modo noturno inteiro que ninguém
+   pediu. Coberto por src/styles/darkModeSelectArrow.test.ts. */
+.dark input:not([type="color"]):not([type="range"]):not([type="checkbox"]),
+.dark textarea,
+.dark select {
+  color: var(--color-slate-100) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  /* slate-500 (valor anterior) dava 3.96:1 sobre o card escuro — abaixo de AA
+     para o texto de 14px dos campos. slate-400 fica em ~7:1 e ainda se lê como
+     texto secundário, não como valor preenchido. */
+  color: var(--color-slate-400) !important;
+}
+
+/* Disabled inputs */
+.dark input:disabled,
+.dark textarea:disabled,
+.dark select:disabled {
+  background-color: var(--color-slate-800) !important;
+  color: var(--color-slate-500) !important;
+  opacity: 0.7;
+}
+
+/* --- Tables (raw <table> markup) --- */
+.dark thead tr,
+.dark table thead {
+  background-color: var(--color-slate-800) !important;
+}
+
+.dark tbody tr:hover {
+  background-color: rgb(34 34 34 / 0.5) !important;
+}
+
+/* --- Accent Backgrounds (50 shades) — palettes still in use --- */
+.dark .bg-amber-50 {
+  background-color: rgb(245 158 11 / 0.15);
+}
+
+.dark .bg-orange-50 {
+  background-color: rgb(249 115 22 / 0.15);
+}
+
+.dark .bg-cyan-50 {
+  background-color: rgb(6 182 212 / 0.15);
+}
+
+.dark .bg-green-50 {
+  background-color: rgb(34 197 94 / 0.15);
+}
+
+.dark .bg-violet-50 {
+  background-color: rgb(139 92 246 / 0.15);
+}
+
+.dark .bg-pink-50 {
+  background-color: rgb(236 72 153 / 0.15);
+}
+
+.dark .bg-teal-50 {
+  background-color: rgb(20 184 166 / 0.15);
+}
+
+.dark .bg-sky-50 {
+  background-color: rgb(14 165 233 / 0.15);
+}
+
+/* --- Accent Backgrounds (100 shades for icon containers) --- */
+.dark .bg-amber-100 {
+  background-color: rgb(245 158 11 / 0.25);
+}
+
+.dark .bg-green-100 {
+  background-color: rgb(34 197 94 / 0.25);
+}
+
+.dark .bg-violet-100 {
+  background-color: rgb(139 92 246 / 0.25);
+}
+
+.dark .bg-orange-100 {
+  background-color: rgb(249 115 22 / 0.25);
+}
+
+.dark .bg-cyan-100 {
+  background-color: rgb(6 182 212 / 0.25);
+}
+
+.dark .bg-teal-100 {
+  background-color: rgb(20 184 166 / 0.25);
+}
+
+.dark .bg-sky-100 {
+  background-color: rgb(14 165 233 / 0.25);
+}
+
+.dark .bg-pink-100 {
+  background-color: rgb(236 72 153 / 0.25);
+}
+
+/* --- Accent Borders (100-200 shades) --- */
+.dark .border-amber-100,
+.dark .border-amber-200 {
+  border-color: rgb(245 158 11 / 0.3);
+}
+
+.dark .border-violet-100,
+.dark .border-violet-200 {
+  border-color: rgb(139 92 246 / 0.3);
+}
+
+.dark .border-green-100,
+.dark .border-green-200 {
+  border-color: rgb(34 197 94 / 0.3);
+}
+
+.dark .border-orange-100,
+.dark .border-orange-200 {
+  border-color: rgb(249 115 22 / 0.3);
+}
+
+.dark .border-pink-100,
+.dark .border-pink-200 {
+  border-color: rgb(236 72 153 / 0.3);
+}
+
+.dark .border-cyan-100,
+.dark .border-cyan-200 {
+  border-color: rgb(6 182 212 / 0.3);
+}
+
+.dark .border-teal-100,
+.dark .border-teal-200 {
+  border-color: rgb(20 184 166 / 0.3);
+}
+
+.dark .border-sky-100,
+.dark .border-sky-200 {
+  border-color: rgb(14 165 233 / 0.3);
+}
+
+/* --- Accent Text (600-900 shades need brighter in dark) --- */
+.dark .text-amber-700 {
+  color: #fcd34d;
+}
+
+.dark .text-amber-800 {
+  color: #fbbf24;
+}
+
+.dark .text-amber-600 {
+  color: #fbbf24;
+}
+
+.dark .text-violet-700 {
+  color: #c4b5fd;
+}
+
+.dark .text-cyan-700 {
+  color: #67e8f9;
+}
+
+.dark .text-orange-700 {
+  color: #fdba74;
+}
+
+.dark .text-green-700 {
+  color: #86efac;
+}
+
+.dark .text-pink-700 {
+  color: #f9a8d4;
+}
+
+.dark .text-teal-700 {
+  color: #5eead4;
+}
+
+.dark .text-sky-700 {
+  color: #7dd3fc;
+}
+
+/* --- Hover accent background states --- */
+.dark .hover\:bg-amber-50:hover {
+  background-color: rgb(245 158 11 / 0.2) !important;
+}
+
+/* --- Shadow adjustments --- */
+.dark .shadow-sm {
+  --tw-shadow-color: rgb(0 0 0 / 0.3);
+}
+
+.dark .shadow-lg {
+  --tw-shadow-color: rgb(0 0 0 / 0.5);
+}
+
+.dark .shadow-2xl {
+  --tw-shadow-color: rgb(0 0 0 / 0.6);
+}
+
+/* --- Scrollbar (WebKit) --- */
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-slate-600);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--color-slate-800);
+}
+
+/* --- Scrollbar on dark containers --- */
+.dark .overflow-y-auto,
+.dark .overflow-auto {
+  scrollbar-color: var(--color-slate-600) transparent;
+}
+
+/* --- Recharts dark mode compatibility --- */
+.dark .recharts-cartesian-grid line {
+  stroke: var(--color-slate-700);
+}
+
+.dark .recharts-text {
+  fill: var(--color-slate-400);
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--color-slate-800) !important;
+  border-color: var(--color-slate-700) !important;
+  color: var(--color-slate-200) !important;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-label {
+  color: var(--color-slate-200) !important;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
+  color: var(--color-slate-300) !important;
+}
+
+.dark .recharts-legend-item-text {
+  color: var(--color-slate-400) !important;
+}
+
+.dark .recharts-legend-wrapper {
+  color: var(--color-slate-400);
+}
+
+/* --- Modal / overlay backdrops --- */
+.dark .bg-black\/20 {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+.dark .backdrop-blur-sm {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+/* --- Gradient overrides (intentional always-dark feature surfaces) --- */
+.dark .from-slate-900 {
+  --tw-gradient-from: var(--color-slate-950);
+}
+
+.dark .to-slate-800 {
+  --tw-gradient-to: var(--color-slate-900);
+}
+
+/* --- Border dashed (upload zones etc.) --- */
+.dark .border-dashed {
+  border-color: var(--color-slate-600);
+}
+
+/* --- Before pseudo-elements for timelines --- */
+.dark .before\:via-slate-200::before {
+  --tw-gradient-via: var(--color-slate-700);
+}
+
+/* --- Notification bell badge border --- */
+.dark .border-white {
+  border-color: var(--color-slate-800);
+}
+
+/* --- Dropdown option text --- */
+.dark option {
+  background-color: var(--color-slate-700);
+  color: var(--color-slate-100);
+}
+
+/* --- Calendar/Date widgets --- */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+}
+
+/* --- Select arrow: NÃO pintar uma aqui ---
+   Existia uma regra `.dark select { background-image: url(<chevron>) }` para
+   "dar" uma seta ao select no modo noturno. Ela era desnecessária e errada:
+
+   1. O controle nativo JÁ desenha a seta, e no modo noturno ela aparece clara
+      porque a regra de `.dark select` acima fixa `color: var(--color-slate-100)`
+      — o Chromium pinta a seta com a cor do texto do controle. Verificado no
+      app: com `background-image: none` aplicado à mão, a seta nativa continua
+      visível no fundo escuro.
+   2. Sem `background-repeat: no-repeat` a imagem ainda REPETIA por todo o
+      campo, virando uma fileira de setas.
+   3. Mesmo corrigida, ela somava com a nativa: duas setas no mesmo campo — mais
+      visível nos filtros de Leads, que são <select> nativos.
+
+   Quem desenha a própria seta (SettingsSelect, com `appearance-none` +
+   `bg-[url(...)]`) vive no componente, com o `bg-[url(...)]` dele; a regra
+   global ainda vencia por especificidade (classe + elemento) e apagava a dele.
+
+   Contrato: quem quiser seta própria precisa de `appearance: none` na MESMA
+   regra (senão a nativa continua lá). Coberto por
+   src/styles/darkModeSelectArrow.test.ts. */
+
+/* --- Texto de destaque no modo noturno ---
+   `--primary` é escolhido para ser FUNDO de botão (tom que comporta o texto do
+   botão). A mesma cor como TEXTO sobre o card escuro não passa em AA — era o
+   caso do item ativo do menu (4.27:1) e da aba "Quadro" (3.82:1). O ThemeContext
+   publica `--primary-text` com o tom da própria marca que passa sobre a
+   superfície do modo, e só a utility `text-primary` é redirecionada para ele.
+   Preenchimentos (`bg-primary`, `border-primary`, `ring-primary`) continuam com
+   `--primary`. Coberto por src/e2e/contrastDarkMode.spec.ts. */
+.dark .text-primary {
+  color: hsl(var(--primary-text, var(--primary)));
+}
+
+/* --- Escala "soft" da marca (chips, destaques, abas) ---
+   No tema claro o padrão é fundo bem claro (`bg-primary-50/100`) com texto escuro
+   da marca (`text-primary-700/800`). No noturno isso deixa um retângulo claro no
+   meio de uma tela escura e, quando a marca é escura (a da imobiliária real,
+   #013529), o texto escuro sobre o chip claro fica em 3.48:1. Aqui a escala
+   inverte: fundo no fim escuro da paleta, texto no fim claro. Os `hover:` entram
+   junto porque um hover claro com texto claro é o mesmo defeito em outro estado.
+
+   As variantes com alpha (`bg-primary-50/40`, `bg-primary-50/60`, …) não têm
+   classe própria para cada valor, então são alcançadas por atributo: qualquer
+   classe que contenha o prefixo recebe um tom escuro translúcido equivalente.
+   Coberto por e2e/contrastDarkMode.spec.ts. */
+.dark .bg-primary-50,
+.dark .hover\:bg-primary-50:hover {
+  background-color: var(--color-primary-900);
+}
+.dark .bg-primary-100,
+.dark .hover\:bg-primary-100:hover {
+  background-color: var(--color-primary-800);
+}
+.dark [class*="bg-primary-50/"],
+.dark [class*="bg-primary-100/"] {
+  /* Tinta escura da própria marca por cima da superfície, no lugar do chip claro
+     translúcido: mantém a sutileza sem virar um retângulo claro. */
+  background-color: color-mix(in srgb, var(--color-primary-800) 45%, transparent);
+}
+.dark .text-primary-600 {
+  /* 380 usos como texto/ícone de destaque — sobre card escuro dá 3.82:1 no tom
+     600. O 300 mantém o matiz da marca com folga em AA. */
+  color: var(--color-primary-300);
+}
+.dark .text-primary-700 {
+  color: var(--color-primary-200);
+}
+.dark .text-primary-800 {
+  color: var(--color-primary-100);
+}
+.dark .border-primary-200 {
+  border-color: var(--color-primary-700);
+}
+.dark .border-primary-300 {
+  border-color: var(--color-primary-700);
+}
+
+/* --- Sonner toaster dark adjustments --- */
+.dark [data-sonner-toaster] [data-sonner-toast] {
+  background-color: var(--color-slate-800);
+  border-color: var(--color-slate-700);
+  color: var(--color-slate-100);
+}

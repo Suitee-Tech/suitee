@@ -1,0 +1,207 @@
+flowchart TD
+
+%% =====================================================
+%% CLIENTES / ENTRADA
+%% =====================================================
+subgraph Entrada["Entrada / Clientes"]
+    User["Usuário / Cliente"]
+    Frontend["fas:fa-desktop toca-frontend<br/>Profile: frontend<br/>host 3000 → container 80"]
+end
+
+%% =====================================================
+%% API GATEWAY
+%% =====================================================
+subgraph GatewayLayer["API Gateway"]
+    Gateway["fas:fa-sitemap gateway<br/>toca-gateway<br/>8080"]
+end
+
+User --> Frontend
+User --> Gateway
+Frontend --> Gateway
+
+%% =====================================================
+%% SERVIÇOS DE DOMÍNIO
+%% =====================================================
+subgraph BusinessServices["Serviços de Negócio"]
+    Auth["fas:fa-shield-alt toca-auth<br/>Auth<br/>8081"]
+    Core["fas:fa-cube toca-core<br/>Core<br/>8082"]
+    Financial["fas:fa-dollar-sign toca-financial<br/>Financial<br/>8083"]
+    CRM["fas:fa-users toca-crm<br/>CRM<br/>8084"]
+    Deal["fas:fa-handshake toca-deal<br/>Deal (Orchestrator/Saga)<br/>8085"]
+    Comm["fas:fa-comments toca-comm<br/>Communication<br/>8086"]
+    Ops["fas:fa-cogs toca-ops<br/>Operations<br/>8087"]
+    Calendar["fas:fa-calendar-alt toca-calendar<br/>Calendar<br/>8088"]
+    Portal["fas:fa-globe toca-portal<br/>Portal<br/>8089"]
+    Signature["fas:fa-file-signature toca-signature<br/>Signature<br/>8093"]
+end
+
+Gateway --> Auth
+Gateway --> Core
+Gateway --> Financial
+Gateway --> CRM
+Gateway --> Deal
+Gateway --> Comm
+Gateway --> Ops
+Gateway --> Calendar
+Gateway --> Portal
+Gateway --> Signature
+
+%% =====================================================
+%% DEPENDÊNCIAS INTERNAS ENTRE SERVIÇOS
+%% =====================================================
+subgraph InternalDependencies["Dependências internas entre serviços"]
+    Deal --> Core
+    Deal --> Financial
+    Deal -->|events| RabbitMQ
+    RabbitMQ -->|events| Comm
+    RabbitMQ -->|events| Ops
+    RabbitMQ -->|events| Calendar
+    RabbitMQ -->|events| Signature
+
+    CRM --> Auth
+    CRM --> Core
+
+    Financial --> Core
+
+    Portal --> Core
+    Portal --> CRM
+
+    Signature --> Core
+end
+
+%% =====================================================
+%% IA / MCP
+%% =====================================================
+subgraph AIStack["IA / MCP"]
+    MCP["fas:fa-plug toca-mcp<br/>MCP Server<br/>8090"]
+    AI["fas:fa-brain toca-ai<br/>AI Service<br/>8092"]
+end
+
+Gateway --> MCP
+MCP --> Gateway
+AI --> MCP
+AI --> Gateway
+
+%% =====================================================
+%% INFRAESTRUTURA BASE
+%% =====================================================
+subgraph Infra["Infraestrutura Base"]
+    Postgres[("postgres<br/>PostgreSQL<br/>5432")]
+    Redis[("redis<br/>Cache<br/>6379")]
+    RabbitMQ[("rabbitmq<br/>Broker<br/>5672 / 15672")]
+    Minio[("minio<br/>Object Storage<br/>9000 / 9001")]
+    Imgproxy["imgproxy<br/>Image Proxy<br/>8091"]
+    Gotenberg["gotenberg<br/>HTML → PDF<br/>container 3000 (interno)"]
+end
+
+Imgproxy --> Minio
+Signature --> Gotenberg
+
+%% Banco de dados
+Auth --> Postgres
+Core --> Postgres
+Financial --> Postgres
+CRM --> Postgres
+Deal --> Postgres
+Comm --> Postgres
+Ops --> Postgres
+Calendar --> Postgres
+Portal --> Postgres
+Signature --> Postgres
+AI --> Postgres
+
+%% Cache Redis
+Auth --> Redis
+Financial --> Redis
+CRM --> Redis
+Deal --> Redis
+
+%% Mensageria RabbitMQ
+Auth -->|events| RabbitMQ
+Core -->|events| RabbitMQ
+Financial -->|events| RabbitMQ
+CRM -->|events| RabbitMQ
+Deal -->|events| RabbitMQ
+Comm -->|events| RabbitMQ
+Ops -->|events| RabbitMQ
+Calendar -->|events| RabbitMQ
+Portal -->|events| RabbitMQ
+Signature -->|events| RabbitMQ
+
+%% Storage MinIO
+Core --> Minio
+Deal --> Minio
+Comm --> Minio
+
+%% =====================================================
+%% OBSERVABILIDADE
+%% =====================================================
+subgraph Observability["Observabilidade"]
+    Jaeger["jaeger<br/>Tracing<br/>16686 / 4317"]
+    Prometheus["prometheus<br/>Metrics<br/>9090"]
+    Loki["loki<br/>Logs<br/>3100"]
+    Promtail["promtail<br/>Log Collector"]
+    Grafana["grafana<br/>Dashboards<br/>3000"]
+end
+
+Promtail --> Loki
+Grafana --> Prometheus
+Grafana --> Loki
+
+Auth -. OTEL .-> Jaeger
+Core -. OTEL .-> Jaeger
+Financial -. OTEL .-> Jaeger
+CRM -. OTEL .-> Jaeger
+Deal -. OTEL .-> Jaeger
+Comm -. OTEL .-> Jaeger
+Ops -. OTEL .-> Jaeger
+Calendar -. OTEL .-> Jaeger
+Portal -. OTEL .-> Jaeger
+Signature -. OTEL .-> Jaeger
+Gateway -. OTEL .-> Jaeger
+MCP -. OTEL .-> Jaeger
+AI -. OTEL .-> Jaeger
+
+%% =====================================================
+%% SERVIÇOS EXTERNOS
+%% =====================================================
+subgraph ExternalServices["Serviços Externos"]
+    SupabaseAuth["Supabase Auth<br/>JWT/JWKS + Admin"]
+    SupabaseDB["Supabase Postgres<br/>DB (opcional)"]
+    SupabaseStorage["Supabase Storage<br/>Object Storage (opcional)"]
+    Clicksign["Clicksign<br/>Assinatura digital"]
+    Deepseek["DeepSeek API<br/>LLM"]
+    Resend["Resend / Email API"]
+    PaymentGateway["Payment Gateway<br/>AbacatePay / outro"]
+end
+
+Auth -->|Auth API| SupabaseAuth
+Gateway -->|JWKS| SupabaseAuth
+Postgres ---|opcional| SupabaseDB
+Minio ---|opcional| SupabaseStorage
+
+Signature --> Clicksign
+AI --> Deepseek
+Comm --> Resend
+Financial --> PaymentGateway
+
+%% =====================================================
+%% ESTILOS
+%% =====================================================
+linkStyle 15,16,17,18,19,47,48,49,50,51,52,53,54,55,56 stroke-dasharray: 6 4;
+
+classDef entry fill:#eef6ff,stroke:#2563eb,stroke-width:1px,color:#111827;
+classDef gateway fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#111827;
+classDef business fill:#f0fdf4,stroke:#16a34a,stroke-width:1px,color:#111827;
+classDef infra fill:#f8fafc,stroke:#475569,stroke-width:1px,color:#111827;
+classDef obs fill:#faf5ff,stroke:#9333ea,stroke-width:1px,color:#111827;
+classDef external fill:#fef2f2,stroke:#dc2626,stroke-width:1px,color:#111827;
+classDef ai fill:#ecfeff,stroke:#0891b2,stroke-width:1px,color:#111827;
+
+class User,Frontend entry;
+class Gateway gateway;
+class Auth,Core,Financial,CRM,Deal,Comm,Ops,Calendar,Portal,Signature business;
+class Postgres,Redis,RabbitMQ,Minio,Imgproxy,Gotenberg infra;
+class Jaeger,Prometheus,Loki,Promtail,Grafana obs;
+class SupabaseAuth,SupabaseDB,SupabaseStorage,Clicksign,Deepseek,Resend,PaymentGateway external;
+class MCP,AI ai;

@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    { "collection": "integrations", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "integrations", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "portal", "value": 1 }], "unique": true },
+    { "collection": "integrations", "keys": [{ "key": "feed_token", "value": 1 }], "unique": true },
+    { "collection": "syncs", "keys": [{ "key": "integration_id", "value": 1 }, { "key": "started_at", "value": -1 }] },
+    { "collection": "syncs", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "portal_leads", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "received_at", "value": -1 }] },
+    { "collection": "portal_leads", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "email", "value": 1 }] },
+    { "collection": "portal_leads", "keys": [{ "key": "integration_id", "value": 1 }] },
+    { "collection": "feed_cache", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "portal", "value": 1 }], "unique": true }
+  ]
+}
+

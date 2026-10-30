@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    { "collection": "leads", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "leads", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "leads", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "email", "value": 1 }] },
+    { "collection": "leads", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "created_at", "value": -1 }] },
+    { "collection": "brokers", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "roulette_configs", "keys": [{ "key": "tenant_id", "value": 1 }], "unique": true },
+    { "collection": "roulette_history", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "created_at", "value": -1 }] }
+  ]
+}
+

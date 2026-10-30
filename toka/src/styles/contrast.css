@@ -1,0 +1,79 @@
+/* Contraste de texto de status e de marca (WCAG 2.1 AA).
+ *
+ * `--status-*` é a cor de PREENCHIMENTO (badge, botão, barra). Como texto sobre
+ * o card ou sobre o fundo `--status-*-soft`, o mesmo tom não passa em AA:
+ * warning dava 1,98:1 no claro e ok ficava em 3,70:1. Aqui a escala ganha um
+ * token de TEXTO por status; as classes `text-status-*` são redirecionadas para
+ * ele. Quando o mesmo elemento também tem `bg-status-*` (badge preenchido), o
+ * texto volta ao `--status-*-foreground`, que é o par do preenchimento.
+ *
+ * O `--primary-text` já era calculado por `pickPrimaryTokens` para o tema
+ * claro, mas só era aplicado no escuro; agora vale nos dois.
+ */
+
+:root {
+  /* Fallback antes de o ThemeContext publicar a marca; o provider sobrescreve. */
+  --primary-text: 152 68% 28%;
+
+  --status-ok-text: 152 68% 28%;
+  --status-warning-text: 26 90% 26%;
+  --status-pending-text: 26 90% 26%;
+  --status-critical-text: 0 72% 38%;
+  --status-info-text: 217 91% 38%;
+  --status-neutral-text: 220 9% 38%;
+}
+
+.dark {
+  --primary-text: 152 68% 70%;
+  --status-ok-text: 152 68% 72%;
+  --status-warning-text: 38 92% 75%;
+  --status-pending-text: 38 92% 75%;
+  --status-critical-text: 0 84% 78%;
+  --status-info-text: 217 91% 78%;
+  --status-neutral-text: 220 15% 78%;
+}
+
+/* Marca: texto de destaque nos dois modos. `--primary` continua sendo o
+ * preenchimento (bg-primary/border-primary/ring-primary). */
+.text-primary {
+  color: hsl(var(--primary-text, var(--primary)));
+}
+
+/* Texto de status legível sobre card/soft. */
+.text-status-ok { color: hsl(var(--status-ok-text)); }
+.text-status-warning { color: hsl(var(--status-warning-text)); }
+.text-status-pending { color: hsl(var(--status-pending-text)); }
+.text-status-critical { color: hsl(var(--status-critical-text)); }
+.text-status-info { color: hsl(var(--status-info-text)); }
+.text-status-neutral { color: hsl(var(--status-neutral-text)); }
+
+/* Preenchimento + texto no MESMO elemento: o par do preenchimento manda. */
+.bg-status-ok.text-status-ok { color: hsl(var(--status-ok-foreground)); }
+.bg-status-ok .text-status-ok { color: hsl(var(--status-ok-foreground)); }
+.bg-status-warning.text-status-warning { color: hsl(var(--status-warning-foreground)); }
+.bg-status-warning .text-status-warning { color: hsl(var(--status-warning-foreground)); }
+.bg-status-pending.text-status-pending { color: hsl(var(--status-pending-foreground)); }
+.bg-status-pending .text-status-pending { color: hsl(var(--status-pending-foreground)); }
+.bg-status-critical.text-status-critical { color: hsl(var(--status-critical-foreground)); }
+.bg-status-critical .text-status-critical { color: hsl(var(--status-critical-foreground)); }
+.bg-status-info.text-status-info { color: hsl(var(--status-info-foreground)); }
+.bg-status-info .text-status-info { color: hsl(var(--status-info-foreground)); }
+.bg-status-neutral.text-status-neutral { color: hsl(var(--status-neutral-foreground)); }
+.bg-status-neutral .text-status-neutral { color: hsl(var(--status-neutral-foreground)); }
+
+/* Botão com hover de preenchimento: o texto acompanha o fundo no hover. */
+.hover\:bg-status-ok:hover.text-status-ok { color: hsl(var(--status-ok-foreground)); }
+.hover\:bg-status-warning:hover.text-status-warning { color: hsl(var(--status-warning-foreground)); }
+.hover\:bg-status-pending:hover.text-status-pending { color: hsl(var(--status-pending-foreground)); }
+.hover\:bg-status-critical:hover.text-status-critical { color: hsl(var(--status-critical-foreground)); }
+.hover\:bg-status-info:hover.text-status-info { color: hsl(var(--status-info-foreground)); }
+.hover\:bg-status-neutral:hover.text-status-neutral { color: hsl(var(--status-neutral-foreground)); }
+
+/* Variantes `hover:text-status-*` também precisam do token de texto, não do
+ * preenchimento. */
+.hover\:text-status-ok:hover { color: hsl(var(--status-ok-text)); }
+.hover\:text-status-warning:hover { color: hsl(var(--status-warning-text)); }
+.hover\:text-status-pending:hover { color: hsl(var(--status-pending-text)); }
+.hover\:text-status-critical:hover { color: hsl(var(--status-critical-text)); }
+.hover\:text-status-info:hover { color: hsl(var(--status-info-text)); }
+.hover\:text-status-neutral:hover { color: hsl(var(--status-neutral-text)); }

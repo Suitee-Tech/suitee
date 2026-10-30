@@ -1,0 +1,363 @@
+{
+  "source": "supabase/migrations/*.sql",
+  "snapshot_date": "2026-09-25",
+  "git_head": "8453ff52e7cb3c2e45ad0cf7d6882495dd2411c9",
+  "migrations": [
+    {
+      "path": "supabase/migrations/20231026000000_init_jsonb_pilot.sql",
+      "sha256": "ea252c7894a7711d28ca8694abab42bf8551e28e4fcfc87dd0ec11084176127e"
+    },
+    {
+      "path": "supabase/migrations/20260421120000_finalize_jsonb_rls.sql",
+      "sha256": "ba96e25dac6e8864a36bcdb8b4a85c21c9055720ee68691c26ef1ab0770804df"
+    },
+    {
+      "path": "supabase/migrations/20260422170000_create_comm_tables.sql",
+      "sha256": "8824cf7067fcb8fb1d9608e84d791d4374f0e122824177346fb134191a0da087"
+    },
+    {
+      "path": "supabase/migrations/20260424120000_create_crm_roulette_audit.sql",
+      "sha256": "e122d3b4cd114501390fc75478d25ac69dd98470a44aac9b7a1c8c527a87082e"
+    },
+    {
+      "path": "supabase/migrations/20260425120000_create_ai_tables.sql",
+      "sha256": "8582a03e884de9d9c5ca4fb4f5f508e84f9d8b3669e5cdde74a0bfe4543f3f8d"
+    },
+    {
+      "path": "supabase/migrations/20260426120000_create_ai_tool_invocations.sql",
+      "sha256": "63b08b848842ab5515d30340ad22682ef7072f6ea2d874b504ed0d255ca12d07"
+    },
+    {
+      "path": "supabase/migrations/20260429120000_search_indexes.sql",
+      "sha256": "2e0e46a9e2953650ffea1509cd0ce643239d3d8b24d827e7ac814d55c070ba8f"
+    },
+    {
+      "path": "supabase/migrations/20260510120000_charge_deal_lead_indexes.sql",
+      "sha256": "c3d01167ae6754f13195ea7a915c149343b677a9dc1a2ec30cf7f0d6d2dfc89b"
+    },
+    {
+      "path": "supabase/migrations/20260510120100_maintenance_rental_lead_indexes.sql",
+      "sha256": "d77fc3dcd5fdcbcbcf87fec38dd0890a738d52900dcb6e38c95191e8d89ac055"
+    },
+    {
+      "path": "supabase/migrations/20260510120200_tenant_commission_rules.sql",
+      "sha256": "686706017f327a919d58cd56a0633444cf092428b402e60ddb8e1cefb0b7e07c"
+    },
+    {
+      "path": "supabase/migrations/20260510120300_create_financial_rentals.sql",
+      "sha256": "8b33f0b33a8603281ed1a491aaa52731e46991b0425b1137629c289773fb83aa"
+    },
+    {
+      "path": "supabase/migrations/20260510120400_create_signature_schema.sql",
+      "sha256": "0374176aa38cfa4845db813f3e27fa27b5ba813affa845845bd1e51a52592f81"
+    },
+    {
+      "path": "supabase/migrations/20260513120000_create_financial_utility_accounts.sql",
+      "sha256": "9b7197faf07836346caa99e57c51f92c6e1d5a5099cd746de9c707be5e5b0f23"
+    },
+    {
+      "path": "supabase/migrations/20260513120100_create_financial_reminder_rules.sql",
+      "sha256": "e36d0a77c0c3c485fd47ddb5ae69c5b80b6e3612838893003060e8ae5b9248b4"
+    },
+    {
+      "path": "supabase/migrations/20260514120000_rls_signature_webhook_events.sql",
+      "sha256": "b44a4c588aa68aecd0148ee9adff8f4aae12d35f5382773d078bf4bac62e0854"
+    },
+    {
+      "path": "supabase/migrations/20260514120100_outbox_backoff_and_status.sql",
+      "sha256": "bd3de1cac96fd865cb9505a6546be273a698426a88aa1722238391b497eb5c8f"
+    },
+    {
+      "path": "supabase/migrations/20260515120000_create_comm_sent_externals.sql",
+      "sha256": "3503c91b00a98bad5e8b0b99162fdf15d6eb35cac12e8d1f19c084282b076e3c"
+    },
+    {
+      "path": "supabase/migrations/20260515120100_prevent_dangling_lead_deletes.sql",
+      "sha256": "845e5e5792355b69ded622f876e216956b4d49fe3a8d8fef739cefc3c6075297"
+    },
+    {
+      "path": "supabase/migrations/20260515120200_create_audit_schema.sql",
+      "sha256": "e55de3f8568b0451ef57caa5f951db3a43a734e19a42ebc4995140482d2cc63e"
+    },
+    {
+      "path": "supabase/migrations/20260517120000_lead_updated_seq.sql",
+      "sha256": "52856b09746d7bd6a8307a7c0b526d4338b3b0ad4331513aaedbaae1d3e34360"
+    },
+    {
+      "path": "supabase/migrations/20260517120100_lead_phone_quarantine.sql",
+      "sha256": "ea3e48962a8a7f07df78906e78e2dd634bf1afdc320120125742008d1b2e1fa3"
+    },
+    {
+      "path": "supabase/migrations/20260518120000_charges_source_event_id_idx.sql",
+      "sha256": "866c0064e6a4a4dff4465bc2e481ae37be7d119e97df5e2e92e5b04a75881047"
+    },
+    {
+      "path": "supabase/migrations/20260519130000_export_jobs.sql",
+      "sha256": "4dc9acd1423ce43da46e7e7ce5f5c4d193b69da1730da3c60c2b586fcc3d5496"
+    },
+    {
+      "path": "supabase/migrations/20260520120000_signature_envelope_kind.sql",
+      "sha256": "8fb7173ba5d4c002edc293343e4db9545532561d5cef23c5691837fe5aaa54ed"
+    },
+    {
+      "path": "supabase/migrations/20260521120000_partnerships_soft_delete_columns.sql",
+      "sha256": "a0ee7870fd0fdf2d6a0d992c765ba74523a28579b9b46e15aad6e5b50b15e969"
+    },
+    {
+      "path": "supabase/migrations/20260522120000_create_abacate_webhook_events.sql",
+      "sha256": "c04bdbc3e32afa6ef81d9a971cb000926a37c4692db950ea4f2e625a0843f5ca"
+    },
+    {
+      "path": "supabase/migrations/20260522120001_partner_royalties.sql",
+      "sha256": "305e7b422c008a679b58c49c87ecadad3a9e2b9072b50887ad623a13c0366d15"
+    },
+    {
+      "path": "supabase/migrations/20260522120100_payments_v1_freeze.sql",
+      "sha256": "ae518d239ce1ba0a429ecb67f303acd629b206c26815264b7901651cd9ca2305"
+    },
+    {
+      "path": "supabase/migrations/20260522120200_charges_abacate_checkout_idx.sql",
+      "sha256": "a73c6132476c07cd702783e57f7aa0da981060054452a0abb04057af89d833a4"
+    },
+    {
+      "path": "supabase/migrations/20260522120300_create_withdrawals.sql",
+      "sha256": "b45e25e1ec564ac6f5b2533d8bcc970b6f05e0e8192fbb9382cacae152ea426e"
+    },
+    {
+      "path": "supabase/migrations/20260522120600_create_platform_subscriptions.sql",
+      "sha256": "8108a27dbb016d1840953f4a7c8e15e6aa10a16a856b99592cfd95e548fa88bc"
+    },
+    {
+      "path": "supabase/migrations/20260526120000_create_sale_billing_plan.sql",
+      "sha256": "829919a797783dfe0409222795d0a96fc0caa654b9532c18efc7912b0ea78d43"
+    },
+    {
+      "path": "supabase/migrations/20260526120100_create_payout_orders.sql",
+      "sha256": "3507893fe56ca54bfa0d96a450acfde5d61b77c550ab69e18fc49aa9d7b97580"
+    },
+    {
+      "path": "supabase/migrations/20260527120000_create_tenant_financial_settings.sql",
+      "sha256": "0b9f666efed6f1969e980b63822eeafc9ec24da9416960050c3e303a2103c3f5"
+    },
+    {
+      "path": "supabase/migrations/20260527120100_commission_role_deductions_indexes.sql",
+      "sha256": "3630accb3408f5ccd4729e6064275771401626228f611ad7311a1b677f1d8756"
+    },
+    {
+      "path": "supabase/migrations/20260527120200_charges_last_reconciled_at.sql",
+      "sha256": "d6fa9820b8ec0a8766eab435f908a95f185a479f1380897a2f045ea5984ec045"
+    },
+    {
+      "path": "supabase/migrations/20260528120000_create_sale_billing_plan_drafts.sql",
+      "sha256": "7e35c8d06bc6b5de1afdbd26d122772c206de58d799fda2a29cdc72747199d58"
+    },
+    {
+      "path": "supabase/migrations/20260528120100_transfers_monthly_unique.sql",
+      "sha256": "ed373cd66ad789455c8c1ae02eb637b12b56d6e52db26c832361eeb296af4eed"
+    },
+    {
+      "path": "supabase/migrations/20260528120200_tenant_settings_admin_fee.sql",
+      "sha256": "6d240424922e0b66b10628768c6fee598485cf450cb74b00804fb41e97f16213"
+    },
+    {
+      "path": "supabase/migrations/20260528130000_drop_abacate_gateway_artifacts.sql",
+      "sha256": "d31a9566b8fcedb7fe88a61add3bcfc551eb9351346e55f6fea6b6374b5c8ad4"
+    },
+    {
+      "path": "supabase/migrations/20260529120000_processed_events_consumer_pk.sql",
+      "sha256": "85a99e0068d0fc03f593ceca06a029abc0fef0a75e04dff4ba2ba7b27017e93f"
+    },
+    {
+      "path": "supabase/migrations/20260529121000_transactions_source_event_id_unique.sql",
+      "sha256": "ac5f81e35a25d72002b81b9cf4025b56673e89b877534035475c084fa89b7b91"
+    },
+    {
+      "path": "supabase/migrations/20260529121100_commissions_source_event_id_unique.sql",
+      "sha256": "3bbaeffdbd525ffe9efedcc0964e2026d1e66b8febf30c6628b88b6fa306d9f7"
+    },
+    {
+      "path": "supabase/migrations/20260529121200_payout_orders_source_event_id_unique.sql",
+      "sha256": "33c280e1d064cc1c8a5be43d1fd894e18f7e1959dc41317141d21b5538083074"
+    },
+    {
+      "path": "supabase/migrations/20260529121300_partner_royalties_source_event_id_unique.sql",
+      "sha256": "c971cb5c4fb5f191ce4923d611851b6e639296d6ee62b0cdb425ee36529d2a57"
+    },
+    {
+      "path": "supabase/migrations/20260529160000_withdrawals_external_id_unique.sql",
+      "sha256": "5ac1c4a22998baf94f63a26823952b5739838489d95d1cd3a56a886cdedd00e2"
+    },
+    {
+      "path": "supabase/migrations/20260606120000_dlq_events_replayed_at.sql",
+      "sha256": "f5653dff6b6e316c9a8479e36c1e44ecdab397fc6ff3366d16af8c2aa88991cf"
+    },
+    {
+      "path": "supabase/migrations/20260718052612_tenant_approval_policy.sql",
+      "sha256": "51329ae42feac3dd45cd33b3cf1f51fe092cda797b016fe43a6232c3e249a00f"
+    },
+    {
+      "path": "supabase/migrations/20260718052718_fix_tenant_settings_rls_policies.sql",
+      "sha256": "c36e0f182db117d3e700d6de4200d0aa53131b3a7f73f570612b3f8d3e7d11b2"
+    },
+    {
+      "path": "supabase/migrations/20260718150531_retrofit_tenant_rls_empty_tables.sql",
+      "sha256": "c91332ce9057863d94366d5bc8830bd1269292aea83bd2e8d236829d6b255954"
+    },
+    {
+      "path": "supabase/migrations/20260718150558_retrofit_tenant_rls_small_tables.sql",
+      "sha256": "b45692f578c577082c580524d5209d1324ad93bcba35901f398c5879c4944667"
+    },
+    {
+      "path": "supabase/migrations/20260718150627_retrofit_tenant_rls_large_tables.sql",
+      "sha256": "45cd69110a984e8d98e025b462b327e3e0eadd4a0aed60aff241cd61419a1d0f"
+    },
+    {
+      "path": "supabase/migrations/20260718150656_retrofit_auxiliary_tenant_rls.sql",
+      "sha256": "1fffa57c39524e73485009d376d24255d63d958fa8023421118fa7bf6a9b9042"
+    },
+    {
+      "path": "supabase/migrations/20260718150712_fix_function_search_paths.sql",
+      "sha256": "c7b6f3db3c27a4af72b998a97efdbe80e9d61ea14af7a391afa10cc1ce5335cb"
+    },
+    {
+      "path": "supabase/migrations/20260718150751_reconcile_20260522_history_collision.sql",
+      "sha256": "379cb9bbc368b1f807d342ea8331a78eb330b2a8c166d64beeef79591dc1b0c9"
+    },
+    {
+      "path": "supabase/migrations/20260718152529_maintain_audit_event_partitions.sql",
+      "sha256": "615f61d96d2702bf404d0c8649a51ffa41d7be1d52b972413cf57ffca21da65a"
+    },
+    {
+      "path": "supabase/migrations/20260718154005_optimize_tenant_rls_policies.sql",
+      "sha256": "072fc0e88de16d55bbfbee2c8d226ae1baf516592ce712afeaa4e42fffbb81eb"
+    },
+    {
+      "path": "supabase/migrations/20260721190000_deployment_migration_checksums.sql",
+      "sha256": "c69a6935114c60d65f0a234e8e2d6f3e2d2a107bf3bdbeeb0fa52551a222c91e"
+    },
+    {
+      "path": "supabase/migrations/20260725210000_repair_media_object_mimetypes.sql",
+      "sha256": "3f31d00f95ed3d214acb4957c32c33e3f111e04bb0970538c0c445c04d59dff0"
+    },
+    {
+      "path": "supabase/migrations/20260729195000_create_fiscal_deadlines.sql",
+      "sha256": "a17efe5af62f08c89408e516b8187a10734692129ca44242d4a6d4599cd57ec0"
+    },
+    {
+      "path": "supabase/migrations/20260729195100_create_fiscal_report_history.sql",
+      "sha256": "00390cb6bb87211709921665e47966b16440805eae73e248249941abe5f12bda"
+    },
+    {
+      "path": "supabase/migrations/20260731000000_invoices_source_event_id_unique.sql",
+      "sha256": "395e7449655210613d591b04b61c05c5b2c6ff17f1135c0791ef2a74bc27d826"
+    },
+    {
+      "path": "supabase/migrations/20260731120000_add_financial_deleted_at.sql",
+      "sha256": "e4d7f1cbe3f9074cda70b9a4c9a7b49625240a05d42bbb290b977837f6ba24e5"
+    },
+    {
+      "path": "supabase/migrations/20260806120000_collections_source_event_id_unique.sql",
+      "sha256": "6ebf8ed6d08647520e07e53d851624bcca8f6fc6f5c254adb46836e32a2e9cc0"
+    },
+    {
+      "path": "supabase/migrations/20260810120000_partner_royalty_payout_lookup.sql",
+      "sha256": "95d8e685d5369b0fecf7d38def4f57e3cd21aea7aceef97f68057782359551fc"
+    },
+    {
+      "path": "supabase/migrations/20260810121000_rental_charge_config_contract_unique.sql",
+      "sha256": "8290eb8904e61b095733781607782fdbff45768614af2ee41b318ad8d8bd1116"
+    },
+    {
+      "path": "supabase/migrations/20260810122000_transfer_source_charge_identity.sql",
+      "sha256": "8168fbdb7e5e309b0c31eeede55ed03962824310958f5c55f229440de85a9c76"
+    },
+    {
+      "path": "supabase/migrations/20260810123000_transfer_deduction_claims.sql",
+      "sha256": "7f963feba543783619da22b8870fc11ce6dfb4efdf9680223682d6977ad315b2"
+    },
+    {
+      "path": "supabase/migrations/20260810124000_sale_billing_plan_contract_unique.sql",
+      "sha256": "8150ab95729c6413f4c604e412e4a24fd11df448873195a4e2ec2fd12e9fb7b7"
+    },
+    {
+      "path": "supabase/migrations/20260810125000_commission_deduction_ids.sql",
+      "sha256": "d67eb2cc0c6dacfe1afb7a11d0430e85f3d56dbbd57282a2f4d79cb0a346f946"
+    },
+    {
+      "path": "supabase/migrations/20260815120000_canonicalize_transaction_status.sql",
+      "sha256": "afbc9267ec13e15fcb7806cb291cfe68d17ac6706f9db899b6cba2cb51439a4c"
+    },
+    {
+      "path": "supabase/migrations/20260815130000_create_journal_entries.sql",
+      "sha256": "093b7af7c7e7e867a42fff6ee2fe219c23afdae2145c2d31f25cc039cd543a09"
+    },
+    {
+      "path": "supabase/migrations/20260820234459_create_financial_managed_bills.sql",
+      "sha256": "079c011ac0c1527c3be4c59fcff6be644a97728c5da80558f12bd7f4e6eb6290"
+    },
+    {
+      "path": "supabase/migrations/20260822120000_add_managed_bill_payment_attempts.sql",
+      "sha256": "33a2782abb89b8df060de85ffb19f492678e45c370875ce7cfd7333f2a8b1764"
+    },
+    {
+      "path": "supabase/migrations/20260822123000_harden_journal_managed_bill_reversals.sql",
+      "sha256": "a2129be06dc34a3a44d1a4304008d0f7a238db36d03d47fddad162adb0169498"
+    },
+    {
+      "path": "supabase/migrations/20260822124000_allow_journal_fixture_cleanup_for_bypassrls.sql",
+      "sha256": "a1c505885e7399ade708c46726dd9803568e81eebcb46aa1b658212ecdada969"
+    },
+    {
+      "path": "supabase/migrations/20260822125000_enforce_unique_journal_reversal.sql",
+      "sha256": "810187382a9fccd999eed6f4ed1bfcb3d2ee3933b8a3277f2dee1519824c445c"
+    },
+    {
+      "path": "supabase/migrations/20260822126000_complete_journal_reversal_guards.sql",
+      "sha256": "3f3118b366ce02385c417f22fbcfc6ad8f0e324e5f5beddb825fe47ec9795f95"
+    },
+    {
+      "path": "supabase/migrations/20260829203000_create_financial_proofs_bucket.sql",
+      "sha256": "07ab7a1dcb56b9fad7289ccfbc9345d4fe3ed4f7462d5c0c85a40acfd27aa92e"
+    },
+    {
+      "path": "supabase/migrations/20260829221908_transfer_source_transaction_identity.sql",
+      "sha256": "cde082288da01daf6e3996247174d1bfc23e04fa576e344bc0c8f097a88c1211"
+    },
+    {
+      "path": "supabase/migrations/20260830041920_backfill_paid_manual_sale_owner_transfers.sql",
+      "sha256": "bb11a2943b6ec33a76bfcd8e0bb0d484d6ad311b29f36e51b63f517288ed1494"
+    },
+    {
+      "path": "supabase/migrations/20260830132500_add_other_payable_journal_account.sql",
+      "sha256": "85cbf4d54fded68731116b72b4388e3007b1ac6a685ca604cf39de54b540dfed"
+    },
+    {
+      "path": "supabase/migrations/20260830133000_backfill_manual_sale_journal_entries.sql",
+      "sha256": "87f203eb827c61712630dc064b54ef4fb67f7249b9d7f2d907e90d1ea7befe16"
+    },
+    {
+      "path": "supabase/migrations/20260904000000_audit_events_tenant_id_nullable.sql",
+      "sha256": "36f6440e42a23cbaec66a77e0b1daf3cb8ef8f834cc932cf0fa99354b6310f87"
+    },
+    {
+      "path": "supabase/migrations/20260916180000_calendar_agent_day_reservations.sql",
+      "sha256": "94c90eb85661da7a5f1dbff5eae15e5b0938d2f18fbba9798eff1c77ec12ee57"
+    },
+    {
+      "path": "supabase/migrations/20260918190000_create_ops_suppliers.sql",
+      "sha256": "43e600b40e159b58901d7a8d3907d21ff892cf8c587a5d7db7b453cc9f43acf9"
+    },
+    {
+      "path": "supabase/migrations/20260919150000_rls_identity_tables.sql",
+      "sha256": "ba18d0b8254ddbb679a41c56363e71ce7791103348f04c8163683a8ee2832097"
+    },
+    {
+      "path": "supabase/migrations/20260925090000_calendar_visibility_indexes.sql",
+      "sha256": "9564e5c491a19b2040c5f63368c66f52e8e451f430bd55e1c4f50c66ef8c7627"
+    },
+    {
+      "path": "supabase/migrations/20260925143000_settle_zero_owner_transfers.sql",
+      "sha256": "151336a0a7e59f0e5f4bfe6b5a70023afc3889bccf3728b0b17a861eb98d9ca2"
+    }
+  ]
+}

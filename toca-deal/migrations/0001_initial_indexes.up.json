@@ -1,0 +1,16 @@
+{
+  "indexes": [
+    { "collection": "deals", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "deals", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "deals", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "updated_at", "value": -1 }] },
+    { "collection": "contracts", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "contracts", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "deal_id", "value": 1 }] },
+    { "collection": "contracts", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "documents", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "documents", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "documents", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "entity_id", "value": 1 }, { "key": "entity_type", "value": 1 }] },
+    { "collection": "documents", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "category", "value": 1 }] },
+    { "collection": "contract_templates", "keys": [{ "key": "tenant_id", "value": 1 }] }
+  ]
+}
+

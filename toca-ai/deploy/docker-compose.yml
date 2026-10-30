@@ -1,0 +1,5 @@
+services:
+  toca-ai:
+    ports:
+      - "8092:8092"
+

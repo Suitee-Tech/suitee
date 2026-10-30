@@ -1,0 +1,65 @@
+# VCS & config
+**/.git
+**/.github
+**/.gitignore
+**/.dockerignore
+**/.vscode
+**/.idea
+**/.claude
+
+# Deps
+**/node_modules
+# Só dependências vendorizadas (raiz de módulo Go). `**/vendor` sem âncora
+# excluía do contexto de build qualquer diretório-fonte com esse nome — foi o
+# que quebrou o build do toca-ops com "cannot find module providing package".
+/vendor
+/pkg/vendor
+/toca-*/vendor
+**/__pycache__
+
+# Build outputs
+**/bin
+**/dist
+**/build
+**/*.exe
+/server
+/*/server
+scripts/seed-mock-data/seed-mock-data
+
+# Python
+**/*.pyc
+**/*.pyo
+**/.venv
+**/venv
+
+# Docs (não são usados em runtime)
+**/*.md
+docs/
+postman/
+
+# Exceção: a Central de Ajuda É conteúdo de runtime — o frontend empacota o
+# corpus na página /ajuda e o toca-mcp o embute em /help-corpus para as tools
+# search_help/get_help_topic da Suitee IA.
+!toka/src/help/docs/
+!toka/src/help/docs/**
+
+# Tests
+**/test_*.go
+**/*_test.go
+**/playwright-report
+**/test-results
+**/blob-report
+
+# Env & secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Project-specific
+scripts/migrations/
+.mcp.json
+resend_mcp.yaml

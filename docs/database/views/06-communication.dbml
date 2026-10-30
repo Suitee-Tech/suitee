@@ -1,0 +1,96 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'Identidade, comunicacao e IA. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table toca_auth.accounts [headercolor: #475569] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table toca_auth.credentials [headercolor: #475569] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-auth/internal/repository/credential_postgres.go']
+}
+
+Table toca_auth.user_preferences [headercolor: #475569] {
+  account_id text [pk, note: 'coluna; vinculo logico sem FK; fonte: toca-auth/internal/repository/preferences_postgres.go']
+}
+
+Table comm.channels [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table comm.inapp_notifications [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__user_id text [note: 'metadata.user_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/notification/inapp.go']
+}
+
+Table comm.messages [headercolor: #0369A1] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__channel_id text [note: 'metadata.channel_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+  json__sender_id text [note: 'metadata.sender_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+  json__reply_to_id text [note: 'metadata.reply_to_id; vinculo logico sem FK; fonte: toca-comm/internal/domain/message/message.go']
+}
+
+Table ai.conversations [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-ai/internal/repositories/conversation_postgres.go']
+}
+
+Table ai.messages [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  conversation_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+}
+
+Table ai.tool_invocations [headercolor: #4F46E5] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  account_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260426120000_create_ai_tool_invocations.sql']
+  conversation_id text [note: 'Coluna fisica de FK; ver platform.dbml']
+}
+
+Ref logical_1: toca_auth.credentials.account_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_2: toca_auth.user_preferences.account_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_59: comm.messages.json__channel_id > comm.channels.id [color: #94A3B8]
+
+Ref logical_60: comm.messages.json__sender_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_61: comm.messages.json__reply_to_id > comm.messages.id [color: #94A3B8]
+
+Ref logical_62: comm.inapp_notifications.json__user_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_78: ai.conversations.account_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_79: ai.tool_invocations.account_id > toca_auth.accounts.id [color: #94A3B8]
+
+Ref physical_1: ai.messages.(conversation_id) > ai.conversations.(id) [color: #334155]
+
+Ref physical_2: ai.tool_invocations.(conversation_id) > ai.conversations.(id) [color: #334155]
+
+TableGroup "01 Identidade" [color: #475569] {
+  toca_auth.accounts
+  toca_auth.credentials
+  toca_auth.user_preferences
+}
+
+TableGroup "12 Comunicacao" [color: #0369A1] {
+  comm.channels
+  comm.inapp_notifications
+  comm.messages
+}
+
+TableGroup "13 Assistente IA" [color: #4F46E5] {
+  ai.conversations
+  ai.messages
+  ai.tool_invocations
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 9 tabelas; 10 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

@@ -1,0 +1,946 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Portal integration service for Toca ecosystem - ZAP Imoveis, OLX/Grupo ZAP, VivaReal",
+        "title": "Toca Portal API",
+        "contact": {
+            "name": "API Support",
+            "email": "support@toca.com.br"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8089",
+    "basePath": "/api/v1",
+    "paths": {
+        "/integrations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all portal integrations for the current tenant",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "List integrations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/integration.PortalIntegration"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new portal integration (ZAP Imoveis, OLX/Grupo ZAP, VivaReal)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Create integration",
+                "parameters": [
+                    {
+                        "description": "Create Integration Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.CreateIntegrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/integration.PortalIntegration"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a single integration by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Get integration by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/integration.PortalIntegration"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing integration's contact info, filters, or status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Update integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Integration Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.UpdateIntegrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/integration.PortalIntegration"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an integration permanently",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Delete integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{id}/leads": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Paginated list of leads captured from a specific integration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "List leads for an integration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{id}/sync": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Manually trigger a sync run for an integration (rebuilds the feed)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Trigger sync",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{id}/syncs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Return paginated sync history for an integration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "List sync history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/portal-stats/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Overview stats for portal integrations (counts, last syncs, leads by portal)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal-stats"
+                ],
+                "summary": "Portal dashboard",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/portal-stats/leads": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Paginated list of leads captured from all portal integrations for the tenant",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal-stats"
+                ],
+                "summary": "List portal leads",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/portals/feed/{token}": {
+            "get": {
+                "description": "Public endpoint crawled by portal bots (ZAP, OLX, VivaReal). Returns cached VRSync XML.",
+                "produces": [
+                    "text/xml"
+                ],
+                "tags": [
+                    "portals"
+                ],
+                "summary": "Serve portal XML feed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Feed token (per-integration)",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "XML feed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing feed token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Feed not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "Feed not available yet",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/portals/webhook/{integrationID}": {
+            "post": {
+                "description": "Public endpoint that receives lead webhooks from portals (ZAP, OLX, VivaReal). Validated via HMAC signature in X-Hub-Signature header.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portals"
+                ],
+                "summary": "Receive portal lead webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Integration ID",
+                        "name": "integrationID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC signature of the request body",
+                        "name": "X-Hub-Signature",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api_v1_handlers.CreateIntegrationRequest": {
+            "type": "object",
+            "required": [
+                "contact_email",
+                "contact_name",
+                "contact_phone",
+                "portal",
+                "publication_type",
+                "sync_frequency"
+            ],
+            "properties": {
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone": {
+                    "type": "string"
+                },
+                "portal": {
+                    "type": "string",
+                    "enum": [
+                        "zap_imoveis",
+                        "olx_grupo_zap",
+                        "vivareal"
+                    ]
+                },
+                "property_filter": {
+                    "$ref": "#/definitions/integration.FeedPropertyFilter"
+                },
+                "publication_type": {
+                    "type": "string",
+                    "enum": [
+                        "STANDARD",
+                        "PREMIUM",
+                        "SUPER_PREMIUM"
+                    ]
+                },
+                "sync_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "6h",
+                        "12h",
+                        "24h"
+                    ]
+                }
+            }
+        },
+        "api_v1_handlers.UpdateIntegrationRequest": {
+            "type": "object",
+            "properties": {
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone": {
+                    "type": "string"
+                },
+                "property_filter": {
+                    "$ref": "#/definitions/integration.FeedPropertyFilter"
+                },
+                "publication_type": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "sync_frequency": {
+                    "type": "string"
+                }
+            }
+        },
+        "integration.FeedPropertyFilter": {
+            "type": "object",
+            "properties": {
+                "listing_types": {
+                    "description": "e.g., [\"sale\", \"rent\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "max_price": {
+                    "type": "number"
+                },
+                "min_price": {
+                    "type": "number"
+                },
+                "property_types": {
+                    "description": "e.g., [\"apartment\", \"house\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "statuses": {
+                    "description": "e.g., [\"published\", \"available\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "integration.PortalIntegration": {
+            "type": "object",
+            "required": [
+                "contact_email",
+                "contact_name",
+                "contact_phone",
+                "id",
+                "portal",
+                "publication_type",
+                "status",
+                "sync_frequency",
+                "tenant_id"
+            ],
+            "properties": {
+                "consecutive_fails": {
+                    "type": "integer"
+                },
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "feed_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_sync_at": {
+                    "type": "string"
+                },
+                "last_sync_status": {
+                    "type": "string"
+                },
+                "portal": {
+                    "type": "string",
+                    "enum": [
+                        "zap_imoveis",
+                        "olx_grupo_zap",
+                        "vivareal"
+                    ]
+                },
+                "property_filter": {
+                    "$ref": "#/definitions/integration.FeedPropertyFilter"
+                },
+                "publication_type": {
+                    "type": "string",
+                    "enum": [
+                        "STANDARD",
+                        "PREMIUM",
+                        "SUPER_PREMIUM"
+                    ]
+                },
+                "status": {
+                    "type": "string"
+                },
+                "sync_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "6h",
+                        "12h",
+                        "24h"
+                    ]
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "webhook_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.CreateIntegrationRequest": {
+            "type": "object",
+            "required": [
+                "contact_email",
+                "contact_name",
+                "contact_phone",
+                "portal",
+                "publication_type",
+                "sync_frequency"
+            ],
+            "properties": {
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone": {
+                    "type": "string"
+                },
+                "portal": {
+                    "type": "string",
+                    "enum": [
+                        "zap_imoveis",
+                        "olx_grupo_zap",
+                        "vivareal"
+                    ]
+                },
+                "property_filter": {
+                    "$ref": "#/definitions/integration.FeedPropertyFilter"
+                },
+                "publication_type": {
+                    "type": "string",
+                    "enum": [
+                        "STANDARD",
+                        "PREMIUM",
+                        "SUPER_PREMIUM"
+                    ]
+                },
+                "sync_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "6h",
+                        "12h",
+                        "24h"
+                    ]
+                }
+            }
+        },
+        "internal_api_v1_handlers.UpdateIntegrationRequest": {
+            "type": "object",
+            "properties": {
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone": {
+                    "type": "string"
+                },
+                "property_filter": {
+                    "$ref": "#/definitions/integration.FeedPropertyFilter"
+                },
+                "publication_type": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "sync_frequency": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                },
+                "statusCode": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

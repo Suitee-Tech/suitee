@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "positions": {
+    "table-toca_auth.accounts": {
+      "x": -931.0854659196589,
+      "y": -47.03849307766478
+    },
+    "table-toca_auth.credentials": {
+      "x": -411.0854659196589,
+      "y": -47.03849307766478
+    },
+    "table-toca_auth.user_preferences": {
+      "x": -931.0854659196589,
+      "y": 216.96150692233522
+    },
+    "table-crm.brokers": {
+      "x": -2774.567994903689,
+      "y": 59.63450464010896
+    },
+    "table-crm.leads": {
+      "x": -2254.567994903689,
+      "y": 59.63450464010896
+    },
+    "table-core.partnerships": {
+      "x": -3051.834993287944,
+      "y": 1368.307324603234
+    },
+    "table-core.properties": {
+      "x": -2531.834993287944,
+      "y": 1368.307324603234
+    },
+    "table-deal.contracts": {
+      "x": -1483.3460397229326,
+      "y": 2252.1478295020434
+    },
+    "table-deal.deals": {
+      "x": -963.3460397229326,
+      "y": 2252.1478295020434
+    },
+    "table-deal.documents": {
+      "x": -1483.3460397229326,
+      "y": 2676.1478295020434
+    },
+    "table-signature.envelopes": {
+      "x": -1478.439870654056,
+      "y": 494.0112633627145
+    },
+    "table-financial.charges": {
+      "x": 109.80629466280413,
+      "y": 635.317604215465
+    },
+    "table-financial.collections": {
+      "x": 629.8062946628041,
+      "y": 635.317604215465
+    },
+    "table-financial.rental_charge_configs": {
+      "x": 109.80629466280413,
+      "y": 1027.317604215465
+    },
+    "table-financial.rentals": {
+      "x": 629.8062946628041,
+      "y": 1027.317604215465
+    },
+    "table-financial.sale_billing_plan_drafts": {
+      "x": 109.80629466280413,
+      "y": 1451.317604215465
+    },
+    "table-financial.utility_accounts": {
+      "x": 629.8062946628041,
+      "y": 1451.317604215465
+    },
+    "table-financial.commissions": {
+      "x": 112.22140126118757,
+      "y": 2280.300832539027
+    },
+    "table-financial.managed_bills": {
+      "x": 632.2214012611876,
+      "y": 2280.300832539027
+    },
+    "table-financial.partner_royalties": {
+      "x": 112.22140126118757,
+      "y": 2704.300832539027
+    },
+    "table-financial.payout_orders": {
+      "x": 632.2214012611876,
+      "y": 2704.300832539027
+    },
+    "table-financial.transfer_deduction_claims": {
+      "x": 112.22140126118757,
+      "y": 3032.300832539027
+    },
+    "table-financial.transfers": {
+      "x": 632.2214012611876,
+      "y": 3032.300832539027
+    },
+    "table-financial.journal_entries": {
+      "x": 1071.3106716404677,
+      "y": 3663.310765800464
+    },
+    "table-financial.transactions": {
+      "x": 1591.3106716404677,
+      "y": 3663.310765800464
+    },
+    "table-ops.inspections": {
+      "x": 1795.8319387358397,
+      "y": -460.72142804552595
+    },
+    "table-ops.keys": {
+      "x": 2315.8319387358397,
+      "y": -460.72142804552595
+    },
+    "table-ops.maintenance": {
+      "x": 1795.8319387358397,
+      "y": -164.72142804552595
+    },
+    "table-ops.suppliers": {
+      "x": 2315.8319387358397,
+      "y": -164.72142804552595
+    },
+    "table-ops.tickets": {
+      "x": 1795.8319387358397,
+      "y": 227.27857195447405
+    },
+    "table-calendar.appointments": {
+      "x": 2200,
+      "y": 1136
+    },
+    "table-comm.channels": {
+      "x": 1145.8208673379206,
+      "y": 1648.626231325238
+    },
+    "table-comm.inapp_notifications": {
+      "x": 1665.8208673379206,
+      "y": 1648.626231325238
+    },
+    "table-comm.messages": {
+      "x": 3096.9274809948233,
+      "y": 2181.77914100813
+    },
+    "table-ai.conversations": {
+      "x": 3096.9274809948233,
+      "y": 2629.77914100813
+    },
+    "table-ai.messages": {
+      "x": 3616.9274809948233,
+      "y": 2629.77914100813
+    },
+    "table-ai.tool_invocations": {
+      "x": 3096.9274809948233,
+      "y": 2893.77914100813
+    },
+    "note-legenda_layout": {
+      "x": -931.0854659196589,
+      "y": -343.96898063042374,
+      "width": 250,
+      "height": 180
+    }
+  }
+}

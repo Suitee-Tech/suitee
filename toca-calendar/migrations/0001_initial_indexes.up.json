@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    { "collection": "appointments", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "appointments", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "appointments", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "agent_id", "value": 1 }] },
+    { "collection": "appointments", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "property_id", "value": 1 }] },
+    { "collection": "appointments", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "date", "value": 1 }] }
+  ]
+}
+

@@ -1,0 +1,21 @@
+# module               minimum  next_target
+#
+# `minimum` is the verified 2026-07-17 baseline and is enforced independently
+# per module. Raise it whenever coverage grows; never lower it to make CI pass.
+# `next_target` records the first ratchet milestone. After every module reaches
+# 50%, move the target to 55%, then increase by five points until 70%.
+pkg                    23.5     50
+gateway                14.1     50
+toca-auth               8.1     50
+toca-core              12.1     50
+toca-crm               14.4     50
+toca-deal              12.7     50
+toca-comm              11.9     50
+toca-financial         16.4     50
+toca-signature         26.0     50
+toca-ops               22.9     50
+toca-calendar          10.1     50
+toca-portal             0.0     50
+toca-mcp                0.0     50
+toca-ai                 3.5     50
+toca-sites             50.6      55

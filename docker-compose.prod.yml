@@ -1,0 +1,1056 @@
+x-rabbitmq-ready: &rabbitmq-ready
+  rabbitmq:
+    condition: service_healthy
+
+# Serviços que falam com o Redis (sessão, cota de OTP, lembretes) esperam o
+# Redis ficar SAUDÁVEL antes de subir. Sem isso o processo sobe antes do DNS
+# `redis` existir, o cliente nasce nulo e o serviço segue assim até ser
+# recriado — foi o que derrubou o login em produção (POST /auth/otp/request
+# com panic de ponteiro nulo).
+x-service-ready: &service-ready
+  rabbitmq:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+
+# Rotação de logs no próprio container: sem isso o json-file do Docker cresce
+# sem limite a cada deploy (cada recriação mantém o log anterior). 10 MB × 3
+# arquivos por serviço é folga de sobra para triagem e trava o crescimento.
+x-logging: &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # ─────────────────────────────────────────
+  # Reverse Proxy (Traefik) - Handles SSL/TLS and Routing
+  # ─────────────────────────────────────────
+  traefik:
+    <<: *default-logging
+    image: traefik:v2.10@sha256:a6b19e415e41b0e48b5c81713f3a60693a38f292059bd7347eef78bc9ae8044a
+    container_name: traefik
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Routers TLS por imobiliária são gerados pelo toca-sites no volume
+      # compartilhado. O file provider recarrega sem recriar containers.
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Enable Let's Encrypt (ACME)
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # A hierarquia Generation Y (YR1/Root YR) ainda não está no trust store
+      # do Chrome/macOS. A cadeia alternativa X1 é a compatível.
+      - "--certificatesresolvers.myresolver.acme.preferredchain=ISRG Root X1"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL:-admin@suitee.com.br}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # IMPORTANT: If testing and hitting Let's Encrypt limits, uncomment the line below to use Staging server:
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # Global redirect to HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt_data:/letsencrypt"
+      - "site_tls_dynamic:/etc/traefik/dynamic:ro"
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # Frontend (Served via highly optimized Nginx)
+  # ─────────────────────────────────────────
+  toka-frontend:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-frontend:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_APP_VERSION=${IMAGE_TAG}
+      - VITE_API_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}/api/v1
+      - VITE_MEDIA_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}
+      - VITE_MULTI_PARTY_UI=true
+      - VITE_SUPABASE_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      # Produção sempre indexa; o overlay de beta sobrescreve para true.
+      - SITE_NOINDEX=false
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      # O rolling update usa este healthcheck como sinal de prontidão do gêmeo;
+      # sem `start_interval` a primeira checagem só aconteceria em 30s e cada
+      # troca do frontend ficaria lenta sem necessidade.
+      start_period: 15s
+      start_interval: 5s
+    labels:
+      - "traefik.enable=true"
+      # Route app.suitee.com.br to frontend
+      - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST:-app.suitee.com.br}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # Base Infrastructure
+  # ─────────────────────────────────────────
+  redis:
+    <<: *default-logging
+    image: redis:alpine@sha256:2d3814be5e9b06a30a0be54770b7e12052e7e79ec85271aefd34875c1f393b23
+    container_name: toca-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  rabbitmq:
+    <<: *default-logging
+    image: rabbitmq:3.13.7-management@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
+    container_name: toca-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-toca_mq_user}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      # Run as the broker user so a startup probe cannot create a root-owned
+      # Erlang cookie. Port connectivity is the actual dependency contract.
+      test: [ "CMD", "gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  jaeger:
+    <<: *default-logging
+    image: jaegertracing/all-in-one:latest@sha256:968b31672178558da8a0c1bfc86336647d756ee6997ca196698796f5262adef1
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  prometheus:
+    <<: *default-logging
+    image: prom/prometheus:v2.55.0@sha256:fe47ca5a4eb2ef06d7adaa583776b1f8e57f1e2a509ab500c538a3c07ebd9625
+    container_name: toca-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    volumes:
+      - ./docs/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docs/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  loki:
+    <<: *default-logging
+    image: grafana/loki:3.1.1@sha256:609c03d2e9becb0bb6b5f4f7e88d05e38321520c23e02e8b00c1caaf60b13523
+    container_name: toca-loki
+    command:
+      - "-config.file=/etc/loki/loki.yml"
+    volumes:
+      - ./docs/observability/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  promtail:
+    <<: *default-logging
+    image: grafana/promtail:3.1.1@sha256:34a7b851f2f300e35d6b37020aa62c5454d07a40b8ce655a9a1d3eefbb8ae333
+    container_name: toca-promtail
+    command:
+      - "-config.file=/etc/promtail/promtail.yml"
+    volumes:
+      - ./docs/observability/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    restart: unless-stopped
+    depends_on:
+      - loki
+    networks:
+      - toca-network
+
+  grafana:
+    <<: *default-logging
+    image: grafana/grafana:11.2.0@sha256:37a5d8860aef847dfa09f5f8947f010f6479f98cf7820b5186f9c6314b44be60
+    container_name: toca-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docs/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docs/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`${GRAFANA_HOST:-grafana.example.com}`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+      - "traefik.http.routers.grafana.middlewares=grafana-auth,grafana-ip"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.grafana-auth.basicauth.users=${GRAFANA_BASIC_AUTH_USERS:?GRAFANA_BASIC_AUTH_USERS_required}"
+      - "traefik.http.middlewares.grafana-ip.ipwhitelist.sourcerange=${GRAFANA_ALLOWED_IPS:?GRAFANA_ALLOWED_IPS_required}"
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # API Gateway (Routes /api requests)
+  # ─────────────────────────────────────────
+  gateway:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-gateway:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-gateway
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8080
+      - GATEWAY_METRICS_PORT=9091
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-false}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:-https://app.suitee.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_GATEWAY:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - FINANCIAL_SERVICE_URL=http://toca-financial:8083
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - OPS_SERVICE_URL=http://toca-ops:8087
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      - PORTAL_SERVICE_URL=http://toca-portal:8089
+      - AI_SERVICE_URL=http://toca-ai:8092
+      - SIGNATURE_SERVICE_URL=http://toca-signature:8093
+      - SITES_SERVICE_URL=http://toca-sites:8094
+      - PUBLIC_SITE_CORS_ORIGIN=https://*.${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+    expose:
+      - "9091" # listener interno de métricas (scrape do Prometheus na toca-network)
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      # P2/B1: a borda não publica /metrics. O scrape é interno
+      # (gateway:9091, não exposto nem publicado) e a exclusão abaixo garante
+      # 404 na borda mesmo se a rota voltar a existir por engano.
+      - "traefik.http.routers.gateway.rule=Host(`${API_HOST:-api.suitee.com.br}`) && !PathPrefix(`/metrics`)"
+      - "traefik.http.routers.gateway.entrypoints=websecure"
+      - "traefik.http.routers.gateway.tls.certresolver=myresolver"
+      - "traefik.http.services.gateway.loadbalancer.server.port=8080"
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # Microservices
+  # ─────────────────────────────────────────
+  toca-auth:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-auth:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-auth
+    expose:
+      - "8081"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      # Recuperação de senha notifica pelo toca-comm (clients.NewCommClient em
+      # password_service.go). Sem a URL o client nasce com base vazia e a
+      # notificação falha em silêncio.
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8081
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_auth
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_AUTH:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:-https://app.suitee.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - REDIS_URI=redis://redis:6379/
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-core:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-core:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-core
+    expose:
+      - "8082"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8082
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_core
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - ADDRESS_VERIFICATION_MODE=${ADDRESS_VERIFICATION_MODE:-best_effort}
+      - ADDRESS_VERIFICATION_PROVIDER=${ADDRESS_VERIFICATION_PROVIDER:-viacep}
+      - ADDRESS_VERIFICATION_BASE_URL=${ADDRESS_VERIFICATION_BASE_URL:-https://viacep.com.br}
+      - ADDRESS_VERIFICATION_TIMEOUT=${ADDRESS_VERIFICATION_TIMEOUT:-2s}
+      - ADDRESS_VERIFICATION_CACHE_TTL=${ADDRESS_VERIFICATION_CACHE_TTL:-24h}
+      - ADDRESS_VERIFICATION_CACHE_MAX_ENTRIES=${ADDRESS_VERIFICATION_CACHE_MAX_ENTRIES:-10000}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_CORE:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - STORAGE_PROVIDER=supabase
+      # A5: invalidação do cache de permissões ao salvar a matriz. Opcional —
+      # sem isto a revogação propaga apenas pelo TTL de 30s dos consumidores.
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-financial:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-financial:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-financial
+    expose:
+      - "8083"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - FINANCIAL_ADJUSTMENT_APPROVAL_THRESHOLD_BRL=${FINANCIAL_ADJUSTMENT_APPROVAL_THRESHOLD_BRL:-5000}
+      - PORT=8083
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_financial
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_FINANCIAL:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - PAYMENT_GATEWAY_API_KEY=${PAYMENT_GATEWAY_API_KEY}
+      # Provedor do LINK DE COBRANÇA por cobrança (Pix/boleto). Vazio (padrão) =
+      # a rota responde 409 e o portal do cliente esconde os botões de pagar;
+      # `sandbox` gera links determinísticos e NÃO cobráveis — ligado apenas no
+      # beta para validação, nunca em produção enquanto não houver gateway real.
+      - PAYMENT_PROVIDER=${PAYMENT_PROVIDER:-}
+      - PLATFORM_SUBSCRIPTIONS_ENABLED=${PLATFORM_SUBSCRIPTIONS_ENABLED:-false}
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-false}
+      - ABACATEPAY_DEV_MODE=${ABACATEPAY_DEV_MODE:-false}
+      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL:-http://localhost:3000}
+      - ABACATEPAY_WEBHOOK_SECRET=${ABACATEPAY_WEBHOOK_SECRET}
+      - ABACATEPAY_WEBHOOK_ALLOWED_IPS=${ABACATEPAY_WEBHOOK_ALLOWED_IPS}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      # Cobranças/repasses resolvem a parte (lead) no CRM e notificam pelo comm
+      # (charge_service.go, transfer_handler.go). As duas URLs faltavam: as
+      # notificações financeiras falhavam em silêncio.
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - REDIS_URI=redis://redis:6379/
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-crm:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-crm:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-crm
+    expose:
+      - "8084"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8084
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_crm
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_CRM:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORE_SERVICE_URL=http://toca-core:8082
+      # Agenda das visitas: o portal do cliente lê o agendamento no calendário
+      # para refletir o que o corretor confirmou (lead_visit_service.go). Sem a
+      # URL, clients.NewBaseClient("") falhava em toda chamada e o overview do
+      # portal devolvia 503 sempre que o lead tinha visita agendada.
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      # Canal direto do cliente com o corretor (portal, lead_service.go).
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - REDIS_URI=redis://redis:6379/
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+
+  # P1-13: antivírus do funil de uploads (clamd na porta 3310). O toca-deal
+  # fala o protocolo INSTREAM direto; imagem pinada por digest (ver P1-16).
+  clamav:
+    <<: *default-logging
+    image: clamav/clamav:stable@sha256:7659dcb0db47941d3cf8336af84bbb63c7e70b76fc00601774358412b42ed186
+    container_name: clamav
+    expose:
+      - "3310"
+    mem_limit: 512m
+    volumes:
+      # P1-13: baixa apenas o main.cvd (host ~4 GB de RAM) — ver o arquivo.
+      - ./deploy/clamav/freshclam.conf:/etc/clamav/freshclam.conf:ro
+      # Banco de assinaturas em volume: sem isso cada recriação baixa
+      # o main.cvd de novo e o boot passa de 8 minutos (deploy estoura o gate).
+      - clamav_db:/var/lib/clamav
+    environment:
+      - CLAMD_STARTUP_TIMEOUT=600
+    healthcheck:
+      # clamdscan --ping EXIGE argumento nesta versão; sem ele o container
+      # ficava unhealthy e o deploy falhava no wait_for_stack.
+      test: ["CMD", "clamdscan", "--ping=3"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 600s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-deal:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-deal:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-deal
+    expose:
+      - "8085"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8085
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_deal
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_DEAL:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      - OPS_SERVICE_URL=http://toca-ops:8087
+      - FINANCIAL_SERVICE_URL=http://toca-financial:8083
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - SIGNATURE_SERVICE_URL=http://toca-signature:8093
+      - AI_SERVICE_URL=http://toca-ai:8092
+      # Régua de follow-up de proposta (§F6). 0 desliga o sweep/estágios.
+      - PROPOSAL_FOLLOWUP_INTERVAL_MINUTES=${PROPOSAL_FOLLOWUP_INTERVAL_MINUTES:-60}
+      - PROPOSAL_FOLLOWUP_STAGE1_DAYS=${PROPOSAL_FOLLOWUP_STAGE1_DAYS:-3}
+      - PROPOSAL_FOLLOWUP_GAP_DAYS=${PROPOSAL_FOLLOWUP_GAP_DAYS:-7}
+      - PROPOSAL_FOLLOWUP_MAX_STAGES=${PROPOSAL_FOLLOWUP_MAX_STAGES:-3}
+      - PROPOSAL_FOLLOWUP_MAX_AGE_DAYS=${PROPOSAL_FOLLOWUP_MAX_AGE_DAYS:-30}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORE_SERVICE_URL=http://toca-core:8082
+      # P1-13: antivírus do funil de uploads (fail-closed).
+      - CLAMAV_URL=clamav:3310
+      # Hidrata o lead do negócio no CRM (deal_service.go: leadHydrator).
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - REDIS_URI=redis://redis:6379/
+      - STORAGE_PROVIDER=supabase
+    depends_on:
+      <<: *rabbitmq-ready
+      toca-signature:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-comm:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-comm:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-comm
+    expose:
+      - "8086"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      # Os consumidores de evento resolvem destinatários no toca-auth
+      # (event_consumer.go: ListCompanyMembersInternal) para notificar a equipe.
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8086
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_comm
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_COMM:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RESEND_API_KEY=${EMAIL_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-update@suitee.com.br}
+      # Opcional: SMTP próprio (deixe vazio para usar Resend).
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      # Notificações transacionais por e-mail (beta). Desligado por padrão em
+      # produção; o .env.beta liga via override (COMM_EMAIL_ENABLED=true).
+      - COMM_EMAIL_ENABLED=${COMM_EMAIL_ENABLED:-false}
+      - COMM_EMAIL_LEAD_ASSIGNED=${COMM_EMAIL_LEAD_ASSIGNED:-true}
+      - COMM_EMAIL_DEAL_UPDATES=${COMM_EMAIL_DEAL_UPDATES:-true}
+      - COMM_EMAIL_PROPOSALS=${COMM_EMAIL_PROPOSALS:-true}
+      - COMM_EMAIL_APPOINTMENTS=${COMM_EMAIL_APPOINTMENTS:-true}
+      - COMM_EMAIL_RECOMMENDATIONS=${COMM_EMAIL_RECOMMENDATIONS:-true}
+      - COMM_EMAIL_CHAT_REMINDERS=${COMM_EMAIL_CHAT_REMINDERS:-true}
+      - COMM_EMAIL_COOLDOWN_MINUTES=${COMM_EMAIL_COOLDOWN_MINUTES:-60}
+      - COMM_EMAIL_CHAT_REMINDER_AFTER_MINUTES=${COMM_EMAIL_CHAT_REMINDER_AFTER_MINUTES:-30}
+      - FRONTEND_URL=${PUBLIC_FRONTEND_URL:-https://app.suitee.com.br}
+      - GATEWAY_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-ops:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-ops:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-ops
+    expose:
+      - "8087"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8087
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_ops
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-${SUPABASE_URL:?SUPABASE_URL_required}}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_OPS:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-calendar:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-calendar:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-calendar
+    expose:
+      - "8088"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8088
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_calendar
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      # Link assinado do .ics no e-mail: a base pública monta a URL e o
+      # segredo assina. Sem os dois o CTA não é emitido.
+      - CALENDAR_LINK_SECRET=${CALENDAR_LINK_SECRET:-}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_CALENDAR:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-portal:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-portal:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-portal
+    expose:
+      - "8089"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8089
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_portal
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_PORTAL:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - FEED_BASE_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    depends_on: *service-ready
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # Sites (vitrine pública) — ADR 0006
+  # ─────────────────────────────────────────
+  toca-sites:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-sites:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-sites
+    expose:
+      - "8094"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8094
+      - REDIS_URI=redis://redis:6379/
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_sites
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - PAYLOAD_API_URL=http://toca-web:3000
+      - TRAEFIK_DYNAMIC_DIR=/var/lib/toca/tls
+      - TRAEFIK_SITE_UPSTREAM=http://toca-web:3000
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - SITE_PUBLIC_SCHEME=https
+      # Vazio em produção: a URL canônica usa a porta implícita do https.
+      - SITE_PUBLIC_PORT=${SITE_PUBLIC_PORT:-}
+      - PORTAL_PUBLIC_URL=${PORTAL_PUBLIC_URL:-https://app.suitee.com.br/portal}
+      - SITES_PUBLIC_CORS_ORIGIN=https://*.${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    volumes:
+      - "site_tls_dynamic:/var/lib/toca/tls"
+    depends_on: *service-ready
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8094/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  # Migrations versionadas do Payload (schema `payload`) antes do toca-web.
+  # A imagem de runtime é standalone e não carrega o CLI; este alvo dedicado
+  # roda `payload migrate` uma vez por deploy (idempotente).
+  toca-web-migrate:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-web-migrator:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-web-migrate
+    environment:
+      # Migrations precisam da role de migration (postgres), não da role de
+      # runtime (toca_app), que não tem CREATE SCHEMA no database.
+      - DATABASE_URI=${MIGRATION_DATABASE_URI:?MIGRATION_DATABASE_URI_required}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:?PAYLOAD_SECRET_required}
+      - PAYLOAD_PUBLIC_SERVER_URL=https://${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - PAYLOAD_DB_PUSH=false
+      # O pooler do Supabase apresenta certificado self-signed no Postgres.
+      - DATABASE_SSL_REJECT_UNAUTHORIZED=false
+    # O banco pode estar subindo (ou ser externo e oscilar): tenta algumas
+    # vezes antes de falhar o deploy. Migration é idempotente.
+    command:
+      - sh
+      - -c
+      - |
+        for attempt in 1 2 3 4 5 6 7 8 9 10; do
+          if pnpm payload migrate; then exit 0; fi
+          echo "payload migrate falhou (tentativa $$attempt/10); aguardando banco..." >&2
+          sleep 3
+        done
+        exit 1
+    restart: "no"
+    networks:
+      - toca-network
+
+  # Payload CMS + Next SSR. Recebe TODO o tráfego de
+  # `*.{PUBLIC_SITE_HOST_SUFFIX}`; o admin do Payload NÃO é o painel da
+  # imobiliária (as agências usam o Toka).
+  #
+  # TLS: o certificado curinga de `*.imoveis.suitee.com.br` exige DNS-01 no
+  # ACME. Enquanto o resolver DNS do provedor não estiver configurado, use o
+  # roteador por host literal (um DNS por imobiliária) — ver docs/ADR 0006.
+  toca-web:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-web:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-web
+    expose:
+      - "3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - PAYLOAD_DB_PUSH=false
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:?PAYLOAD_SECRET_required}
+      - PAYLOAD_PUBLIC_SERVER_URL=https://${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - SITE_PUBLIC_SCHEME=https
+      # Produção sempre indexa; o overlay de beta sobrescreve para true.
+      - SITE_NOINDEX=false
+      # O pooler do Supabase apresenta certificado self-signed no Postgres.
+      - DATABASE_SSL_REJECT_UNAUTHORIZED=false
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - SITES_INTERNAL_API_URL=http://toca-sites:8094
+      - NEXT_PUBLIC_SITES_API_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}
+      - NEXT_PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}
+      - S3_ENDPOINT=${S3_ENDPOINT:-}
+      - S3_BUCKET=${S3_BUCKET:-}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+    depends_on:
+      toca-sites:
+        condition: service_healthy
+      toca-web-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.site-public.rule=HostRegexp(`{sub:[a-z0-9-]+}.${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}`)"
+      - "traefik.http.routers.site-public.entrypoints=websecure"
+      - "traefik.http.routers.site-public.tls.certresolver=myresolver"
+      - "traefik.http.routers.site-public.service=site-public"
+      # Apex: serve o Payload Admin/mídia (rotas /admin e /api, excluídas do
+      # rewrite de tenant). O site público em si só existe nos subdomínios.
+      - "traefik.http.routers.site-admin.rule=Host(`${PUBLIC_SITE_HOST_SUFFIX:-imoveis.suitee.com.br}`)"
+      - "traefik.http.routers.site-admin.entrypoints=websecure"
+      - "traefik.http.routers.site-admin.tls.certresolver=myresolver"
+      - "traefik.http.routers.site-admin.service=site-public"
+      - "traefik.http.services.site-public.loadbalancer.server.port=3000"
+    networks:
+      - toca-network
+
+  toca-mcp:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-mcp:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-mcp
+    expose:
+      - "8090"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8090
+      - GATEWAY_URL=http://gateway:8080
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_MCP:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8090/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - toca-network
+
+  # Internal-only OCR service. Models are baked into the image and copied into
+  # this persistent cache on first use; readiness stays red until Docling loads.
+  toca-ocr:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-ocr:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-ocr
+    expose:
+      - "5001"
+    environment:
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_OCR:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+    volumes:
+      - docling_models:/root/.cache
+    mem_limit: ${OCR_MEMORY_LIMIT:-4g}
+    cpus: "${OCR_CPU_LIMIT:-2.0}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://127.0.0.1:5001/ready', timeout=5).status_code==200 else 1)"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-ai:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-ai:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-ai
+    expose:
+      - "8092"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - APP_ENV=production
+      - APP_MODE=release
+      - PORT=8092
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_AI:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY_required}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      - MCP_SERVER_URL=http://toca-mcp:8090
+      - OCR_SERVICE_URL=http://toca-ocr:5001
+      - AI_REQUEST_TIMEOUT_SECONDS=${AI_REQUEST_TIMEOUT_SECONDS:-120}
+      - AI_MAX_ITERATIONS=${AI_MAX_ITERATIONS:-5}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8092/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      toca-mcp:
+        condition: service_healthy
+    networks:
+      - toca-network
+
+  toca-signature:
+    <<: *default-logging
+    image: ghcr.io/${GITHUB_REPOSITORY}/toca-signature:${IMAGE_TAG:?IMAGE_TAG must be a full release SHA}
+    container_name: toca-signature
+    expose:
+      - "8093"
+    environment:
+      - REDIS_URI=redis://redis:6379/
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - APP_ENV=production
+      - APP_MODE=release
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - PORT=8093
+      - SUPABASE_DB_URL=${SUPABASE_DB_URL:?SUPABASE_DB_URL_required}
+      - DATABASE_URI=${DATABASE_URI:?DATABASE_URI_required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?DATABASE_URI_SERVICE_required}
+      - DATABASE_NAME=toca_signature
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-1}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_CALLER_KEY=${INTERNAL_CALLER_KEY_TOCA_SIGNATURE:-}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - APP_TIMEZONE=${APP_TIMEZONE:-America/Sao_Paulo}
+      - RABBITMQ_URI=amqp://${RABBITMQ_DEFAULT_USER:-toca_mq_user}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS_required}
+      - CLICKSIGN_BASE_URL=${CLICKSIGN_BASE_URL:-https://app.clicksign.com}
+      - CLICKSIGN_ACCESS_TOKEN=${CLICKSIGN_ACCESS_TOKEN:?CLICKSIGN_ACCESS_TOKEN_required}
+      - CLICKSIGN_WEBHOOK_SECRET=${CLICKSIGN_WEBHOOK_SECRET:?CLICKSIGN_WEBHOOK_SECRET_required}
+      - CLICKSIGN_ENVIRONMENT=${CLICKSIGN_ENVIRONMENT:-production}
+      # P1-14: chave de criptografia das credenciais Clicksign por tenant
+      # (64 hex = 32 bytes). Vazia = fallback global por ambiente.
+      - CLICKSIGN_CREDENTIALS_ENC_KEY=${CLICKSIGN_CREDENTIALS_ENC_KEY:-}
+      - CLICKSIGN_WEBHOOK_ALLOWED_IPS=${CLICKSIGN_WEBHOOK_ALLOWED_IPS:-203.0.113.10,203.0.113.10}
+      - PUBLIC_GATEWAY_URL=${PUBLIC_API_URL:-https://api.suitee.com.br}
+      - WEBHOOK_PUBLIC_URL=${WEBHOOK_PUBLIC_URL}
+      - GOTENBERG_URL=http://gotenberg:3000
+    restart: unless-stopped
+    depends_on:
+      <<: *rabbitmq-ready
+      redis:
+        condition: service_healthy
+      gotenberg:
+        condition: service_started
+    networks:
+      - toca-network
+
+  # Gotenberg renders HTML contracts to PDF before they go to Clicksign.
+  # Internal-only (no Traefik exposure).
+  gotenberg:
+    <<: *default-logging
+    image: gotenberg/gotenberg:8@sha256:3fdee07e0dcd5005c3db4d81d1600d081fc6fb424da87e409e1c1f9624a249b8
+    container_name: toca-gotenberg
+    command:
+      - "gotenberg"
+      - "--api-port=3000"
+      - "--api-timeout=60s"
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+volumes:
+  clamav_db:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  letsencrypt_data:
+  site_tls_dynamic:
+  docling_models:
+
+networks:
+  toca-network:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd00:172:18::/80

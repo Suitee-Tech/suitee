@@ -1,0 +1,4 @@
+services:
+  toca-core:
+    ports:
+      - "8082:8082"

@@ -1,0 +1,90 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'Locacao e cobranca. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table core.properties [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__amends_contract_id text [note: 'metadata.amends_contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+}
+
+Table financial.charges [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/charge/charge.go']
+}
+
+Table financial.collections [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/collection/collection.go']
+}
+
+Table financial.rental_charge_configs [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental_charge_config/rental_charge_config.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental_charge_config/rental_charge_config.go']
+}
+
+Table financial.rentals [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+}
+
+Table financial.utility_accounts [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/utility_account/utility_account.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/utility_account/utility_account.go']
+}
+
+Ref logical_13: deal.contracts.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_15: deal.contracts.json__amends_contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_20: financial.rentals.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_21: financial.rentals.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_25: financial.charges.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_28: financial.charges.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_42: financial.rental_charge_configs.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_43: financial.rental_charge_configs.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_44: financial.utility_accounts.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_45: financial.utility_accounts.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_46: financial.collections.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+TableGroup "03 Imoveis e empresa" [color: #0891B2] {
+  core.properties
+}
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+}
+
+TableGroup "06 Financeiro - cobranca" [color: #0F766E] {
+  financial.charges
+  financial.collections
+  financial.rental_charge_configs
+  financial.rentals
+  financial.utility_accounts
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 7 tabelas; 11 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

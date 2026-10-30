@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+media
+public/media
+Dockerfile
+.dockerignore
+README.md
+npm-debug.log*
+pnpm-debug.log*
+coverage
+test-results

@@ -1,0 +1,4 @@
+services:
+  toca-financial:
+    ports:
+      - "8083:8083"

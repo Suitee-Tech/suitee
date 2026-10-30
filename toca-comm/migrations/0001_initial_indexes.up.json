@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    { "collection": "channels", "keys": [{ "key": "tenantid", "value": 1 }] },
+    { "collection": "channels", "keys": [{ "key": "tenantid", "value": 1 }, { "key": "entityid", "value": 1 }] },
+    { "collection": "messages", "keys": [{ "key": "channelid", "value": 1 }] },
+    { "collection": "messages", "keys": [{ "key": "channelid", "value": 1 }, { "key": "tenantid", "value": 1 }] },
+    { "collection": "templates", "keys": [{ "key": "tenantid", "value": 1 }] }
+  ]
+}
+

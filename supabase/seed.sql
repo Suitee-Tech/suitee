@@ -1,0 +1,5 @@
+-- Seed local canônico.
+--
+-- Mantenha este arquivo idempotente. Dados determinísticos de jornadas E2E
+-- pertencem às fixtures do Playwright; o Supabase CLI só precisa de um seed
+-- válido para que `supabase start` e `supabase db reset` sejam reproduzíveis.

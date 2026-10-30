@@ -1,0 +1,11 @@
+# Default maintainers for the public repository.
+# Replace @oginoino with the organization team when the team is created,
+# e.g. `* @Suitee-Tech/maintainers`.
+* @oginoino
+
+# Security-sensitive surfaces require the owner's review.
+/.github/ @oginoino
+/SECURITY.md @oginoino
+/supabase/migrations/ @oginoino
+/gateway/ @oginoino
+/toca-auth/ @oginoino

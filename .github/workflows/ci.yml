@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Go / ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - pkg
+          - gateway
+          - toca-auth
+          - toca-core
+          - toca-financial
+          - toca-crm
+          - toca-deal
+          - toca-comm
+          - toca-ops
+          - toca-calendar
+          - toca-portal
+          - toca-sites
+          - toca-mcp
+          - toca-ai
+          - toca-signature
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.5"
+          cache: true
+      - name: Test
+        run: make test-go MODULE="${{ matrix.module }}"
+
+  frontend:
+    name: Operator panel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: toka/pnpm-lock.yaml
+      - name: Install
+        working-directory: toka
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        working-directory: toka
+        run: pnpm lint:types
+      - name: Unit tests
+        working-directory: toka
+        run: pnpm test
+
+  public-site:
+    name: Public site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: toca-web/pnpm-lock.yaml
+      - name: Install, typecheck and build
+        working-directory: toca-web
+        env:
+          DATABASE_URI: postgresql://build:build@127.0.0.1:5432/build
+          PAYLOAD_SECRET: ci-only-secret-ci-only-secret-1234
+          PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3000
+          PUBLIC_SITE_HOST_SUFFIX: imoveis.localhost
+          NEXT_PUBLIC_SITE_HOST_SUFFIX: imoveis.localhost
+          PAYLOAD_DB_PUSH: "false"
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm build
+
+  documentation:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Validate links and documentation inventories
+        run: node scripts/docs/check-docs.mjs

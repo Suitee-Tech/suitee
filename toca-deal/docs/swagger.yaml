@@ -1,0 +1,3447 @@
+basePath: /api/v1
+definitions:
+  audit.LogEntry:
+    properties:
+      action:
+        type: string
+      actor_id:
+        type: string
+      actor_type:
+        type: string
+      after:
+        additionalProperties: {}
+        type: object
+      before:
+        additionalProperties: {}
+        type: object
+      created_at:
+        type: string
+      entity_id:
+        type: string
+      entity_type:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      tenant_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.AdjustmentEntry:
+    properties:
+      applied_at:
+        type: string
+      effective_from:
+        type: string
+      index_name:
+        type: string
+      index_value:
+        type: number
+      mode:
+        description: Mode é "manual" ou "auto"; preserva a origem do reajuste para
+          auditoria.
+        type: string
+      new_value:
+        type: number
+      note:
+        type: string
+      previous_value:
+        type: number
+      triggered_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.AmendmentEntry:
+    properties:
+      created_at:
+        type: string
+      new_contract_id:
+        type: string
+      reason:
+        type: string
+      superseded_at:
+        description: |-
+          SupersededAt é preenchido quando o aditivo é assinado e o contrato
+          original passa para EXPIRED. Antes disso fica vazio.
+        type: string
+      triggered_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract:
+    properties:
+      adjust_index:
+        type: string
+      adjustments:
+        description: Adjustments mantém o histórico de reajustes aplicados (manual
+          ou auto).
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.AdjustmentEntry'
+        type: array
+      amendments:
+        description: |-
+          Amendments lista aditivos emitidos a partir deste contrato. Apenas no
+          contrato original — o aditivo (novo contrato) carrega apenas
+          AmendsContractID apontando de volta. Ordem cronológica.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.AmendmentEntry'
+        type: array
+      amends_contract_id:
+        description: |-
+          AmendsContractID, quando preenchido, indica que ESTE contrato é um
+          aditivo de outro — substitui o original ao ser assinado. O original
+          passa para EXPIRED e ganha SupersededAt no AmendmentEntry correspondente.
+        type: string
+      auto_adjust:
+        type: boolean
+      client:
+        type: string
+      commission_pct:
+        type: number
+      content:
+        description: Could be HTML or S3 URL
+        type: string
+      created_at:
+        type: string
+      customer_id:
+        description: |-
+          CustomerID mirrors Deal.CustomerID (the lead/customer party UUID) so
+          the listing UI can fall back to a CRM lookup when Client (the cached
+          display name) drifts after a lead rename. Snapshot-derived from the
+          Deal at CreateContract time.
+        type: string
+      deal_id:
+        type: string
+      display_id:
+        type: string
+      draft_revisions:
+        description: |-
+          DraftRevisions preserves the document replaced by each regeneration.
+          Signature attempts remain linked to this same contract.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.DraftRevision'
+        type: array
+      end_date:
+        type: string
+      entry_inspection_id:
+        description: |-
+          EntryInspectionID is set when the ENTRY vistoria created at
+          contract.signed time is concluded with a laudo. Mirrors
+          Termination.ExitInspectionID — both are the inspection ids that
+          flank the rental's operational window. Empty until the operator
+          closes the entry inspection in toca-ops.
+        type: string
+      external_envelope_id:
+        description: |-
+          External signature integration (Clicksign today; provider-agnostic).
+          Populated when SendForSignature is called; cleared after a successful
+          cancel/refusal so the contract is editable again.
+        type: string
+      id:
+        type: string
+      late_fee_pct:
+        description: |-
+          Per-contract financial rules. When set, override the global delinquency
+          defaults (2% multa / 1% juros mês) so the admin UI can tune them per
+          contract. Stored on the contract itself rather than on a separate config
+          so they survive renewals/re-signatures of the same lease.
+        type: number
+      monthly_interest_pct:
+        type: number
+      next_adjustment:
+        type: string
+      property_id:
+        type: string
+      property_title:
+        type: string
+      security_deposit:
+        description: |-
+          SecurityDeposit (caução) — valor depositado pelo locatário no início do
+          contrato. Usado pelo TerminateContract para acertar devolução.
+        type: number
+      sent_for_signature_at:
+        type: string
+      signatories:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory'
+        type: array
+      signature_locked_at:
+        description: |-
+          SignatureLockedAt blocks edits while an envelope is in flight. Cleared
+          when the envelope is canceled or refused. SIGNED contracts stay locked
+          permanently — that's intentional, you can't edit a signed contract.
+        type: string
+      signature_provider:
+        description: e.g. "clicksign"
+        type: string
+      signed_document_url:
+        description: |-
+          SignedDocumentURL is the URL of the final signed PDF, populated by
+          MarkSignedExternally from the SignatureEnvelopeFinishedEvent.
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Status'
+      tenant_id:
+        type: string
+      termination:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Termination'
+        description: Termination é preenchido pelo TerminateContract — nil enquanto
+          ativo.
+      type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType'
+        description: CRM contract fields
+      updated_at:
+        type: string
+      value:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType:
+    enum:
+    - venda
+    - locacao
+    type: string
+    x-enum-varnames:
+    - TypeVenda
+    - TypeLocacao
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.CreateContractRequest:
+    properties:
+      adjust_index:
+        type: string
+      auto_adjust:
+        type: boolean
+      client:
+        type: string
+      commission_pct:
+        type: number
+      content:
+        type: string
+      customer_id:
+        description: |-
+          CustomerID is accepted but optional — CreateContract overrides it from
+          the linked Deal (authoritative source) so a stale/missing value from
+          the caller cannot poison the snapshot.
+        type: string
+      deal_id:
+        type: string
+      end_date:
+        type: string
+      late_fee_pct:
+        type: number
+      monthly_interest_pct:
+        type: number
+      next_adjustment:
+        type: string
+      property_id:
+        type: string
+      property_title:
+        type: string
+      signatories:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory'
+        type: array
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Status'
+      type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType'
+        description: CRM fields
+      value:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.DraftRevision:
+    properties:
+      content:
+        type: string
+      replaced_at:
+        type: string
+      replaced_by:
+        type: string
+      signatories:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory'
+        type: array
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory:
+    properties:
+      auth_methods:
+        description: selected by the operator
+        items:
+          type: string
+        type: array
+      birthday:
+        description: YYYY-MM-DD
+        type: string
+      clicksign_signer_key:
+        description: |-
+          External signature integration. Populated by EnvelopeService.CreateForContract
+          (via the Clicksign client) and updated by MarkSignerSignedExternally.
+        type: string
+      documentation:
+        description: CPF/CNPJ
+        type: string
+      email:
+        type: string
+      evidence_url:
+        type: string
+      group:
+        description: |-
+          Group is the default Clicksign signing-order group for this signer.
+          0 / unset keeps the legacy behavior (every signer notified together
+          on envelope activation). Per-envelope overrides at create time take
+          precedence — this is just the contract-level default.
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      phone_number:
+        description: |-
+          Optional contact + identification used by the signature provider
+          (Clicksign requires CPF for some auth methods like icp_brasil/biometric).
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryRole'
+        description: Buyer, Seller, Witness
+      signature:
+        description: Digital signature hash
+        type: string
+      signed_at:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryStatus'
+        description: Mirrors envelope SignerStatus — written by signature_subscribers
+      viewed_at:
+        description: First time the signer opened the signing link
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryRole:
+    enum:
+    - inquilino
+    - proprietario
+    - fiador
+    - locador
+    - locatario
+    - comprador
+    - vendedor
+    - avalista
+    - testemunha
+    - conjuge
+    - procurador
+    - representante_legal
+    - tutor
+    - curador
+    type: string
+    x-enum-varnames:
+    - RoleInquilino
+    - RoleProprietario
+    - RoleFiador
+    - RoleLocador
+    - RoleLocatario
+    - RoleComprador
+    - RoleVendedor
+    - RoleAvalista
+    - RoleTestemunha
+    - RoleConjuge
+    - RoleProcurador
+    - RoleRepresentanteLegal
+    - RoleTutor
+    - RoleCurador
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryStatus:
+    enum:
+    - PENDING
+    - VIEWED
+    - SIGNED
+    - REFUSED
+    type: string
+    x-enum-varnames:
+    - SignatoryStatusPending
+    - SignatoryStatusViewed
+    - SignatoryStatusSigned
+    - SignatoryStatusRefused
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.Status:
+    enum:
+    - DRAFT
+    - PENDING_SIGNATURE
+    - PARTIALLY_SIGNED
+    - SIGNED
+    - ACTIVE
+    - EXPIRED
+    - TERMINATED
+    type: string
+    x-enum-varnames:
+    - StatusDraft
+    - StatusPending
+    - StatusPartiallySigned
+    - StatusSigned
+    - StatusActive
+    - StatusExpired
+    - StatusTerminated
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.Termination:
+    properties:
+      early_termination_fee:
+        type: number
+      exit_inspection_id:
+        type: string
+      reason:
+        type: string
+      security_deposit_deductions:
+        type: number
+      security_deposit_return:
+        type: number
+      terminated_at:
+        type: string
+      triggered_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_contract.TerminationFeeBreakdown:
+    properties:
+      cap_applied:
+        description: |-
+          CapApplied — true quando a fórmula bruta excederia o teto de 3
+          alugueis (Lei 8245/91 Art. 4) e foi clipada. Não acontece com a
+          fórmula linear pura, mas defendemos contra extensões futuras.
+        type: boolean
+      fee_cents:
+        description: |-
+          FeeCents — valor da multa em centavos. Sempre >= 0. Centavos para
+          evitar erro de ponto flutuante em soma de cobranças.
+        type: integer
+      fraction_remaining:
+        description: FractionRemaining — MonthsRemaining / TotalMonths, em [0, 1].
+        type: number
+      monthly_rent_cents:
+        description: MonthlyRentCents — aluguel mensal usado no cálculo.
+        type: integer
+      months_elapsed:
+        description: MonthsElapsed — meses já cumpridos (corrigido para min(elapsed,
+          total)).
+        type: integer
+      months_remaining:
+        description: MonthsRemaining — meses restantes (TotalMonths - MonthsElapsed).
+        type: integer
+      reason:
+        description: |-
+          Reason — string curta para UI explicar zeros: "contract_already_ended",
+          "exempt_no_monthly_rent", etc. Vazia no caminho feliz.
+        type: string
+      total_months:
+        description: TotalMonths — duração total contratada.
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipation:
+    properties:
+      broker_id:
+        type: string
+      commission:
+        description: commission amount
+        type: number
+      percentage:
+        description: commission split %
+        type: number
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole'
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole:
+    enum:
+    - captador
+    - co_captador
+    - visitador
+    - atendente
+    - fechamento
+    - imobiliaria
+    type: string
+    x-enum-comments:
+      BrokerRoleCaptador: property capture broker
+      BrokerRoleFechamento: deal closing broker
+      BrokerRoleVisitador: visit broker
+    x-enum-descriptions:
+    - property capture broker
+    - ""
+    - visit broker
+    - ""
+    - deal closing broker
+    - ""
+    x-enum-varnames:
+    - BrokerRoleCaptador
+    - BrokerRoleCoCaptador
+    - BrokerRoleVisitador
+    - BrokerRoleAtendente
+    - BrokerRoleFechamento
+    - BrokerRoleImobiliaria
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem:
+    properties:
+      category:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory'
+      content_type:
+        type: string
+      description:
+        type: string
+      file_name:
+        type: string
+      file_size:
+        type: integer
+      file_url:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      party_id:
+        type: string
+      rejection_reason:
+        type: string
+      request_mode:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode'
+        description: |-
+          RequestMode define se o cliente anexa arquivo ("upload") ou apenas
+          preenche o formulário ("form"). Vazio é normalizado para "upload".
+      requested_fields:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField'
+        type: array
+      required:
+        type: boolean
+      reviewed_at:
+        type: string
+      solicited:
+        type: boolean
+      solicited_at:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus'
+      storage_key:
+        type: string
+      uploaded_at:
+        type: string
+      uploaded_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory:
+    enum:
+    - pessoal
+    - financeiro
+    - imovel
+    - juridico
+    - outros
+    type: string
+    x-enum-varnames:
+    - CategoryPessoal
+    - CategoryFinanceiro
+    - CategoryImovel
+    - CategoryJuridico
+    - CategoryOutros
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode:
+    enum:
+    - upload
+    - form
+    type: string
+    x-enum-varnames:
+    - RequestModeUpload
+    - RequestModeForm
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus:
+    enum:
+    - PENDING
+    - UPLOADED
+    - APPROVED
+    - REJECTED
+    type: string
+    x-enum-varnames:
+    - ChecklistPending
+    - ChecklistUploaded
+    - ChecklistApproved
+    - ChecklistRejected
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField:
+    properties:
+      key:
+        type: string
+      label:
+        type: string
+      required:
+        type: boolean
+      type:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistStats:
+    properties:
+      approved:
+        type: integer
+      pending:
+        type: integer
+      rejected:
+        type: integer
+      required:
+        type: integer
+      required_approved:
+        type: integer
+      required_complete:
+        type: boolean
+      total:
+        type: integer
+      uploaded:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplate:
+    properties:
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplateItem'
+        type: array
+      label:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplateItem:
+    properties:
+      category:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory'
+      description:
+        type: string
+      name:
+        type: string
+      request_mode:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode'
+        description: |-
+          RequestMode (opcional): "form" = apenas preenchimento de formulário
+          (sem anexo) — ex.: CPF e telefone digitados. Vazio = "upload".
+      requested_fields:
+        description: |-
+          RequestedFields (opcional) são os campos solicitados ao cliente
+          quando RequestMode = "form" (ou complemento do anexo).
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField'
+        type: array
+      required:
+        type: boolean
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal:
+    properties:
+      broker_id:
+        description: Primary responsible broker
+        type: string
+      broker_participations:
+        description: |-
+          BrokerParticipations tracks all brokers involved (captador, visitador, fechamento)
+          for history and commission split purposes
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipation'
+        type: array
+      checklist:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem'
+        type: array
+      checklist_stats:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistStats'
+        description: |-
+          ChecklistStats is a derived view of `Checklist` populated by
+          callers (see `PopulateChecklistStats`) before serialization. Tagged
+          `bson:"-"` so the repository never persists it — the source of
+          truth is the items themselves. Surfaced on GetByID so the Esteira
+          Documentation tab can render a "X de Y obrigatórios aprovados"
+          badge without re-computing client-side.
+      co_brokering:
+        type: boolean
+      commission:
+        type: number
+      created_at:
+        type: string
+      customer_id:
+        description: |-
+          CustomerID is ALWAYS the lead.id of the buyer or tenant. Stays constant
+          across the lead→client lifecycle. To get the portal account, look up
+          the lead's `account_id` field via toca-crm — don't reuse this column
+          for that purpose.
+        type: string
+      display_id:
+        type: string
+      documents:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Document'
+        type: array
+      due_diligence:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence'
+      favorites:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Favorite'
+        type: array
+      history:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.History'
+        type: array
+      id:
+        type: string
+      idempotency_key:
+        description: |-
+          IdempotencyKey identifica a INTENÇÃO de criação: o mesmo formulário
+          reenviado (duplo clique, retry de rede) usa a mesma chave e o backend
+          devolve o negócio já criado em vez de duplicar. Vazio em negócios
+          criados por clientes sem a chave.
+        type: string
+      lead_id:
+        description: |-
+          LeadID is kept for explicit lead↔customer separation. Defaults to
+          CustomerID; in pre-conversion deals they're identical. Useful when a
+          deal is later transferred between leads (rare).
+        type: string
+      owner_id:
+        description: |-
+          OwnerID is the lead.id of the property owner (lead with role='owner').
+          It does NOT change after lead→client conversion — `account_id` is a
+          projection layered onto the same lead, not a replacement for the id.
+        type: string
+      parties:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Party'
+        type: array
+      property_id:
+        type: string
+      proposals:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Proposal'
+        type: array
+      recommended_property_id:
+        description: |-
+          RecommendedPropertyID é o imóvel que o corretor recomenda explicitamente
+          ao cliente (exibido no portal como "Sugestão do seu corretor").
+        type: string
+      signers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Signer'
+        type: array
+      source_company_id:
+        description: |-
+          SourceCompanyID is the tenant that OWNS the shared resource the deal
+          was started from. Only set when CoBrokering is true. Lets the Esteira
+          and the financial split identify the owner company.
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Status'
+      tenant_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Type'
+      updated_at:
+        type: string
+      value:
+        type: number
+    required:
+    - broker_id
+    - customer_id
+    - owner_id
+    - property_id
+    - status
+    - tenant_id
+    - type
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Document:
+    properties:
+      deal_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentStatus'
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentType'
+      uploaded_at:
+        type: string
+      uploaded_by:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentStatus:
+    enum:
+    - PENDING
+    - UPLOADED
+    - APPROVED
+    - REJECTED
+    type: string
+    x-enum-varnames:
+    - DocumentStatusPending
+    - DocumentStatusUploaded
+    - DocumentStatusApproved
+    - DocumentStatusRejected
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentType:
+    enum:
+    - IDENTITY
+    - INCOME
+    - RESIDENCE
+    - PROPERTY
+    - CONTRACT
+    - SIGNED_CONTRACT
+    - OTHER
+    type: string
+    x-enum-comments:
+      DocumentTypeContract: Minuta do Contrato
+      DocumentTypeIdentity: RG, CPF
+      DocumentTypeIncome: Comprovante de Renda
+      DocumentTypeProperty: Matrícula, IPTU
+      DocumentTypeResidence: Comprovante de Residência
+      DocumentTypeSignedContract: Contrato Assinado
+    x-enum-descriptions:
+    - RG, CPF
+    - Comprovante de Renda
+    - Comprovante de Residência
+    - Matrícula, IPTU
+    - Minuta do Contrato
+    - Contrato Assinado
+    - ""
+    x-enum-varnames:
+    - DocumentTypeIdentity
+    - DocumentTypeIncome
+    - DocumentTypeResidence
+    - DocumentTypeProperty
+    - DocumentTypeContract
+    - DocumentTypeSignedContract
+    - DocumentTypeOther
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence:
+    properties:
+      cnd_status:
+        description: '"PENDING", "CLEAN", "RESTRICTED"'
+        type: string
+      legal_opinion:
+        type: string
+      score_serasa:
+        type: integer
+      status:
+        description: '"PENDING", "APPROVED", "REJECTED"'
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Favorite:
+    properties:
+      account_id:
+        type: string
+      created_at:
+        type: string
+      property_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.FieldProvenance:
+    properties:
+      confidence:
+        type: number
+      document_id:
+        type: string
+      source:
+        type: string
+      updated_at:
+        type: string
+      validated_at:
+        type: string
+      validated_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.History:
+    properties:
+      deal_id:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Status'
+      timestamp:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Party:
+    properties:
+      account_id:
+        type: string
+      birth_date:
+        type: string
+      created_at:
+        type: string
+      custom_fields:
+        additionalProperties:
+          type: string
+        type: object
+      document:
+        type: string
+      due_diligence:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence'
+      email:
+        type: string
+      field_provenance:
+        additionalProperties:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.FieldProvenance'
+        description: |-
+          FieldProvenance registra, por campo, a origem do dado (IA/manual/validado) e
+          a confiança. Preenchido pela extração OCR+IA (auto-apply) e pela validação do
+          operador. Reside na JSONB do Deal — sem migration.
+        type: object
+      id:
+        type: string
+      is_primary:
+        type: boolean
+      kind:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind'
+      lead_id:
+        type: string
+      name:
+        type: string
+      no_spouse_declared:
+        type: boolean
+      phone:
+        type: string
+      representation:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation'
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole'
+      share_pct:
+        type: number
+      sign_status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus'
+      signature_required:
+        description: |-
+          SignatureRequired marks whether this party's acceptance is mandatory for
+          the deal to advance past the proposal stage. nil means "not configured" —
+          the helper IsSignatureRequired() falls back to IsPrimary so deals created
+          before this field existed keep the previous behavior.
+        type: boolean
+      signature_url:
+        type: string
+      signed_at:
+        type: string
+      spouse_of_party_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind:
+    enum:
+    - person
+    - company
+    type: string
+    x-enum-varnames:
+    - PartyKindPerson
+    - PartyKindCompany
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation:
+    properties:
+      allow_representative_proposal:
+        type: boolean
+      representative_party_id:
+        type: string
+      requires_principal_signature:
+        type: boolean
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.RepresentationType'
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole:
+    enum:
+    - tenant
+    - buyer
+    - owner
+    - guarantor
+    - witness
+    - spouse
+    - attorney
+    - legal_representative
+    - guardian
+    - curator
+    type: string
+    x-enum-varnames:
+    - PartyRoleTenant
+    - PartyRoleBuyer
+    - PartyRoleOwner
+    - PartyRoleGuarantor
+    - PartyRoleWitness
+    - PartyRoleSpouse
+    - PartyRoleAttorney
+    - PartyRoleLegalRep
+    - PartyRoleGuardian
+    - PartyRoleCurator
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Proposal:
+    properties:
+      accepted_by:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalAcceptance'
+        type: array
+      counter_value:
+        type: number
+      created_at:
+        type: string
+      created_by:
+        type: string
+      down_payment:
+        type: number
+      follow_up_last_at:
+        description: |-
+          FollowUpLastAt é quando o último lembrete saiu — âncora da cadência
+          seguinte. Vazio significa que nenhum lembrete saiu ainda e a âncora é
+          o envio da proposta.
+        type: string
+      follow_ups:
+        description: |-
+          FollowUps conta os lembretes temporais já disparados para esta proposta
+          (plano beta §F6). É o "grupo" da régua: cada estágio dispara UMA vez e
+          só depois do intervalo da cadência, nunca a cada varredura.
+        type: integer
+      id:
+        type: string
+      installments:
+        type: integer
+      notes:
+        type: string
+      payment_method:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalStatus'
+      value:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalAcceptance:
+    properties:
+      accepted_at:
+        type: string
+      party_id:
+        type: string
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole'
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalStatus:
+    enum:
+    - DRAFT
+    - SENT
+    - ACCEPTED
+    - REJECTED
+    - COUNTER_OFFER
+    type: string
+    x-enum-varnames:
+    - ProposalStatusDraft
+    - ProposalStatusSent
+    - ProposalStatusAccepted
+    - ProposalStatusRejected
+    - ProposalStatusCounter
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.RepresentationType:
+    enum:
+    - attorney
+    - legal_representative
+    - guardian
+    - curator
+    type: string
+    x-enum-varnames:
+    - RepresentationTypeAttorney
+    - RepresentationTypeLegalRep
+    - RepresentationTypeGuardian
+    - RepresentationTypeCurator
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole:
+    enum:
+    - inquilino
+    - proprietario
+    - fiador
+    - locador
+    - locatario
+    - comprador
+    - vendedor
+    - avalista
+    - testemunha
+    - conjuge
+    - procurador
+    - representante_legal
+    - tutor
+    - curador
+    type: string
+    x-enum-varnames:
+    - SignatoryRoleInquilino
+    - SignatoryRoleProprietario
+    - SignatoryRoleFiador
+    - SignatoryRoleLocador
+    - SignatoryRoleLocatario
+    - SignatoryRoleComprador
+    - SignatoryRoleVendedor
+    - SignatoryRoleAvalista
+    - SignatoryRoleTestemunha
+    - SignatoryRoleConjuge
+    - SignatoryRoleProcurador
+    - SignatoryRoleRepLegal
+    - SignatoryRoleTutor
+    - SignatoryRoleCurador
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Signer:
+    properties:
+      account_id:
+        type: string
+      auth_evidence_url:
+        description: |-
+          AuthEvidenceURL is Clicksign's link to the proof-of-authentication
+          document (e.g. selfie+document scan, ICP-Brasil certificate
+          snapshot). Stored separately from WidgetEventLogURL because legal
+          usually wants both attached side-by-side.
+        type: string
+      auth_method_used:
+        description: |-
+          AuthMethodUsed mirrors clicksign.AuthMethod (email | whatsapp |
+          sms | selfie | icp_brasil | selfie+document). Surfaces in the
+          audit trail so operators can answer "how did this signer
+          authenticate?" without joining against the envelope.
+        type: string
+      certificate_serial:
+        description: |-
+          CertificateSerial is the X.509 serial of the ICP-Brasil
+          certificate used to sign (when AuthMethodUsed=icp_brasil). Empty
+          for non-ICP signature methods. Stored as the canonical
+          uppercase-hex string Clicksign reports.
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_required:
+        description: |-
+          IsRequired marks whether this signer must sign for the contract to be
+          considered complete. nil means "not configured" — defaults to true so
+          existing deals don't suddenly bypass signatures.
+        type: boolean
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole'
+      signature_url:
+        type: string
+      signed_at:
+        type: string
+      signed_ip:
+        description: |-
+          SignedIP is the client IP recorded by Clicksign for the signature
+          event. Useful for fraud investigations ("the signer claims they
+          never signed but our log shows they did from X.Y.Z.W at HH:MM").
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus'
+      widget_event_log_url:
+        description: |-
+          WidgetEventLogURL is Clicksign's link to the per-signer event
+          log (page-views, downloads, signature acceptance). Operators
+          drop this into legal hand-offs as the canonical "audit trail of
+          the act of signing" for a single signer.
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus:
+    enum:
+    - PENDING
+    - SIGNED
+    - REJECTED
+    type: string
+    x-enum-varnames:
+    - SignerStatusPending
+    - SignerStatusSigned
+    - SignerStatusRejected
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Status:
+    enum:
+    - NEGOTIATION
+    - PROPOSAL
+    - ANALYSIS
+    - CONTRACT
+    - CONVERTED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - StatusNegotiation
+    - StatusProposal
+    - StatusAnalysis
+    - StatusContract
+    - StatusConverted
+    - StatusCancelled
+  github_com_oginoino_toca_toca-deal_internal_domain_deal.Type:
+    enum:
+    - SALE
+    - RENT
+    type: string
+    x-enum-varnames:
+    - TypeSale
+    - TypeRent
+  github_com_oginoino_toca_toca-deal_internal_services.BackfillStats:
+    properties:
+      failed:
+        type: integer
+      failed_doc_ids:
+        items:
+          type: string
+        type: array
+      reattempted:
+        type: integer
+      scanned:
+        type: integer
+      skipped_no_url:
+        type: integer
+      succeeded:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-deal_internal_services.ChecklistDocumentBackfillStats:
+    properties:
+      deals_scanned:
+        type: integer
+      documents:
+        type: integer
+      items_scanned:
+        type: integer
+    type: object
+  internal_api_v1_handlers.AcceptCounterOfferRequest:
+    properties:
+      proposal_id:
+        type: string
+    required:
+    - proposal_id
+    type: object
+  internal_api_v1_handlers.AddBrokerParticipationRequest:
+    properties:
+      broker_id:
+        type: string
+      commission:
+        type: number
+      percentage:
+        type: number
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole'
+        enum:
+        - captador
+        - co_captador
+        - visitador
+        - atendente
+        - fechamento
+        - imobiliaria
+    required:
+    - broker_id
+    - role
+    type: object
+  internal_api_v1_handlers.AddChecklistItemRequest:
+    properties:
+      category:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory'
+      description:
+        type: string
+      name:
+        type: string
+      party_id:
+        type: string
+      request_mode:
+        description: 'RequestMode: "upload" (anexo) ou "form" (apenas preenchimento).'
+        type: string
+      requested_fields:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField'
+        type: array
+      required:
+        type: boolean
+    required:
+    - category
+    - name
+    type: object
+  internal_api_v1_handlers.AddProposalRequest:
+    properties:
+      down_payment:
+        type: number
+      installments:
+        type: integer
+      notes:
+        type: string
+      payment_method:
+        type: string
+      value:
+        type: number
+    required:
+    - payment_method
+    - value
+    type: object
+  internal_api_v1_handlers.AddSignerRequest:
+    properties:
+      email:
+        type: string
+      is_required:
+        type: boolean
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole'
+    required:
+    - email
+    - name
+    - role
+    type: object
+  internal_api_v1_handlers.AmendContractRequest:
+    properties:
+      adjust_index:
+        type: string
+      auto_adjust:
+        type: boolean
+      content:
+        type: string
+      end_date:
+        type: string
+      late_fee_pct:
+        type: number
+      monthly_interest_pct:
+        type: number
+      next_adjustment:
+        type: string
+      reason:
+        type: string
+      security_deposit:
+        type: number
+      signatories:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory'
+        type: array
+      start_date:
+        type: string
+      value:
+        type: number
+    required:
+    - reason
+    type: object
+  internal_api_v1_handlers.ClientPortalSignatureDTO:
+    properties:
+      contract_id:
+        type: string
+      deadline:
+        type: string
+      envelope_id:
+        type: string
+      envelope_status:
+        type: string
+      environment:
+        type: string
+      has_envelope:
+        type: boolean
+      my_signer:
+        $ref: '#/definitions/internal_api_v1_handlers.ClientPortalSignerDTO'
+      other_signers:
+        items:
+          $ref: '#/definitions/internal_api_v1_handlers.ClientPortalSignerDTO'
+        type: array
+      signed_count:
+        type: integer
+      signed_document_url:
+        type: string
+      total_count:
+        type: integer
+    type: object
+  internal_api_v1_handlers.ClientPortalSignerDTO:
+    properties:
+      name:
+        type: string
+      request_signature_key:
+        description: |-
+          RequestSignatureKey is the per-signer Clicksign widget token. Only
+          populated for the calling user's record (MySigner) — never leaks
+          for OtherSigners.
+        type: string
+      role:
+        type: string
+      signed_at:
+        type: string
+      signer_id:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_api_v1_handlers.CompleteMyChecklistItemUploadRequest:
+    properties:
+      content_type:
+        type: string
+      file_name:
+        type: string
+      file_size:
+        type: integer
+      storage_key:
+        type: string
+    required:
+    - file_name
+    - storage_key
+    type: object
+  internal_api_v1_handlers.CreateDealRequest:
+    properties:
+      broker_id:
+        type: string
+      broker_participations:
+        items:
+          $ref: '#/definitions/internal_api_v1_handlers.SetBrokerParticipationItem'
+        type: array
+      customer_account_id:
+        type: string
+      customer_email:
+        type: string
+      customer_id:
+        description: Lead/Client ID (buyer or tenant)
+        type: string
+      customer_name:
+        type: string
+      customer_role:
+        description: e.g., "comprador", "locatario", "inquilino"
+        type: string
+      lead_id:
+        description: Explicit lead reference (optional, defaults to CustomerID)
+        type: string
+      owner_account_id:
+        type: string
+      owner_document:
+        type: string
+      owner_email:
+        type: string
+      owner_id:
+        type: string
+      owner_name:
+        description: |-
+          Owner identity hints — when the caller already has the property owner's
+          lead profile loaded (e.g. the captação leads list in the CRM), passing
+          these fields lets us populate the owner Party directly instead of relying
+          on a service-to-service CRM lookup that may fail silently (missing
+          INTERNAL_API_KEY, CRM_SERVICE_URL, network).
+        type: string
+      owner_phone:
+        type: string
+      parties:
+        items:
+          $ref: '#/definitions/internal_api_v1_handlers.CreatePartyRequest'
+        type: array
+      property_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Type'
+      value:
+        type: number
+    required:
+    - broker_id
+    - customer_id
+    - owner_id
+    - property_id
+    - type
+    - value
+    type: object
+  internal_api_v1_handlers.CreatePartyRequest:
+    properties:
+      account_id:
+        type: string
+      document:
+        type: string
+      email:
+        type: string
+      is_primary:
+        type: boolean
+      kind:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind'
+      lead_id:
+        type: string
+      name:
+        type: string
+      no_spouse_declared:
+        type: boolean
+      phone:
+        type: string
+      representation:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation'
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole'
+      share_pct:
+        type: number
+      spouse_of_party_id:
+        type: string
+    required:
+    - role
+    type: object
+  internal_api_v1_handlers.GetMyChecklistItemUploadURLRequest:
+    properties:
+      content_type:
+        type: string
+      file_name:
+        type: string
+      file_size:
+        type: integer
+    required:
+    - file_name
+    type: object
+  internal_api_v1_handlers.InitChecklistRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem'
+        type: array
+    required:
+    - items
+    type: object
+  internal_api_v1_handlers.ReadjustContractRequest:
+    properties:
+      effective_from:
+        type: string
+      index_name:
+        type: string
+      index_value:
+        type: number
+      new_value:
+        type: number
+      next_adjustment:
+        type: string
+      note:
+        type: string
+    type: object
+  internal_api_v1_handlers.SendForSignatureRequest:
+    properties:
+      attachment_document_ids:
+        items:
+          type: string
+        type: array
+      inline_attachments:
+        items:
+          $ref: '#/definitions/internal_api_v1_handlers.SendInlineAttachmentInput'
+        type: array
+      locale:
+        type: string
+      signer_auth:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      signer_groups:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  internal_api_v1_handlers.SendInlineAttachmentInput:
+    properties:
+      content_base64:
+        type: string
+      filename:
+        type: string
+    type: object
+  internal_api_v1_handlers.SetBrokerParticipationItem:
+    properties:
+      broker_id:
+        type: string
+      commission:
+        type: number
+      percentage:
+        maximum: 100
+        minimum: 0
+        type: number
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole'
+        enum:
+        - captador
+        - co_captador
+        - visitador
+        - atendente
+        - fechamento
+        - imobiliaria
+    required:
+    - role
+    type: object
+  internal_api_v1_handlers.SetBrokerParticipationsRequest:
+    properties:
+      commission:
+        maximum: 100
+        type: number
+      participations:
+        items:
+          $ref: '#/definitions/internal_api_v1_handlers.SetBrokerParticipationItem'
+        minItems: 1
+        type: array
+    required:
+    - participations
+    type: object
+  internal_api_v1_handlers.SignContractRequest:
+    properties:
+      signatory_id:
+        type: string
+      signature:
+        type: string
+    required:
+    - signatory_id
+    - signature
+    type: object
+  internal_api_v1_handlers.SignedFileResponse:
+    properties:
+      source:
+        type: string
+      status:
+        type: string
+      url:
+        type: string
+    type: object
+  internal_api_v1_handlers.TerminateContractRequest:
+    properties:
+      early_termination_fee:
+        type: number
+      exit_inspection_id:
+        type: string
+      reason:
+        type: string
+      require_exit_inspection:
+        type: boolean
+      security_deposit_deductions:
+        type: number
+      security_deposit_return:
+        type: number
+    required:
+    - reason
+    type: object
+  internal_api_v1_handlers.UpdateChecklistItemStatusRequest:
+    properties:
+      rejection_reason:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus'
+        description: |-
+          P0/A18: allowlist explícita. Antes era só `binding:"required"` e o valor
+          era gravado literalmente (inclusive qualquer string fora do domínio).
+        enum:
+        - PENDING
+        - UPLOADED
+        - APPROVED
+        - REJECTED
+    required:
+    - status
+    type: object
+  internal_api_v1_handlers.UpdateDueDiligenceRequest:
+    properties:
+      cnd_status:
+        type: string
+      legal_opinion:
+        type: string
+      score_serasa:
+        type: integer
+      status:
+        type: string
+    type: object
+  internal_api_v1_handlers.UpdateSignerStatusRequest:
+    properties:
+      signature_url:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus'
+    required:
+    - status
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+host: localhost:8084
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Deal service for Toca ecosystem
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Toca Deal API
+  version: "1.0"
+paths:
+  /checklist-templates:
+    get:
+      description: Returns the built-in templates bundled with the platform.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplate'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List checklist templates available for deals
+      tags:
+      - checklist
+  /client-portal/deals:
+    get:
+      consumes:
+      - application/json
+      description: List deals where the current user is a signer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get my deals
+      tags:
+      - portal
+  /client-portal/deals/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a deal by ID where the current user is a signer
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get my deal
+      tags:
+      - portal
+  /client-portal/deals/{id}/checklist:
+    get:
+      consumes:
+      - application/json
+      description: Get the document checklist for a deal where the current user is
+        a signer
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get my deal checklist
+      tags:
+      - portal
+  /client-portal/deals/{id}/checklist/{itemId}/download:
+    get:
+      description: Get a presigned URL to download a checklist item file and redirect
+        to it
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirects to presigned URL
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download checklist item file
+      tags:
+      - client-portal
+  /client-portal/deals/{id}/checklist/{itemId}/party-fields:
+    patch:
+      responses: {}
+  /client-portal/deals/{id}/checklist/{itemId}/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Mark a checklist item as uploaded for a deal where the current
+        user is a signer
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      - description: File
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Upload my checklist item
+      tags:
+      - portal
+  /client-portal/deals/{id}/checklist/{itemId}/upload-complete:
+    post:
+      consumes:
+      - application/json
+      description: Marks a checklist item as uploaded after the client successfully
+        PUT the file to the presigned URL
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      - description: Upload Complete Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.CompleteMyChecklistItemUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Complete checklist item upload
+      tags:
+      - portal
+  /client-portal/deals/{id}/checklist/{itemId}/upload-url:
+    post:
+      consumes:
+      - application/json
+      description: Generates a presigned PUT URL so the client can upload directly
+        to S3/MinIO
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      - description: Upload URL Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.GetMyChecklistItemUploadURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get presigned upload URL for my checklist item
+      tags:
+      - portal
+  /client-portal/deals/{id}/signature:
+    get:
+      description: |-
+        Returns envelope status + the user's own signer record + a
+        PII-filtered list of the other signers (name, role, status).
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_api_v1_handlers.ClientPortalSignatureDTO'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Signature status for the calling portal user
+      tags:
+      - portal
+  /client-portal/leads:
+    get:
+      consumes:
+      - application/json
+      description: Get all leads/interests where the user is the client
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get client's leads
+      tags:
+      - client-portal
+  /contracts:
+    post:
+      consumes:
+      - application/json
+      description: Create a new contract for a deal
+      parameters:
+      - description: Create Contract Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.CreateContractRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create contract
+      tags:
+      - contracts
+  /contracts/{id}:
+    delete:
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete contract
+      tags:
+      - contracts
+    get:
+      consumes:
+      - application/json
+      description: Get a contract by its ID
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get contract by ID
+      tags:
+      - contracts
+    put:
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update contract
+      tags:
+      - contracts
+  /contracts/{id}/amend:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Creates a new DRAFT contract that inherits unchanged fields
+        from the original. The amendment links back via
+        amends_contract_id. The original keeps ACTIVE until the
+        amendment is signed; envelope_finished on the amendment
+        expires the original.
+      parameters:
+      - description: Original contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Amendment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AmendContractRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Issue contract amendment (aditivo)
+      tags:
+      - contracts
+  /contracts/{id}/readjust:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Applies a manual readjustment to the rent value and publishes
+        contract.readjusted so toca-financial updates the recurring
+        monthly amount in RentalChargeConfig. Existing charges are
+        NOT modified — only future generations pick up the new value.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Readjustment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.ReadjustContractRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Readjust (reajustar) rental contract value
+      tags:
+      - contracts
+  /contracts/{id}/send-for-signature:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Locks the contract for edits, transitions to PENDING_SIGNATURE,
+        and publishes signature.requested for the signature service to process.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Auth methods per signer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.SendForSignatureRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: contract is locked for signature
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Send contract for external signature (Clicksign)
+      tags:
+      - contracts
+  /contracts/{id}/sign:
+    post:
+      consumes:
+      - application/json
+      description: Sign a contract as a signatory
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sign Contract Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.SignContractRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Sign contract
+      tags:
+      - contracts
+  /contracts/{id}/signed-file:
+    get:
+      description: |-
+        Returns the URL of the final signed PDF (post-Clicksign).
+        Prefers the persisted MinIO presigned URL (durable, internal)
+        and falls back to the Clicksign-hosted URL while persistence
+        is still in flight. Returns 404 if the contract isn't SIGNED
+        yet or if no URL is available.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_api_v1_handlers.SignedFileResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get the signed contract PDF URL
+      tags:
+      - contracts
+  /contracts/{id}/terminate:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Marks the contract as TERMINATED, records reason/fee/deposit
+        acerto, and publishes contract.terminated for toca-financial
+        to cancel future recurring charges and process the caução.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Termination request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.TerminateContractRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: exit inspection required
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Terminate (encerrar) rental contract
+      tags:
+      - contracts
+  /contracts/{id}/termination-fee-preview:
+    get:
+      description: |-
+        Aplica a fórmula canônica da Lei 8245/91 Art. 4 — multa
+        proporcional decrescente: 3 × aluguel × (meses_restantes /
+        total). Endpoint pensado para o portal cliente preview ANTES
+        de solicitar encerramento, e para o admin reconciliar o
+        número que vai aparecer no Terminate. Não muta nada.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data hipotética de encerramento (YYYY-MM-DD). Default = hoje.
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.TerminationFeeBreakdown'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Calcular multa de rescisão antecipada (#438)
+      tags:
+      - contracts
+  /deals:
+    get:
+      consumes:
+      - application/json
+      description: List deals with pagination
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List deals
+      tags:
+      - deals
+    post:
+      consumes:
+      - application/json
+      description: Create a new deal
+      parameters:
+      - description: Create Deal Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.CreateDealRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create deal
+      tags:
+      - deals
+  /deals/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a deal by its ID
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete deal
+      tags:
+      - deals
+    get:
+      consumes:
+      - application/json
+      description: Get a deal by its ID
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get deal by ID
+      tags:
+      - deals
+  /deals/{id}/accept-counter-offer:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint admin/operador para aceitar uma contraproposta enviada
+        pelo cliente. Deal.Value é atualizado para o CounterValue da proposal, status
+        vira ACCEPTED, evento publicado.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Counter-offer acceptance
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AcceptCounterOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: proposal_id required
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: tenant context required
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: deal or proposal not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: proposal is not in COUNTER_OFFER status
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Accept counter-offer (admin)
+      tags:
+      - deals
+  /deals/{id}/audit-log:
+    get:
+      consumes:
+      - application/json
+      description: Return the audit.events entries for this deal, newest first.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Page size (default 100, max 500)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/audit.LogEntry'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get audit trail for a deal
+      tags:
+      - deals
+  /deals/{id}/broker-participations:
+    post:
+      consumes:
+      - application/json
+      description: Add a broker with a specific role (captador, visitador, fechamento)
+        to a deal for history and commission purposes
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Broker Participation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddBrokerParticipationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add broker participation to deal
+      tags:
+      - deals
+    put:
+      consumes:
+      - application/json
+      description: 'Replace the entire broker_participations array. Sum of percentages
+        must be 100% (±0.01). Locked once the deal reaches CONVERTED (contract signed).
+        Issue #420.'
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Broker Participations payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.SetBrokerParticipationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Deal is locked (CONVERTED/CANCELLED)
+          schema:
+            $ref: '#/definitions/response.Response'
+        "422":
+          description: Sum is not 100
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Replace all broker participations on a deal
+      tags:
+      - deals
+  /deals/{id}/checklist:
+    post:
+      consumes:
+      - application/json
+      description: Add a single item to the deal checklist
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Checklist Item Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add checklist item
+      tags:
+      - deals
+    put:
+      responses: {}
+  /deals/{id}/checklist/{itemId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an item from the deal checklist
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove checklist item
+      tags:
+      - deals
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a checklist item (approve, reject, upload)
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      - description: Update Status Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.UpdateChecklistItemStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update checklist item status
+      tags:
+      - deals
+  /deals/{id}/checklist/{itemId}/download:
+    get:
+      description: Get a presigned URL to download a checklist item file and redirect
+        to it
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirects to presigned URL
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download checklist item file (CRM)
+      tags:
+      - deals
+  /deals/{id}/checklist/{itemId}/solicit:
+    post:
+      consumes:
+      - application/json
+      description: Mark a checklist item as solicited (requested from client)
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Checklist Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Solicit checklist item
+      tags:
+      - deals
+  /deals/{id}/contracts:
+    get:
+      consumes:
+      - application/json
+      description: List all contracts associated with a deal
+      parameters:
+      - description: Deal ID
+        in: path
+        name: deal_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List contracts by deal
+      tags:
+      - contracts
+  /deals/{id}/due-diligence:
+    put:
+      consumes:
+      - application/json
+      description: Update due diligence information
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Due Diligence Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.UpdateDueDiligenceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update due diligence
+      tags:
+      - deals
+  /deals/{id}/proposals:
+    post:
+      consumes:
+      - application/json
+      description: Add a new proposal to a deal
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Proposal Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddProposalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add proposal
+      tags:
+      - deals
+  /deals/{id}/reconcile-signers:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Forces the deal.Signers projection to be re-applied from
+        the contract's signatories. Recovery hatch for the
+        Esteira "Reconciliar" button when the periodic event flow
+        has drifted. Idempotent.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Force-resync the signer projection for a deal
+      tags:
+      - deals
+  /deals/{id}/signers:
+    post:
+      consumes:
+      - application/json
+      description: Add a signer to the deal
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Signer Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddSignerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add signer
+      tags:
+      - deals
+  /deals/{id}/signers/{signerId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a signer from the deal
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Signer ID
+        in: path
+        name: signerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove signer
+      tags:
+      - deals
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a signer
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Signer ID
+        in: path
+        name: signerId
+        required: true
+        type: string
+      - description: Update Signer Status Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.UpdateSignerStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update signer status
+      tags:
+      - deals
+    put:
+      responses: {}
+  /deals/{id}/signers/{signerId}/invite:
+    post:
+      consumes:
+      - application/json
+      description: Send an invitation to a deal signer
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Signer ID
+        in: path
+        name: signerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Invite signer
+      tags:
+      - deals
+  /deals/backfill-checklist-documents:
+    post:
+      description: |-
+        Varre os negócios do tenant e cria/atualiza a linha de documento
+        de cada item de checklist já enviado pelo cliente. Idempotente.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_services.ChecklistDocumentBackfillStats'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Materializa no painel de documentos os arquivos da esteira digital
+      tags:
+      - documents
+  /deals/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get active proposals count and monthly sales value
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get deal stats
+      tags:
+      - deals
+  /documents/backfill-signed:
+    post:
+      description: Targets contract-linked documents in `status=assinado` whose
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-deal_internal_services.BackfillStats'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Re-run the signed-PDF persistence pipeline for stuck rows
+      tags:
+      - documents
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

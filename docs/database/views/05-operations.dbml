@@ -1,0 +1,133 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'Operacoes e agenda. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table crm.leads [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__ContractID text [note: 'metadata.ContractID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+}
+
+Table core.properties [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__amends_contract_id text [note: 'metadata.amends_contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__entry_inspection_id text [note: 'metadata.entry_inspection_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+}
+
+Table financial.rentals [headercolor: #0F766E] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__tenant_lead_id text [note: 'metadata.tenant_lead_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+  json__owner_lead_id text [note: 'metadata.owner_lead_id; vinculo logico sem FK; fonte: toca-financial/internal/domain/rental/rental.go']
+}
+
+Table ops.inspections [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/inspection/inspection.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-ops/internal/models/inspection/inspection.go']
+}
+
+Table ops.keys [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/key/key.go']
+}
+
+Table ops.maintenance [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__rental_id text [note: 'metadata.rental_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__requester_lead_id text [note: 'metadata.requester_lead_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+  json__supplier_id text [note: 'metadata.supplier_id; vinculo logico sem FK; fonte: toca-ops/internal/models/maintenance/maintenance.go']
+}
+
+Table ops.suppliers [headercolor: #C2410C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table calendar.appointments [headercolor: #BE123C] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__lead_id text [note: 'metadata.lead_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-calendar/internal/models/appointment/appointment.go']
+}
+
+Ref logical_5: crm.leads.json__ContractID > deal.contracts.id [color: #94A3B8]
+
+Ref logical_13: deal.contracts.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_14: deal.contracts.json__customer_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_15: deal.contracts.json__amends_contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_16: deal.contracts.json__entry_inspection_id > ops.inspections.id [color: #94A3B8]
+
+Ref logical_20: financial.rentals.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_21: financial.rentals.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_22: financial.rentals.json__tenant_lead_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_23: financial.rentals.json__owner_lead_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_63: calendar.appointments.json__lead_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_64: calendar.appointments.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_67: ops.maintenance.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_68: ops.maintenance.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_69: ops.maintenance.json__rental_id > financial.rentals.id [color: #94A3B8]
+
+Ref logical_70: ops.maintenance.json__requester_lead_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_71: ops.maintenance.json__supplier_id > ops.suppliers.id [color: #94A3B8]
+
+Ref logical_72: ops.inspections.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_73: ops.inspections.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_77: ops.keys.json__property_id > core.properties.id [color: #94A3B8]
+
+TableGroup "02 CRM e atendimento" [color: #2563EB] {
+  crm.leads
+}
+
+TableGroup "03 Imoveis e empresa" [color: #0891B2] {
+  core.properties
+}
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+}
+
+TableGroup "06 Financeiro - cobranca" [color: #0F766E] {
+  financial.rentals
+}
+
+TableGroup "10 Operacoes" [color: #C2410C] {
+  ops.inspections
+  ops.keys
+  ops.maintenance
+  ops.suppliers
+}
+
+TableGroup "11 Agenda" [color: #BE123C] {
+  calendar.appointments
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 9 tabelas; 19 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

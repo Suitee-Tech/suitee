@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "positions": {
+    "table-core.properties": {
+      "x": 1105.6010568031704,
+      "y": -154.38573315719947
+    },
+    "table-deal.contracts": {
+      "x": 1067.6287978863934,
+      "y": 146.9154557463673
+    },
+    "table-financial.charges": {
+      "x": 131.35402906208702,
+      "y": -146.76089828269465
+    },
+    "table-financial.collections": {
+      "x": 651.354029062087,
+      "y": -146.76089828269465
+    },
+    "table-financial.rental_charge_configs": {
+      "x": 131.35402906208702,
+      "y": 149.23910171730535
+    },
+    "table-financial.rentals": {
+      "x": 651.354029062087,
+      "y": 149.23910171730535
+    },
+    "table-financial.utility_accounts": {
+      "x": 131.35402906208702,
+      "y": 445.23910171730535
+    },
+    "note-legenda_layout": {
+      "x": 1075.7199471598415,
+      "y": 423.31571994715983,
+      "width": 250,
+      "height": 180
+    }
+  }
+}

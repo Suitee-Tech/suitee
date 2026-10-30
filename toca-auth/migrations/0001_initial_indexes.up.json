@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    { "collection": "credentials", "keys": [{ "key": "email", "value": 1 }], "unique": true },
+    { "collection": "credentials", "keys": [{ "key": "account_id", "value": 1 }] },
+    { "collection": "accounts", "keys": [{ "key": "type", "value": 1 }] },
+    { "collection": "invitations", "keys": [{ "key": "token", "value": 1 }], "unique": true },
+    { "collection": "invitations", "keys": [{ "key": "email", "value": 1 }, { "key": "company_id", "value": 1 }] },
+    { "collection": "password_resets", "keys": [{ "key": "token", "value": 1 }], "unique": true },
+    { "collection": "user_preferences", "keys": [{ "key": "account_id", "value": 1 }], "unique": true }
+  ]
+}
+

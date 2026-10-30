@@ -1,0 +1,11 @@
+{
+  "event": {
+    "name": "expired",
+    "occurred_at": "2026-05-11T12:05:00Z",
+    "delivery_id": "delivery-expired-1"
+  },
+  "envelope": {
+    "id": "cs-env-1",
+    "status": "canceled"
+  }
+}

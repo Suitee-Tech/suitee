@@ -1,0 +1,6391 @@
+basePath: /api/v1
+definitions:
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.AgingBucket:
+    properties:
+      count:
+        type: integer
+      label:
+        type: string
+      max_days:
+        type: integer
+      min_days:
+        type: integer
+      total_debt:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.Allocation:
+    properties:
+      allocation_type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationType'
+      amount_cents:
+        type: integer
+      beneficiary_party_id:
+        type: string
+      charge_item_id:
+        type: string
+      id:
+        type: string
+      payment_id:
+        type: string
+      purpose:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationPurpose'
+      related_entity_id:
+        description: |-
+          RelatedEntityID points to the Commission financed by an
+          rental_intermediation_broker slice. Other purposes leave it empty.
+        type: string
+      rule_version_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationMethod:
+    enum:
+    - proportional_v1
+    type: string
+    x-enum-varnames:
+    - AllocationMethodProportionalV1
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationPurpose:
+    enum:
+    - sale_commission_broker
+    - rental_admin_fee
+    - rental_intermediation_broker
+    - rental_intermediation_agency
+    - owner_rent
+    type: string
+    x-enum-varnames:
+    - AllocationPurposeSaleCommissionBroker
+    - AllocationPurposeAdminFee
+    - AllocationPurposeRentalIntermediationBroker
+    - AllocationPurposeRentalIntermediationAgency
+    - AllocationPurposeOwnerRent
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationType:
+    enum:
+    - revenue
+    - owner_payable
+    - commission_payable
+    - partner_payable
+    - royalty_payable
+    - tax_withheld
+    - receivable
+    type: string
+    x-enum-varnames:
+    - AllocationTypeRevenue
+    - AllocationTypeOwnerPayable
+    - AllocationTypeCommissionPayable
+    - AllocationTypePartnerPayable
+    - AllocationTypeRoyaltyPayable
+    - AllocationTypeTaxWithheld
+    - AllocationTypeReceivable
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge:
+    properties:
+      amount:
+        $ref: '#/definitions/valueobjects.Money'
+      applied_event_ids:
+        items:
+          type: string
+        type: array
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      deal_id:
+        description: |-
+          DealID is the upstream deal that originated this charge (when applicable).
+          Persisted as `metadata->>'deal_id'` since the table uses JSONB storage;
+          indexed via supabase migration 20260510120000_charge_rental_indexes.sql.
+          Lets queries like "all charges of deal X" or "lead financial summary"
+          traverse the chain without joining via contract.
+        type: string
+      description:
+        type: string
+      discount:
+        $ref: '#/definitions/valueobjects.Money'
+      due_date:
+        type: string
+      id:
+        type: string
+      interest:
+        $ref: '#/definitions/valueobjects.Money'
+      late_fee:
+        $ref: '#/definitions/valueobjects.Money'
+      lead_id:
+        description: |-
+          LeadID denormalizes the customer lead id for the same reason — we want
+          to answer "everything this lead owes" without going through deal+contract.
+        type: string
+      line_items:
+        description: |-
+          LineItems discriminates the components that make up Amount when a
+          single charge is a *bundle* of conceptual line items — e.g. rental
+          charges that fold in fixed bundled extras (condomínio, IPTU, taxa de
+          administração). When set, Σ LineItems.AmountCents must equal
+          Amount.Cents(); enforced by ValidateLineItems. The frontend renders
+          the breakdown so the customer sees "Aluguel R$ 2.500 + Condomínio
+          R$ 800" on a single charge. Empty for charges that are not bundles.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.LineItem'
+        type: array
+      owner_id:
+        type: string
+      paid_amount:
+        $ref: '#/definitions/valueobjects.Money'
+      paid_at:
+        type: string
+      payment_method:
+        type: string
+      payments:
+        description: |-
+          Payments is the append-only log of every payment received against
+          this charge. The accumulated PaidAmount is Σ Payments.AmountCents.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.PaymentEntry'
+        type: array
+      property_id:
+        type: string
+      reference_month:
+        type: string
+      reminders_sent:
+        description: |-
+          RemindersSent is an append-only log of notification dispatches for this
+          charge. Populated by ChargeService.Notify after a successful send. UI
+          uses the count + last timestamp to badge the row and warn operators
+          before triggering duplicates within a short window.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.ReminderEntry'
+        type: array
+      source_event_id:
+        description: |-
+          SourceEventID is a deterministic identifier for the upstream event
+          that produced this charge — set by handlers that consume cross-service
+          events (maintenance.requested, inspection.deductions_recorded, etc.).
+          Empty for charges created directly by operators. Backed by a partial
+          unique index in supabase (migration 20260518120000) so retries from
+          the broker don't create duplicates. Derived via
+          events.DeriveNotificationID — see pkg/events/dedup.go.
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Status'
+      tenant_id:
+        type: string
+      tenant_party_id:
+        type: string
+      total_amount:
+        $ref: '#/definitions/valueobjects.Money'
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.ChargeType'
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.ChargeType:
+    enum:
+    - RENT
+    - SALE
+    - CONDOMINIO
+    - IPTU
+    - UTILITY
+    - MAINTENANCE
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - TypeRent
+    - TypeSale
+    - TypeCondominio
+    - TypeIPTU
+    - TypeUtility
+    - TypeMaintenance
+    - TypeOther
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.DelinquencyStats:
+    properties:
+      active_collections:
+        type: integer
+      average_days_overdue:
+        type: number
+      average_debt_amount:
+        type: number
+      recovery_rate:
+        type: number
+      total_debt_amount:
+        type: number
+      total_overdue:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.LineItem:
+    properties:
+      allocation_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationType'
+        description: |-
+          AllocationType lets a persisted item override the default destination
+          inferred from EconomicOwnerID. This is needed when one SALE receipt
+          contains both a third-party commission payable and the agency's retained
+          share, even though both are economically owned by the tenant.
+      amount_cents:
+        type: integer
+      description:
+        type: string
+      economic_owner_id:
+        description: |-
+          EconomicOwnerID is the party that economically benefits from this item
+          ("todo valor tem dono econômico", seção 9.4). Defaults to the charge
+          OwnerID when empty, preserving the pre-titularidade behavior.
+        type: string
+      id:
+        description: |-
+          ID is the stable identity used by PaymentEntry.Allocations. It is
+          generated server-side from the charge and item position so retries and
+          regenerated JSON keep the same relationship.
+        type: string
+      rule_version_id:
+        description: |-
+          RuleVersionID freezes the configuration/rule revision that produced
+          this item. Legacy/manual rows may use the charge-item policy version.
+        type: string
+      settlement_mode:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.SettlementMode'
+        description: |-
+          SettlementMode classifies how the collected value settles to the
+          economic owner (arrecadacao, liquidacao_direta, reembolso, compensacao).
+      source_id:
+        type: string
+      source_type:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.PaymentEntry:
+    properties:
+      allocation_method:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.AllocationMethod'
+        description: AllocationMethod makes the payment-partial appropriation rule
+          explicit.
+      allocations:
+        description: |-
+          Allocations split this payment into destination slices (owner_payable,
+          revenue, commission_payable, ...) per charge item. Empty for payments
+          recorded before the titularidade econômica dimension existed; Σ
+          Allocations.AmountCents must equal AmountCents once populated.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Allocation'
+        type: array
+      amount_cents:
+        type: integer
+      id:
+        description: |-
+          ID is the stable identity of the payment command that produced this
+          entry. Keeping it in the append-only log lets retries return the
+          original result without adding the same money twice.
+        type: string
+      method:
+        type: string
+      paid_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.ReminderEntry:
+    properties:
+      channels:
+        items:
+          type: string
+        type: array
+      recipient:
+        type: string
+      sent_at:
+        type: string
+      sent_by:
+        type: string
+      sent_by_label:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.SettlementMode:
+    enum:
+    - arrecadacao
+    - liquidacao_direta
+    - reembolso
+    - compensacao
+    type: string
+    x-enum-varnames:
+    - SettlementModeCollection
+    - SettlementModeDirectLiquidation
+    - SettlementModeReimbursement
+    - SettlementModeOffset
+  github_com_oginoino_toca_toca-financial_internal_domain_charge.Status:
+    enum:
+    - PENDING
+    - PAID
+    - OVERDUE
+    - CANCELLED
+    - PARTIALLY_PAID
+    - REVERSED
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusPaid
+    - StatusOverdue
+    - StatusCancelled
+    - StatusPartiallyPaid
+    - StatusReversed
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.Action:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Action'
+        type: array
+      charge_ids:
+        items:
+          type: string
+        type: array
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      days_overdue:
+        type: integer
+      debtor_id:
+        type: string
+      debtor_name:
+        type: string
+      guarantee:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeActivation'
+        description: |-
+          Guarantee — registro do acionamento da garantia locatícia,
+          presente quando a cobrança escalou para GUARANTEE_ACTIVATED (#447).
+      id:
+        type: string
+      judicial:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.JudicialProcess'
+        description: |-
+          Judicial — metadados do processo judicial, presente quando a
+          cobrança escalou para JUDICIAL (#448). Embutido no metadata JSONB.
+      negotiated_amount:
+        type: number
+      negotiated_date:
+        type: string
+      notes:
+        type: string
+      source_event_id:
+        description: |-
+          SourceEventID — chave de idempotência derivada do header
+          Idempotency-Key. Backed por índice único parcial no PostgreSQL
+          (uq_financial_collections_source_event_id) para evitar duplicatas
+          em re-submissões de criação manual (FIN-COM-12).
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Status'
+      tenant_id:
+        type: string
+      total_debt:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.CollectionStats:
+    properties:
+      active:
+        type: integer
+      guarantee_activated:
+        type: integer
+      judicial:
+        type: integer
+      negotiated:
+        type: integer
+      recovered_amount:
+        type: number
+      resolved:
+        type: integer
+      total_debt:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeActivation:
+    properties:
+      amount:
+        description: valor acionado
+        type: number
+      insurer_name:
+        description: |-
+          InsurerName / InsurerProtocol / InsurerResponse — preenchidos
+          quando a garantia é Seguro Fiança (o adaptador da seguradora
+          responde com protocolo). Para Fiador/Caução ficam vazios.
+        type: string
+      insurer_protocol:
+        type: string
+      insurer_response:
+        type: string
+      reason:
+        type: string
+      requested_at:
+        type: string
+      resolved_at:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeActivationStatus'
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeType'
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeActivationStatus:
+    enum:
+    - REQUESTED
+    - ACCEPTED
+    - REJECTED
+    - PAID
+    - CANCELLED
+    type: string
+    x-enum-comments:
+      GuaranteeStatusAccepted: garantidor aceitou
+      GuaranteeStatusCancelled: acionamento cancelado
+      GuaranteeStatusPaid: valor recuperado
+      GuaranteeStatusRejected: acionamento recusado
+      GuaranteeStatusRequested: acionamento aberto
+    x-enum-descriptions:
+    - acionamento aberto
+    - garantidor aceitou
+    - acionamento recusado
+    - valor recuperado
+    - acionamento cancelado
+    x-enum-varnames:
+    - GuaranteeStatusRequested
+    - GuaranteeStatusAccepted
+    - GuaranteeStatusRejected
+    - GuaranteeStatusPaid
+    - GuaranteeStatusCancelled
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeType:
+    enum:
+    - SEGURO_FIANCA
+    - FIADOR
+    - CAUCAO
+    type: string
+    x-enum-varnames:
+    - GuaranteeTypeSeguroFianca
+    - GuaranteeTypeFiador
+    - GuaranteeTypeCaucao
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.JudicialProcess:
+    properties:
+      case_number:
+        description: |-
+          CaseNumber — número único do processo no padrão CNJ
+          (NNNNNNN-DD.AAAA.J.TR.OOOO). Validar com ValidateCNJ.
+        type: string
+      claim_value:
+        description: valor da causa
+        type: number
+      court:
+        description: vara / comarca
+        type: string
+      created_at:
+        type: string
+      lawyer:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Lawyer'
+      next_hearing:
+        type: string
+      notes:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.JudicialStatus'
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.JudicialStatus:
+    enum:
+    - EM_TRAMITE
+    - ACORDO
+    - SENTENCA_PROCEDENTE
+    - SENTENCA_IMPROCEDENTE
+    - ARQUIVADO
+    type: string
+    x-enum-varnames:
+    - JudicialStatusEmTramite
+    - JudicialStatusAcordo
+    - JudicialStatusSentencaProcedente
+    - JudicialStatusSentencaImprocedente
+    - JudicialStatusArquivado
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.Lawyer:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      oab:
+        type: string
+      phone:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_collection.Status:
+    enum:
+    - ACTIVE
+    - NEGOTIATED
+    - GUARANTEE_ACTIVATED
+    - JUDICIAL
+    - RESOLVED
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusNegotiated
+    - StatusGuaranteeActivated
+    - StatusJudicial
+    - StatusResolved
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission:
+    properties:
+      amount:
+        type: number
+      approved_by:
+        type: string
+      broker_id:
+        type: string
+      cancelled_at:
+        type: string
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      customer_id:
+        type: string
+      deal_id:
+        type: string
+      deductions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Deduction'
+        type: array
+      funded_amount_cents:
+        type: integer
+      funding_entries:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.FundingEntry'
+        type: array
+      funding_required_cents:
+        description: |-
+          FundingRequiredCents gates automatic sale and rental commissions on
+          collected receipts. Explicit manual obligations may keep zero.
+        type: integer
+      gross_amount:
+        type: number
+      id:
+        type: string
+      ledger_transaction_id:
+        description: |-
+          LedgerTransactionID is the stable posting created for this obligation by
+          the manual posting command. It is deliberately the Transaction primary
+          key: one deterministic identity is enough to make lifecycle synchronization
+          and reconciliation unambiguous, including when plan_hash is absent.
+        type: string
+      net_amount:
+        type: number
+      note:
+        type: string
+      owner_id:
+        type: string
+      paid_at:
+        type: string
+      payout_order_id:
+        type: string
+      percentage:
+        type: number
+      plan_hash:
+        description: 'FIN-COM-04: links commission to its resolved plan'
+        type: string
+      proof_url:
+        type: string
+      property_id:
+        type: string
+      requested_by:
+        description: |-
+          RequestedBy / ApprovedBy — fechamento do achado A13 (segregação de funções)
+          no caminho STANDALONE. Antes, o ator existia apenas na trilha de auditoria:
+          sem o autor no estado não havia como comparar criador × aprovador nem
+          aprovador × pagador, e `financeiro` (que tem `finance:write` e
+          `finance:approve_transfer`) criava e aprovava a própria comissão.
+          Vazio é dado legado/worker e NÃO cria conflito (mesma decisão dos fluxos de
+          transfer/payout/withdrawal).
+        type: string
+      role:
+        type: string
+      source_event_id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Status'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.Deduction:
+    properties:
+      amount:
+        type: number
+      description:
+        type: string
+      id:
+        type: string
+      kind:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.DeductionKind'
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.DeductionKind:
+    enum:
+    - IRRF
+    - INSS
+    - ISS
+    - OUTROS
+    type: string
+    x-enum-varnames:
+    - DeductionIRRF
+    - DeductionINSS
+    - DeductionISS
+    - DeductionOutros
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.FundingEntry:
+    properties:
+      amount_cents:
+        type: integer
+      charge_id:
+        type: string
+      funded_at:
+        type: string
+      payment_id:
+        type: string
+      reference_month:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.Role:
+    enum:
+    - captador
+    - co_captador
+    - visitador
+    - atendente
+    - fechamento
+    - imobiliaria
+    type: string
+    x-enum-varnames:
+    - RoleCaptador
+    - RoleCoCaptador
+    - RoleVisitador
+    - RoleAtendente
+    - RoleFechamento
+    - RoleImobiliaria
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.Rule:
+    properties:
+      default_percentage:
+        type: number
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Role'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_commission.Status:
+    enum:
+    - PENDING
+    - APPROVED
+    - PAID
+    - CANCELLED
+    - REVERSED
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusApproved
+    - StatusPaid
+    - StatusCancelled
+    - StatusReversed
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DeadlineStatus:
+    enum:
+    - UPCOMING
+    - DUE_SOON
+    - OVERDUE
+    - COMPLETED
+    type: string
+    x-enum-varnames:
+    - DeadlineStatusUpcoming
+    - DeadlineStatusDueSoon
+    - DeadlineStatusOverdue
+    - DeadlineStatusCompleted
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DimobReport:
+    properties:
+      created_at:
+        type: string
+      declarante_cnpj:
+        description: |-
+          DeclaranteCNPJ / DeclaranteNome — dados da pessoa jurídica que
+          entrega a DIMOB (a imobiliária). Capturados no GenerateDimob e
+          usados no download do TXT (registro R01 do layout RFB). Issue #418.
+        type: string
+      declarante_nome:
+        type: string
+      file_url:
+        type: string
+      generated_at:
+        type: string
+      id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DimobStatus'
+      submitted_at:
+        type: string
+      tenant_id:
+        type: string
+      total_amount:
+        type: number
+      total_rentals:
+        type: integer
+      total_sales:
+        type: integer
+      year:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DimobStatus:
+    enum:
+    - PENDING
+    - GENERATING
+    - READY
+    - SUBMITTED
+    - ERROR
+    type: string
+    x-enum-varnames:
+    - DimobStatusPending
+    - DimobStatusGenerating
+    - DimobStatusReady
+    - DimobStatusSubmitted
+    - DimobStatusError
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.FiscalDeadline:
+    properties:
+      description:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DeadlineStatus'
+      tenant_id:
+        type: string
+      title:
+        type: string
+      type:
+        description: DIMOB, NFSE, INFORME
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Informe:
+    properties:
+      created_at:
+        type: string
+      generated_at:
+        type: string
+      id:
+        type: string
+      owner_id:
+        type: string
+      owner_name:
+        type: string
+      pdf_url:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.InformeStatus'
+      tenant_id:
+        type: string
+      total_admin_fee:
+        type: number
+      total_gross:
+        type: number
+      total_intermediation:
+        description: |-
+          TotalIntermediation soma a intermediação imobiliária retida dos
+          repasses do ano (T-05): é a linha que explica o repasse menor do que o
+          bruto, junto com a taxa de administração.
+        type: number
+      total_net:
+        type: number
+      year:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.InformeStatus:
+    enum:
+    - PENDING
+    - GENERATING
+    - READY
+    - ERROR
+    type: string
+    x-enum-varnames:
+    - InformeStatusPending
+    - InformeStatusGenerating
+    - InformeStatusReady
+    - InformeStatusError
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Nfse:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: string
+      issue_date:
+        type: string
+      number:
+        type: string
+      pdf_url:
+        type: string
+      recipient_document:
+        type: string
+      recipient_name:
+        type: string
+      reference_month:
+        type: string
+      service_description:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.NfseStatus'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      xml_url:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.NfseStatus:
+    enum:
+    - DRAFT
+    - ISSUED
+    - CANCELLED
+    - ERROR
+    type: string
+    x-enum-varnames:
+    - NfseStatusDraft
+    - NfseStatusIssued
+    - NfseStatusCancelled
+    - NfseStatusError
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.ReportHistory:
+    properties:
+      file_url:
+        type: string
+      generated_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.ReportHistoryStatus'
+      tenant_id:
+        type: string
+      type:
+        description: DIMOB, NFSE, INFORME
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_fiscal.ReportHistoryStatus:
+    enum:
+    - READY
+    - ERROR
+    type: string
+    x-enum-varnames:
+    - ReportHistoryStatusReady
+    - ReportHistoryStatusError
+  github_com_oginoino_toca_toca-financial_internal_domain_invoice.Invoice:
+    properties:
+      amount:
+        type: number
+      charge_id:
+        description: |-
+          ChargeID allocates cash received through this billing artifact to the
+          canonical receivable. An invoice without a charge link may still be read
+          for legacy/reporting purposes, but cannot be paid.
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: string
+      paid_at:
+        type: string
+      payer_id:
+        description: PartyID
+        type: string
+      reference_id:
+        description: DealID or ContractID
+        type: string
+      source_event_id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Status'
+      tenant_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Type'
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_invoice.Status:
+    enum:
+    - DRAFT
+    - ISSUED
+    - PAID
+    - OVERDUE
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - StatusDraft
+    - StatusIssued
+    - StatusPaid
+    - StatusOverdue
+    - StatusCancelled
+  github_com_oginoino_toca_toca-financial_internal_domain_invoice.Type:
+    enum:
+    - RENT
+    - SALE
+    - FEE
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - TypeRent
+    - TypeSale
+    - TypeFee
+    - TypeOther
+  github_com_oginoino_toca_toca-financial_internal_domain_journal.Account:
+    enum:
+    - cash
+    - accounts_receivable
+    - commission_payable
+    - owner_payable
+    - partner_payable
+    - royalty_payable
+    - tax_withheld
+    - other_payable
+    - withdrawal_payable
+    - equity
+    - revenue
+    - commission_expense
+    - expense
+    type: string
+    x-enum-comments:
+      AccountAccountsReceivable: contas a receber (inquilino/comprador)
+      AccountCash: caixa
+      AccountCommissionExpense: despesa de comissão
+      AccountCommissionPayable: comissão a pagar ao corretor
+      AccountEquity: patrimônio líquido da imobiliária (disponível para saque)
+      AccountExpense: despesa genérica
+      AccountOtherPayable: outras retenções a destinar
+      AccountOwnerPayable: repasse a pagar ao proprietário
+      AccountPartnerPayable: valor devido a empresa parceira
+      AccountRevenue: receita (aluguel/venda/encargos)
+      AccountRoyaltyPayable: royalty devido a franqueadora
+      AccountTaxWithheld: tributo retido a recolher
+      AccountWithdrawalPayable: saque a pagar
+    x-enum-descriptions:
+    - caixa
+    - contas a receber (inquilino/comprador)
+    - comissão a pagar ao corretor
+    - repasse a pagar ao proprietário
+    - valor devido a empresa parceira
+    - royalty devido a franqueadora
+    - tributo retido a recolher
+    - outras retenções a destinar
+    - saque a pagar
+    - patrimônio líquido da imobiliária (disponível para saque)
+    - receita (aluguel/venda/encargos)
+    - despesa de comissão
+    - despesa genérica
+    x-enum-varnames:
+    - AccountCash
+    - AccountAccountsReceivable
+    - AccountCommissionPayable
+    - AccountOwnerPayable
+    - AccountPartnerPayable
+    - AccountRoyaltyPayable
+    - AccountTaxWithheld
+    - AccountOtherPayable
+    - AccountWithdrawalPayable
+    - AccountEquity
+    - AccountRevenue
+    - AccountCommissionExpense
+    - AccountExpense
+  github_com_oginoino_toca_toca-financial_internal_domain_journal.AccountNature:
+    enum:
+    - asset
+    - liability
+    - equity
+    - revenue
+    - expense
+    type: string
+    x-enum-varnames:
+    - NatureAsset
+    - NatureLiability
+    - NatureEquity
+    - NatureRevenue
+    - NatureExpense
+  github_com_oginoino_toca_toca-financial_internal_domain_journal.ChartAccount:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      flows:
+        items:
+          type: string
+        type: array
+      ledger_account:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_journal.Account'
+      name:
+        type: string
+      nature:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_journal.AccountNature'
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_journal.ChartOfAccounts:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_journal.ChartAccount'
+        type: array
+      version:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowEntry:
+    properties:
+      inflow_cents:
+        description: charges PAID + invoices PAID
+        type: integer
+      net_cents:
+        type: integer
+      outflow_cents:
+        description: transfers PROCESSED + withdrawals COMPLETED
+        type: integer
+      period:
+        description: |-
+          Period é o início do bucket (YYYY-MM-DD para day, YYYY-MM para month,
+          "YYYY-Www" para week — formato ISO).
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowGranularity:
+    enum:
+    - day
+    - week
+    - month
+    type: string
+    x-enum-varnames:
+    - CashFlowDaily
+    - CashFlowWeekly
+    - CashFlowMonthly
+  github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowReport:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowEntry'
+        type: array
+      from:
+        type: string
+      generated_at:
+        type: string
+      granularity:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowGranularity'
+      tenant_id:
+        type: string
+      to:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.CategoryBucket:
+    properties:
+      category:
+        type: string
+      count:
+        type: integer
+      total_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.DREReport:
+    properties:
+      expense:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.CategoryBucket'
+        type: array
+      from:
+        type: string
+      generated_at:
+        type: string
+      net_cents:
+        type: integer
+      revenue:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.CategoryBucket'
+        type: array
+      tenant_id:
+        type: string
+      to:
+        type: string
+      unclassified_receipts_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.DelinquencySnapshot:
+    properties:
+      average_days_overdue:
+        type: number
+      overdue_count:
+        type: integer
+      overdue_total_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.FinancialSummary:
+    properties:
+      delinquency:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.DelinquencySnapshot'
+      from:
+        type: string
+      generated_at:
+        type: string
+      receivables:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.Section'
+        description: financial.charges
+      tenant_id:
+        type: string
+      to:
+        type: string
+      withdrawals:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.Section'
+        description: financial.withdrawals
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.KPIs:
+    properties:
+      active_contract_count:
+        type: integer
+      agency_available_cash_cents:
+        type: integer
+      average_ticket_cents:
+        type: integer
+      cash_balance_cents:
+        description: |-
+          Posição contábil corrente derivada exclusivamente do journal. Saldos de
+          passivo são apresentados como obrigações positivas, embora o ledger os
+          armazene naturalmente como crédito (valor assinado negativo).
+        type: integer
+      commission_paid_month_cents:
+        type: integer
+      commission_payable_cents:
+        type: integer
+      committed_funds_cents:
+        type: integer
+      coverage_gap_cents:
+        type: integer
+      delinquency_pct:
+        description: overdue / (overdue + recebimento bruto do mês) × 100
+        type: number
+      generated_at:
+        type: string
+      other_commitments_cents:
+        type: integer
+      other_payable_cents:
+        type: integer
+      overdue_cents:
+        description: só OVERDUE
+        type: integer
+      overdue_count:
+        type: integer
+      owner_payable_cents:
+        type: integer
+      partner_payable_cents:
+        type: integer
+      receivable_cents:
+        description: PENDING + OVERDUE + saldo de PARTIALLY_PAID
+        type: integer
+      revenue_last_30_cents:
+        description: receita própria na janela móvel de 30 dias
+        type: integer
+      revenue_month_cents:
+        description: receita própria realizada no mês
+        type: integer
+      royalty_payable_cents:
+        type: integer
+      tax_withheld_cents:
+        type: integer
+      tenant_id:
+        type: string
+      third_party_obligations_cents:
+        type: integer
+      unexpected_payable_debit_cents:
+        type: integer
+      withdrawal_payable_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.Section:
+    properties:
+      by_status:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.StatusBucket'
+        type: array
+      total_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_report.StatusBucket:
+    properties:
+      count:
+        type: integer
+      status:
+        type: string
+      total_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan.CompositeInput:
+    properties:
+      dacao_amount_cents:
+        type: integer
+      dacao_description:
+        type: string
+      saldo_amount_cents:
+        type: integer
+      saldo_description:
+        type: string
+      saldo_due_date:
+        type: string
+      troca_amount_cents:
+        type: integer
+      troca_description:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan.Mode:
+    enum:
+    - SINGLE
+    - INSTALLMENTS
+    type: string
+    x-enum-varnames:
+    - ModeSingle
+    - ModeInstallments
+  github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan_draft.Draft:
+    properties:
+      composite:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan.CompositeInput'
+      consumed_at:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deal_id:
+        type: string
+      down_payment_cents:
+        type: integer
+      first_due_date:
+        type: string
+      id:
+        type: string
+      installment_amount_cents:
+        type: integer
+      installment_count:
+        type: integer
+      mode:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan.Mode'
+      recurrence_interval_days:
+        type: integer
+      tenant_id:
+        type: string
+      total_amount_cents:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_tenant_financial_settings.Settings:
+    properties:
+      admin_fee_pct:
+        description: |-
+          AdminFeePct é o % do aluguel bruto retido pela imobiliária como
+          taxa de administração antes do repasse ao proprietário.
+          Consumido pelo TransferChargeHook.EnsureMonthlyForChargePaid
+          (RENT e SALE). Default DefaultAdminFeePct (10%).
+        type: number
+      default_commission_pct_rent:
+        type: number
+      default_commission_pct_sale:
+        type: number
+      default_currency:
+        type: string
+      default_due_day:
+        type: integer
+      default_late_fee_pct:
+        type: number
+      default_lease_term_months:
+        description: |-
+          DefaultLeaseTermMonths é o prazo padrão (meses) sugerido para novos
+          contratos de locação. Consumido pelo plano pré-contrato da esteira.
+        type: integer
+      default_monthly_interest_pct:
+        type: number
+      payout_proof_required:
+        type: boolean
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transaction.EconomicBreakdown:
+    properties:
+      admin_fee_cents:
+        description: |-
+          AdminFeeCents is the recurring administration fee (taxa de administração)
+          retained by the agency on RENT receipts. It is zero for SALE receipts and
+          for legacy rows predating rental manual receipts.
+        type: integer
+      agency_retained_cents:
+        type: integer
+      commission_funded_cents:
+        description: |-
+          Funding is a receipt-specific subset of the existing broker obligation,
+          never a second payable. The flag distinguishes known zero from legacy data.
+        type: integer
+      commission_funding_known:
+        type: boolean
+      commission_payable_cents:
+        type: integer
+      commission_pool_cents:
+        type: integer
+      discount_cents:
+        type: integer
+      flow:
+        type: string
+      gross_cents:
+        type: integer
+      owner_payable_cents:
+        type: integer
+      partner_payable_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transaction.Status:
+    enum:
+    - PENDING
+    - PAID
+    - OVERDUE
+    - REVERSED
+    - CANCELLED
+    - PENDING
+    - PAID
+    - OVERDUE
+    - REVERSED
+    - CANCELLED
+    - Pendente
+    - Pago
+    - Em Atraso
+    - Estornado
+    - Cancelado
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusPaid
+    - StatusOverdue
+    - StatusReversed
+    - StatusCancelled
+    - _StatusPendente
+    - _StatusPago
+    - _StatusEmAtraso
+    - _StatusEstornado
+    - _StatusCancelado
+    - StatusPendente
+    - StatusPago
+    - StatusEmAtraso
+    - StatusEstornado
+    - StatusCancelado
+  github_com_oginoino_toca_toca-financial_internal_domain_transaction.Transaction:
+    properties:
+      admin_fee:
+        type: number
+      batch_fingerprint:
+        description: |-
+          BatchFingerprint binds an idempotency key to the complete manual command,
+          including its transaction and Commission cardinalities. The counters make
+          that invariant inspectable without inferring it from row presence.
+        type: string
+      batch_line_count:
+        type: integer
+      broker_id:
+        description: |-
+          BrokerID and Role make each commission ledger line correlate exactly with
+          its Commission aggregate. PlanHash alone identifies the whole plan and is
+          therefore insufficient when a contract has more than one beneficiary.
+        type: string
+      category:
+        type: string
+      commission_count:
+        type: integer
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      date:
+        type: string
+      deal_id:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      economic_breakdown:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transaction.EconomicBreakdown'
+      gross_value:
+        type: number
+      id:
+        type: string
+      maintenance_deductions:
+        type: number
+      month:
+        type: string
+      note:
+        description: 'Note é a observação do operador na baixa (ex.: "TED 14:30, conferido").'
+        type: string
+      operation_id:
+        description: |-
+          OperationID groups every posting created by the same manual action. It is
+          deliberately distinct from SourceEventID, which identifies one line for
+          idempotency, and from ID/PostingID, which identifies the persisted entry.
+        type: string
+      payer_kind:
+        type: string
+      payer_name:
+        type: string
+      payment_date:
+        type: string
+      payment_method:
+        type: string
+      payment_plan:
+        description: |-
+          PaymentPlan carries the payment plan programmed in the pipeline when the
+          operator posted a manual receipt (ex.: "Entrada + 11x de R$ 8.333,33").
+          It is informational provenance and does not affect the posting math.
+        type: string
+      plan_hash:
+        description: 'FIN-COM-04: links transaction to its resolved commission plan'
+        type: string
+      posting_id:
+        type: string
+      proof_url:
+        description: |-
+          ProofURL é o comprovante (foto/PDF/link) anexado na baixa do lançamento.
+          Padronizado com o fluxo de cobranças/comissões/repasse: qualquer baixa
+          aceita documento e o guarda no lançamento para o recibo e auditoria.
+        type: string
+      role:
+        type: string
+      source_event_id:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transaction.Status'
+      tenant_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transaction.Type'
+      updated_at:
+        type: string
+      utility_deductions:
+        type: number
+      value:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transaction.Type:
+    enum:
+    - receita
+    - despesa
+    - repasse
+    - comissao
+    - estorno
+    type: string
+    x-enum-varnames:
+    - TypeReceita
+    - TypeDespesa
+    - TypeRepasse
+    - TypeComissao
+    - TypeEstorno
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.Deduction:
+    properties:
+      amount:
+        type: number
+      description:
+        type: string
+      ledger_account:
+        description: |-
+          LedgerAccount é a contrapartida da retenção no razão. A natureza do
+          valor depende de quem adiantou o pagamento (direito a receber da
+          imobiliária ou obrigação com terceiro), então quem aplica a dedução
+          declara a conta; vazio cai no padrão do Type.
+        type: string
+      reference_id:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.EconomicBreakdown:
+    properties:
+      admin_fee_cents:
+        type: integer
+      agency_retained_cents:
+        type: integer
+      agency_revenue_cents:
+        type: integer
+      available_cents:
+        type: integer
+      commission_funded_cents:
+        type: integer
+      commission_payable_cents:
+        type: integer
+      deductions_cents:
+        type: integer
+      discount_cents:
+        type: integer
+      flow:
+        description: rent | sale
+        type: string
+      gross_cents:
+        type: integer
+      intermediation_revenue_cents:
+        type: integer
+      owner_payable_cents:
+        type: integer
+      partner_payable_cents:
+        type: integer
+      reserved_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.HistoryEntry:
+    properties:
+      action:
+        description: '"created" | "approved" | "processed" | "cancelled"'
+        type: string
+      actor:
+        type: string
+      actor_label:
+        type: string
+      at:
+        type: string
+      note:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalance:
+    properties:
+      blocked_cents:
+        type: integer
+      reserved_cents:
+        type: integer
+      total_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalanceMovement:
+    properties:
+      actor:
+        type: string
+      amount_cents:
+        type: integer
+      at:
+        type: string
+      id:
+        type: string
+      managed_bill_id:
+        type: string
+      payment_attempt_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalanceMovementType'
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalanceMovementType:
+    enum:
+    - consume_reserved
+    - release_reserved
+    - restore_reserved
+    type: string
+    x-enum-varnames:
+    - OwnerBalanceMovementConsumeReserved
+    - OwnerBalanceMovementReleaseReserved
+    - OwnerBalanceMovementRestoreReserved
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer:
+    properties:
+      admin_fee_amount:
+        type: number
+      admin_fee_percent:
+        type: number
+      approved_at:
+        type: string
+      approved_by:
+        type: string
+      bank_account:
+        type: string
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      deduction_details:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.Deduction'
+        type: array
+      economic_breakdown:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.EconomicBreakdown'
+        description: |-
+          EconomicBreakdown is populated for charge-backed transfers after the
+          payment allocation closes. It is optional for legacy/manual transfers.
+      gross_rent:
+        type: number
+      history:
+        description: |-
+          History is the append-only audit trail of state transitions
+          (created → approved → processed) plus any future cancel/reopen. UI
+          surfaces this on the repasse detail so operators can see who did what
+          and when.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.HistoryEntry'
+        type: array
+      id:
+        type: string
+      maintenance_deductions:
+        type: number
+      net_amount:
+        type: number
+      notes:
+        type: string
+      other_deductions:
+        type: number
+      owner_balance:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalance'
+        description: |-
+          OwnerBalance is populated for allocation-aware transfers. TotalCents is
+          the complete owner payable, ReservedCents holds values collected for
+          direct liquidation/offset, and BlockedCents mirrors transfer deductions.
+          Nil identifies legacy transfers, whose net remains derived from GrossRent.
+      owner_balance_base_reserved_cents:
+        type: integer
+      owner_balance_base_total_cents:
+        description: |-
+          OwnerBalanceBase* freezes the allocation-derived economic basis. Lifecycle
+          movements never edit that basis: the current buckets are rebuilt by
+          replaying the append-only OwnerBalanceMovements over it. This makes a
+          charge-payment retry deterministic without resurrecting consumed/released
+          reserves.
+        type: integer
+      owner_balance_movements:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalanceMovement'
+        type: array
+      owner_id:
+        type: string
+      processed_at:
+        type: string
+      processed_by:
+        type: string
+      proof_url:
+        description: |-
+          ProofURL é o comprovante anexado pelo operador ao efetivar o repasse
+          manualmente (fluxo externo/banco). Registrado no PROCESSED para auditoria.
+        type: string
+      property_id:
+        type: string
+      reference_month:
+        type: string
+      settlement_journal_source_id:
+        type: string
+      settlement_type:
+        description: |-
+          SettlementType distinguishes a monthly rental repasse from a sale
+          settlement. Empty means a legacy row whose semantics predate this field.
+        type: string
+      source_charge_id:
+        description: |-
+          SourceChargeID is the stable identity of the fully paid charge that
+          released this transfer. SALE plans may have multiple installments in the
+          same reference month, so contract+month is not a safe idempotency key.
+          Legacy/manual transfers leave it empty and retain monthly uniqueness.
+        type: string
+      source_transaction_id:
+        description: |-
+          SourceTransactionID identifies a manual receipt whose settlement released
+          this owner obligation. It is mutually exclusive with SourceChargeID.
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.Status'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_transfer.Status:
+    enum:
+    - PENDING
+    - APPROVED
+    - PROCESSED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusApproved
+    - StatusProcessed
+    - StatusCancelled
+  github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.HistoryEntry:
+    properties:
+      action:
+        type: string
+      actor:
+        type: string
+      at:
+        type: string
+      note:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Status:
+    enum:
+    - PENDING
+    - APPROVED
+    - COMPLETE
+    - FAILED
+    - CANCELLED
+    type: string
+    x-enum-comments:
+      StatusApproved: approved, awaiting manual settlement
+      StatusCancelled: cancelled before settlement
+      StatusComplete: operator settled it off-platform
+      StatusFailed: settlement attempt failed (rare)
+      StatusPending: requested, awaiting approval
+    x-enum-descriptions:
+    - requested, awaiting approval
+    - approved, awaiting manual settlement
+    - operator settled it off-platform
+    - settlement attempt failed (rare)
+    - cancelled before settlement
+    x-enum-varnames:
+    - StatusPending
+    - StatusApproved
+    - StatusComplete
+    - StatusFailed
+    - StatusCancelled
+  github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal:
+    properties:
+      amount_cents:
+        type: integer
+      approved_at:
+        type: string
+      approved_by:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      external_id:
+        description: |-
+          ExternalID is generated at request time and is the immutable idempotency
+          key. It must never be overwritten — the operator-supplied settlement
+          reference (PIX/TED end-to-end id) lives in SettlementRef instead.
+        type: string
+      history:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.HistoryEntry'
+        type: array
+      id:
+        type: string
+      last_error:
+        type: string
+      platform_fee_cents:
+        type: integer
+      receipt_url:
+        description: |-
+          ReceiptURL holds the operator-supplied proof of the off-platform
+          transfer (comprovante PIX/TED).
+        type: string
+      requested_by:
+        type: string
+      settled_at:
+        type: string
+      settlement_ref:
+        description: |-
+          SettlementRef carries the operator-supplied off-platform transfer
+          reference (PIX/TED end-to-end id) recorded when the withdrawal is
+          settled manually. Distinct from ExternalID, which stays immutable.
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Status'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.BatchCreateInput:
+    properties:
+      broker_id:
+        type: string
+      category:
+        type: string
+      contract_id:
+        type: string
+      date:
+        description: ISO-8601
+        type: string
+      deal_id:
+        type: string
+      description:
+        type: string
+      due_date:
+        description: |-
+          DueDateStr is the programmed first due date brought from the pipeline
+          ("YYYY-MM-DD"). Optional: it becomes the posting's due_date provenance.
+        type: string
+      flow:
+        description: sale | rent
+        type: string
+      payment_method:
+        type: string
+      payment_plan:
+        description: |-
+          PaymentPlan is the payment plan label programmed in the pipeline
+          (ex.: "Entrada + 11x de R$ 8.333,33"). Informational provenance.
+        type: string
+      role:
+        type: string
+      type:
+        type: string
+      value:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.BatchCreateOutput:
+    properties:
+      error:
+        type: string
+      index:
+        type: integer
+      transaction:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transaction.Transaction'
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.ChargePreview:
+    properties:
+      amount_cents:
+        type: integer
+      description:
+        type: string
+      due_date:
+        type: string
+      reference_month:
+        type: string
+      source_event_id:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.CommissionPreview:
+    properties:
+      amount_cents:
+        type: integer
+      broker_id:
+        type: string
+      percentage:
+        type: number
+      retained:
+        type: boolean
+      role:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.DelinquencyDashboard:
+    properties:
+      aging_report:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.AgingBucket'
+        type: array
+      collection_stats:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.CollectionStats'
+      stats:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.DelinquencyStats'
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.EconomicCompositionPreview:
+    properties:
+      admin_fee_cents:
+        type: integer
+      agency_retained_cents:
+        type: integer
+      agency_revenue_cents:
+        type: integer
+      available_cents:
+        type: integer
+      commission_funded_cents:
+        type: integer
+      commission_payable_cents:
+        type: integer
+      commission_pool_cents:
+        type: integer
+      deductions_cents:
+        type: integer
+      flow:
+        type: string
+      gross_cents:
+        type: integer
+      intermediation_cents:
+        type: integer
+      owner_payable_cents:
+        type: integer
+      partner_payable_cents:
+        type: integer
+      reserved_cents:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.FinancialPreviewDTO:
+    properties:
+      charges:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.ChargePreview'
+        type: array
+      commissions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.CommissionPreview'
+        type: array
+      composition:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.EconomicCompositionPreview'
+      contract_id:
+        type: string
+      deal_id:
+        type: string
+      deal_type:
+        type: string
+      gateway_disabled:
+        type: boolean
+      notes:
+        items:
+          type: string
+        type: array
+      partnership_fees:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.PartnershipFeePreview'
+        type: array
+      total_charges_cents:
+        type: integer
+      total_commission_cents:
+        type: integer
+      total_transfers_cents:
+        type: integer
+      transfers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.TransferPreview'
+        type: array
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.JournalTotals:
+    properties:
+      accounts_receivable:
+        type: number
+      cash:
+        type: number
+      owner_payable:
+        type: number
+      revenue:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.ManagedBillLine:
+    properties:
+      amount:
+        type: number
+      component:
+        type: string
+      creditor_name:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.ManualCommissionInput:
+    properties:
+      amount:
+        type: number
+      broker_id:
+        type: string
+      contract_id:
+        type: string
+      deal_id:
+        type: string
+      percentage:
+        type: number
+      role:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.ManualCommissionRetentionInput:
+    properties:
+      amount:
+        type: number
+      percentage:
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.MonthlyStatement:
+    properties:
+      admin_fee_amount:
+        type: number
+      available_amount:
+        type: number
+      balance_covered_count:
+        type: integer
+      blocked_amount:
+        type: number
+      flow_summaries:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.StatementFlowSummary'
+        type: array
+      generated_at:
+        type: string
+      gross_rent:
+        type: number
+      intermediation_amount:
+        description: |-
+          Intermediação do período (descontada do aluguel antes do repasse) e o
+          saldo que ainda será descontado nos próximos meses.
+        type: number
+      intermediation_commission_funded_amount:
+        type: number
+      intermediation_outstanding_amount:
+        type: number
+      journal_totals:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.JournalTotals'
+      maintenance_deductions:
+        type: number
+      managed_bills:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.ManagedBillLine'
+        type: array
+      managed_bills_total:
+        type: number
+      month:
+        type: integer
+      net_amount:
+        type: number
+      other_deductions:
+        type: number
+      owner_balance_total:
+        type: number
+      owner_lead_id:
+        type: string
+      reference_month:
+        type: string
+      reserved_amount:
+        type: number
+      tenant_id:
+        type: string
+      transfers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.StatementTransfer'
+        type: array
+      year:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.NotifyResult:
+    properties:
+      channels_sent:
+        items:
+          type: string
+        type: array
+      charge_id:
+        type: string
+      recipient:
+        type: string
+      skipped:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.OwnerBalanceSummary:
+    properties:
+      available_cents:
+        type: integer
+      blocked_cents:
+        type: integer
+      has_balance:
+        type: boolean
+      owner_lead_id:
+        type: string
+      reference_month:
+        type: string
+      reserved_cents:
+        type: integer
+      tenant_id:
+        type: string
+      total_cents:
+        type: integer
+      transfer_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.PartnershipFeePreview:
+    properties:
+      amount_cents:
+        type: integer
+      direction:
+        type: string
+      kind:
+        type: string
+      label:
+        type: string
+      payee_tenant:
+        type: string
+      payer_tenant:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.ProcessResult:
+    properties:
+      charges_marked_overdue:
+        type: integer
+      collections_created:
+        type: integer
+      collections_updated:
+        type: integer
+      late_fees_calculated:
+        type: integer
+      processed_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.StatementFlowSummary:
+    properties:
+      admin_fee_amount:
+        type: number
+      brokerage_amount:
+        type: number
+      discount_amount:
+        type: number
+      flow:
+        type: string
+      gross_amount:
+        type: number
+      intermediation_amount:
+        description: |-
+          IntermediationAmount/IntermediationCommissionFundedAmount explicam a
+          diferença entre o aluguel bruto e o repasse nos meses em que a comissão
+          do primeiro aluguel é diluída — sem eles a taxa de administração sozinha
+          dava a impressão de que o repasse estava incompleto.
+        type: number
+      intermediation_commission_funded_amount:
+        type: number
+      maintenance_deductions:
+        type: number
+      net_amount:
+        type: number
+      other_deductions:
+        type: number
+      transfer_count:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.StatementTransfer:
+    properties:
+      admin_fee_amount:
+        type: number
+      admin_fee_percent:
+        type: number
+      approved_at:
+        type: string
+      approved_by:
+        type: string
+      bank_account:
+        type: string
+      brokerage_amount:
+        type: number
+      contract_id:
+        type: string
+      created_at:
+        type: string
+      deduction_details:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.Deduction'
+        type: array
+      economic_breakdown:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.EconomicBreakdown'
+        description: |-
+          EconomicBreakdown is populated for charge-backed transfers after the
+          payment allocation closes. It is optional for legacy/manual transfers.
+      gross_rent:
+        type: number
+      history:
+        description: |-
+          History is the append-only audit trail of state transitions
+          (created → approved → processed) plus any future cancel/reopen. UI
+          surfaces this on the repasse detail so operators can see who did what
+          and when.
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.HistoryEntry'
+        type: array
+      id:
+        type: string
+      intermediation_amount:
+        description: |-
+          IntermediationAmount é o quanto da intermediação foi descontado do
+          aluguel NESTE repasse (comissão do primeiro aluguel diluída nos primeiros
+          meses). Nil quando o repasse é legado ou não há intermediação — a UI
+          distingue "sem intermediação" de "zero".
+        type: number
+      intermediation_commission_funded_amount:
+        description: |-
+          IntermediationCommissionFundedAmount é a fatia da intermediação que foi
+          para comissões de corretor (o resto é receita da imobiliária).
+        type: number
+      intermediation_outstanding_amount:
+        description: |-
+          IntermediationOutstandingAmount é o quanto ainda falta descontar do
+          aluguel para cobrir a intermediação contratada deste contrato.
+        type: number
+      maintenance_deductions:
+        type: number
+      net_amount:
+        type: number
+      notes:
+        type: string
+      other_deductions:
+        type: number
+      owner_balance:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalance'
+        description: |-
+          OwnerBalance is populated for allocation-aware transfers. TotalCents is
+          the complete owner payable, ReservedCents holds values collected for
+          direct liquidation/offset, and BlockedCents mirrors transfer deductions.
+          Nil identifies legacy transfers, whose net remains derived from GrossRent.
+      owner_balance_base_reserved_cents:
+        type: integer
+      owner_balance_base_total_cents:
+        description: |-
+          OwnerBalanceBase* freezes the allocation-derived economic basis. Lifecycle
+          movements never edit that basis: the current buckets are rebuilt by
+          replaying the append-only OwnerBalanceMovements over it. This makes a
+          charge-payment retry deterministic without resurrecting consumed/released
+          reserves.
+        type: integer
+      owner_balance_movements:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerBalanceMovement'
+        type: array
+      owner_id:
+        type: string
+      processed_at:
+        type: string
+      processed_by:
+        type: string
+      proof_url:
+        description: |-
+          ProofURL é o comprovante anexado pelo operador ao efetivar o repasse
+          manualmente (fluxo externo/banco). Registrado no PROCESSED para auditoria.
+        type: string
+      property_id:
+        type: string
+      reference_month:
+        type: string
+      settlement_journal_source_id:
+        type: string
+      settlement_type:
+        description: |-
+          SettlementType distinguishes a monthly rental repasse from a sale
+          settlement. Empty means a legacy row whose semantics predate this field.
+        type: string
+      source_charge_id:
+        description: |-
+          SourceChargeID is the stable identity of the fully paid charge that
+          released this transfer. SALE plans may have multiple installments in the
+          same reference month, so contract+month is not a safe idempotency key.
+          Legacy/manual transfers leave it empty and retain monthly uniqueness.
+        type: string
+      source_transaction_id:
+        description: |-
+          SourceTransactionID identifies a manual receipt whose settlement released
+          this owner obligation. It is mutually exclusive with SourceChargeID.
+        type: string
+      statement_flow:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.Status'
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-financial_internal_services.TransferPreview:
+    properties:
+      admin_fee_cents:
+        type: integer
+      admin_fee_pct:
+        type: number
+      agency_intermediation_cents:
+        type: integer
+      commission_funded_cents:
+        type: integer
+      gross_cents:
+        type: integer
+      intermediation_carry_cents:
+        type: integer
+      intermediation_cents:
+        type: integer
+      net_cents:
+        type: integer
+      reference_month:
+        type: string
+    type: object
+  internal_handlers.ActivateGuaranteeRequest:
+    properties:
+      amount:
+        description: valor acionado
+        type: number
+      reason:
+        type: string
+      type:
+        description: SEGURO_FIANCA | FIADOR | CAUCAO
+        type: string
+    required:
+    - amount
+    - type
+    type: object
+  internal_handlers.AddActionRequest:
+    properties:
+      description:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    required:
+    - description
+    - type
+    - user_id
+    type: object
+  internal_handlers.AddDeductionRequest:
+    properties:
+      amount:
+        type: number
+      deduction_id:
+        type: string
+      description:
+        type: string
+      kind:
+        type: string
+    required:
+    - kind
+    type: object
+  internal_handlers.BatchTransactionRequest:
+    properties:
+      commission_retention:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.ManualCommissionRetentionInput'
+      commissions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.ManualCommissionInput'
+        type: array
+      items:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.BatchCreateInput'
+        minItems: 1
+        type: array
+    required:
+    - items
+    type: object
+  internal_handlers.CancelChargeRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  internal_handlers.CommissionCancelRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  internal_handlers.CommissionPayRequest:
+    properties:
+      note:
+        type: string
+      proof_url:
+        type: string
+    type: object
+  internal_handlers.CommissionSplitInput:
+    properties:
+      amount:
+        type: number
+      broker_id:
+        type: string
+      percentage:
+        type: number
+      role:
+        type: string
+    required:
+    - amount
+    - broker_id
+    type: object
+  internal_handlers.CreateChargeRequest:
+    properties:
+      amount:
+        type: number
+      contract_id:
+        type: string
+      deal_id:
+        type: string
+      description:
+        type: string
+      discount:
+        description: |-
+          Discount is an optional reduction applied to the total
+          (TotalAmount = Amount + LateFee + Interest - Discount).
+        type: number
+      due_date:
+        type: string
+      lead_id:
+        type: string
+      line_items:
+        description: |-
+          LineItems is the optional composition breakdown ("valores inclusos
+          na cobrança": aluguel, condomínio, IPTU, utilidades). When present,
+          Amount is derived from their sum (Σ items == Amount, enforced by
+          charge.ValidateLineItems).
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.LineItem'
+        type: array
+      owner_id:
+        type: string
+      property_id:
+        type: string
+      reference_month:
+        type: string
+      tenant_party_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.ChargeType'
+    required:
+    - amount
+    - contract_id
+    - description
+    - due_date
+    - owner_id
+    - property_id
+    - reference_month
+    - tenant_party_id
+    - type
+    type: object
+  internal_handlers.CreateCollectionRequest:
+    properties:
+      charge_ids:
+        items:
+          type: string
+        type: array
+      contract_id:
+        type: string
+      days_overdue:
+        type: integer
+      debtor_id:
+        type: string
+      debtor_name:
+        type: string
+      total_debt:
+        type: number
+    required:
+    - charge_ids
+    - contract_id
+    - days_overdue
+    - debtor_id
+    - debtor_name
+    - total_debt
+    type: object
+  internal_handlers.CreateCommissionBatchRequest:
+    properties:
+      contract_id:
+        type: string
+      deal_id:
+        type: string
+      splits:
+        items:
+          $ref: '#/definitions/internal_handlers.CommissionSplitInput'
+        minItems: 1
+        type: array
+    required:
+    - deal_id
+    - splits
+    type: object
+  internal_handlers.CreateCommissionRequest:
+    properties:
+      amount:
+        type: number
+      broker_id:
+        type: string
+      contract_id:
+        type: string
+      deal_id:
+        type: string
+      percentage:
+        type: number
+      role:
+        type: string
+      source_event_id:
+        type: string
+    required:
+    - amount
+    - broker_id
+    - deal_id
+    type: object
+  internal_handlers.CreateInvoiceRequest:
+    properties:
+      amount:
+        type: number
+      charge_id:
+        type: string
+      due_date:
+        type: string
+      payer_id:
+        type: string
+      reference_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Type'
+    required:
+    - amount
+    - charge_id
+    - due_date
+    - payer_id
+    - reference_id
+    - type
+    type: object
+  internal_handlers.CreateTransferRequest:
+    properties:
+      admin_fee_percent:
+        type: number
+      contract_id:
+        type: string
+      deduction_details:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.Deduction'
+        type: array
+      gross_rent:
+        type: number
+      maintenance_deductions:
+        type: number
+      notes:
+        type: string
+      other_deductions:
+        type: number
+      owner_id:
+        type: string
+      property_id:
+        type: string
+      reference_month:
+        type: string
+    required:
+    - admin_fee_percent
+    - contract_id
+    - gross_rent
+    - owner_id
+    - property_id
+    - reference_month
+    type: object
+  internal_handlers.GenerateDimobRequest:
+    properties:
+      company_cnpj:
+        description: |-
+          CompanyCNPJ / CompanyName identificam a declarante (a imobiliária)
+          no registro R01 do TXT da DIMOB (#418). Opcionais no binding para
+          não quebrar callers atuais, mas necessários para baixar o arquivo —
+          sem CNPJ, GET /fiscal/dimob/{year}/file responde 400.
+        type: string
+      company_name:
+        type: string
+      year:
+        type: integer
+    required:
+    - year
+    type: object
+  internal_handlers.GenerateInformesRequest:
+    properties:
+      year:
+        type: integer
+    required:
+    - year
+    type: object
+  internal_handlers.IssueNfseRequest:
+    properties:
+      amount:
+        type: number
+      recipient_id:
+        type: string
+      reference_month:
+        type: string
+      service_description:
+        type: string
+    required:
+    - amount
+    - recipient_id
+    - reference_month
+    - service_description
+    type: object
+  internal_handlers.JudicialProcessRequest:
+    properties:
+      case_number:
+        description: número CNJ
+        type: string
+      claim_value:
+        type: number
+      court:
+        description: vara / comarca
+        type: string
+      lawyer_email:
+        type: string
+      lawyer_name:
+        type: string
+      lawyer_oab:
+        type: string
+      lawyer_phone:
+        type: string
+      next_hearing:
+        type: string
+      notes:
+        type: string
+      status:
+        description: vazio → EM_TRAMITE
+        type: string
+    required:
+    - case_number
+    - court
+    type: object
+  internal_handlers.PayChargeRequest:
+    properties:
+      paid_amount:
+        type: number
+      payment_method:
+        type: string
+    required:
+    - paid_amount
+    - payment_method
+    type: object
+  internal_handlers.PaymentLinkResponse:
+    properties:
+      expires_at:
+        type: string
+      external_id:
+        type: string
+      provider:
+        type: string
+      url:
+        type: string
+    type: object
+  internal_handlers.ProofUploadResponse:
+    properties:
+      expires_at:
+        type: string
+      filename:
+        type: string
+      object_key:
+        type: string
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
+  internal_handlers.ReconcileManualRequest:
+    properties:
+      note:
+        type: string
+      paid_amount:
+        type: number
+      paid_at:
+        type: string
+      payment_method:
+        type: string
+      proof_url:
+        type: string
+    required:
+    - paid_amount
+    - paid_at
+    - payment_method
+    type: object
+  internal_handlers.RepairRentalAllocationsRequest:
+    properties:
+      reason:
+        type: string
+      tenant_id:
+        description: |-
+          TenantID é aceito apenas em chamadas internas (credencial de serviço com
+          allowlist); no caminho com JWT o tenant vem do token e este campo é ignorado.
+        type: string
+    required:
+    - reason
+    type: object
+  internal_handlers.RequestWithdrawalRequest:
+    properties:
+      amount_cents:
+        type: integer
+      description:
+        type: string
+    required:
+    - amount_cents
+    type: object
+  internal_handlers.RuleDTO:
+    properties:
+      default_percentage:
+        maximum: 100
+        minimum: 0
+        type: number
+      role:
+        type: string
+    required:
+    - role
+    type: object
+  internal_handlers.SalePlanReadinessResponse:
+    properties:
+      active:
+        type: boolean
+      mode:
+        type: string
+      total_amount_cents:
+        type: integer
+    type: object
+  internal_handlers.SettleWithdrawalRequest:
+    properties:
+      external_ref:
+        type: string
+      proof_url:
+        type: string
+    type: object
+  internal_handlers.UpdateChargeRequest:
+    properties:
+      amount:
+        type: number
+      description:
+        type: string
+      discount:
+        type: number
+      due_date:
+        type: string
+      interest:
+        type: number
+      late_fee:
+        type: number
+      line_items:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.LineItem'
+        type: array
+      reference_month:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Status'
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.ChargeType'
+    type: object
+  internal_handlers.UpdateCollectionRequest:
+    properties:
+      days_overdue:
+        type: integer
+      debtor_name:
+        type: string
+      negotiated_amount:
+        type: number
+      negotiated_date:
+        type: string
+      notes:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Status'
+      total_debt:
+        type: number
+    type: object
+  internal_handlers.UpdateCommissionRulesRequest:
+    properties:
+      rules:
+        items:
+          $ref: '#/definitions/internal_handlers.RuleDTO'
+        type: array
+    required:
+    - rules
+    type: object
+  internal_handlers.UpdateGuaranteeStatusRequest:
+    properties:
+      insurer_response:
+        type: string
+      status:
+        description: REQUESTED|ACCEPTED|REJECTED|PAID|CANCELLED
+        type: string
+    required:
+    - status
+    type: object
+  internal_handlers.UpdateTenantFinancialSettingsRequest:
+    properties:
+      admin_fee_pct:
+        type: number
+      default_commission_pct_rent:
+        type: number
+      default_commission_pct_sale:
+        type: number
+      default_currency:
+        type: string
+      default_due_day:
+        type: integer
+      default_late_fee_pct:
+        type: number
+      default_lease_term_months:
+        type: integer
+      default_monthly_interest_pct:
+        type: number
+      payout_proof_required:
+        type: boolean
+    type: object
+  internal_handlers.UpsertDraftRequest:
+    properties:
+      dacao_amount:
+        type: number
+      dacao_description:
+        type: string
+      down_payment_amount:
+        type: number
+      first_due_date:
+        type: string
+      installment_amount:
+        type: number
+      installment_count:
+        minimum: 1
+        type: integer
+      mode:
+        enum:
+        - SINGLE
+        - INSTALLMENTS
+        type: string
+      recurrence_interval_days:
+        type: integer
+      saldo_amount:
+        type: number
+      saldo_description:
+        type: string
+      saldo_due_date:
+        type: string
+      total_amount:
+        type: number
+      troca_amount:
+        type: number
+      troca_description:
+        type: string
+    required:
+    - first_due_date
+    - installment_count
+    - mode
+    - total_amount
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+  valueobjects.Money:
+    type: object
+host: localhost:8085
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Financial service for Toca ecosystem
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Toca Financial API
+  version: "1.0"
+paths:
+  /charges:
+    get:
+      consumes:
+      - application/json
+      description: List charges with pagination and filters
+      parameters:
+      - description: Contract ID
+        in: query
+        name: contract_id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Reference Month
+        in: query
+        name: reference_month
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List charges
+      tags:
+      - charges
+    post:
+      consumes:
+      - application/json
+      description: Create a new charge
+      parameters:
+      - description: Create Charge Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateChargeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create charge
+      tags:
+      - charges
+  /charges/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a charge by its ID
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get charge by ID
+      tags:
+      - charges
+    put:
+      consumes:
+      - application/json
+      description: Update charge details
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Charge Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateChargeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update charge
+      tags:
+      - charges
+  /charges/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancela uma cobrança PENDING/OVERDUE. Bloqueia PAID/CANCELLED com
+        409. Reason vai para o audit.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancel
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CancelChargeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "400":
+          description: reason vazio
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: charge não existe
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: já paga ou já cancelada
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Cancel a charge
+      tags:
+      - charges
+  /charges/{id}/notify:
+    post:
+      consumes:
+      - application/json
+      description: Dispatches an email + in-app reminder for the charge to the payer
+        lead.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.NotifyResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Send reminder for a charge
+      tags:
+      - charges
+  /charges/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Mark a charge as paid
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pay Charge Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.PayChargeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Pay charge
+      tags:
+      - charges
+  /charges/{id}/payment-link:
+    post:
+      description: Cria o link de cobrança (Pix/boleto) da charge via provedor de
+        pagamentos (P1-05). 409 quando o ambiente não tem provedor configurado.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_handlers.PaymentLinkResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: payment provider not configured
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Generate payment link for a charge
+      tags:
+      - charges
+  /charges/{id}/receipt:
+    get:
+      description: Devolve o recibo PDF da cobrança paga. 400 se status != PAID.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download charge receipt PDF
+      tags:
+      - charges
+  /charges/{id}/reconcile-manual:
+    post:
+      consumes:
+      - application/json
+      description: Marca a charge como paga manualmente (sem gateway). Audita operador
+        + proof.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reconciliation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.ReconcileManualRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Reconcile a charge off-platform (manual)
+      tags:
+      - charges
+  /charges/{id}/repair-rental-allocations:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Re-deriva as alocações dos pagamentos sem a fatia de intermediação (financia comissão/payout),
+        estorna e regrava o lançamento de recebimento e reconcilia o repasse do proprietário.
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Repair
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.RepairRentalAllocationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Repara alocações de uma cobrança de locação quitada antes do plano
+        de intermediação
+      tags:
+      - charges
+  /charges/{id}/repair-rental-allocations/eligibility:
+    get:
+      description: 'Read-only: informa se a cobrança de locação quitada tem algo a
+        reparar (gate do botão no painel).'
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Elegibilidade do reparo de alocação de locação
+      tags:
+      - charges
+  /charges/overdue:
+    get:
+      consumes:
+      - application/json
+      description: List all overdue charges for a tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List overdue charges
+      tags:
+      - charges
+  /client-portal/charges:
+    get:
+      description: Cliente lista charges próprias — tenant_lead (cobranças a pagar)
+        ou owner_lead (charges das próprias propriedades).
+      parameters:
+      - description: Filter by status (PENDING, PAID, OVERDUE, CANCELLED)
+        in: query
+        name: status
+        type: string
+      - description: Filter by reference month (YYYY-MM)
+        in: query
+        name: reference_month
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] List my charges'
+      tags:
+      - client-portal
+  /client-portal/charges/{id}:
+    get:
+      description: Cliente busca uma charge própria (validada por account_id)
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_charge.Charge'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] Get my charge by ID'
+      tags:
+      - client-portal
+  /client-portal/charges/{id}/receipt:
+    get:
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: '[Portal] Recibo PDF da charge paga'
+      tags:
+      - client-portal
+  /client-portal/informes:
+    get:
+      description: Owner lista os próprios Informes de Rendimentos (filtrado por account_id)
+      parameters:
+      - description: Filter by year (YYYY)
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Informe'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] List my income reports'
+      tags:
+      - client-portal
+  /client-portal/informes/{id}/pdf:
+    get:
+      description: Owner baixa o PDF do próprio Informe de Rendimentos (validado por
+        account_id)
+      parameters:
+      - description: Informe ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] Download my income report PDF'
+      tags:
+      - client-portal
+  /client-portal/owner-statements:
+    get:
+      parameters:
+      - description: Year
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month (1-12)
+        in: query
+        name: month
+        required: true
+        type: integer
+      - description: json | pdf
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.MonthlyStatement'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get monthly owner statement (my)
+      tags:
+      - portal
+  /client-portal/transfers:
+    get:
+      description: Owner lista repasses próprios (filtrado por account_id)
+      parameters:
+      - description: Filter by status (PENDING, APPROVED, PROCESSED)
+        in: query
+        name: status
+        type: string
+      - description: Filter by reference year (YYYY)
+        in: query
+        name: year
+        type: integer
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] List my transfers'
+      tags:
+      - client-portal
+  /client-portal/transfers/{id}:
+    get:
+      description: Owner busca um repasse próprio (validado por account_id)
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] Get my transfer by ID'
+      tags:
+      - client-portal
+  /client-portal/transfers/{id}/receipt:
+    get:
+      description: Owner baixa o comprovante do próprio repasse (validado por account_id)
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: '[Portal] Download my transfer receipt PDF'
+      tags:
+      - client-portal
+  /collections:
+    get:
+      consumes:
+      - application/json
+      description: List collection cases with pagination and filters
+      parameters:
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List collections
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Create a new collection case
+      parameters:
+      - description: Create Collection Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateCollectionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create collection
+      tags:
+      - collections
+  /collections/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a collection case by its ID
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get collection by ID
+      tags:
+      - collections
+    put:
+      consumes:
+      - application/json
+      description: Update an existing collection case
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Collection Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateCollectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update collection
+      tags:
+      - collections
+  /collections/{id}/actions:
+    post:
+      consumes:
+      - application/json
+      description: Add a collection action
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Action Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.AddActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add action to collection
+      tags:
+      - collections
+  /collections/{id}/guarantee:
+    get:
+      description: Returns the guarantee activation record of a collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.GuaranteeActivation'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get guarantee activation
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Activates the rental guarantee (insurance, guarantor or deposit)
+        of a collection and escalates it to GUARANTEE_ACTIVATED
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Activate Guarantee Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.ActivateGuaranteeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Activate guarantee
+      tags:
+      - collections
+  /collections/{id}/guarantee/status:
+    put:
+      consumes:
+      - application/json
+      description: Records the guarantor/insurer response on an open guarantee activation
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Guarantee Status Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateGuaranteeStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update guarantee activation status
+      tags:
+      - collections
+  /collections/{id}/judicial:
+    get:
+      description: Returns the judicial process metadata of a collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.JudicialProcess'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get judicial process
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Registers or updates the judicial process metadata of a collection
+        and escalates it to JUDICIAL
+      parameters:
+      - description: Collection ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Judicial Process Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.JudicialProcessRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_collection.Collection'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Register judicial process
+      tags:
+      - collections
+  /commission-rules:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Rule'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get tenant commission rules
+      tags:
+      - commission-rules
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateCommissionRulesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Rule'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update tenant commission rules
+      tags:
+      - commission-rules
+  /commissions:
+    get:
+      consumes:
+      - application/json
+      description: List commissions with pagination
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List commissions
+      tags:
+      - commissions
+    post:
+      consumes:
+      - application/json
+      description: Create a new commission (legacy path — prefer POST /commissions/batch
+        when splits are available)
+      parameters:
+      - description: Create Commission Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateCommissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create commission
+      tags:
+      - commissions
+  /commissions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a commission by its ID
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get commission by ID
+      tags:
+      - commissions
+  /commissions/{id}/approve:
+    post:
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Approve commission (PENDING → APPROVED)
+      tags:
+      - commissions
+  /commissions/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancel Request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_handlers.CommissionCancelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel commission
+      tags:
+      - commissions
+  /commissions/{id}/deductions:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Deduction
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.AddDeductionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Add a deduction to a commission
+      tags:
+      - commissions
+  /commissions/{id}/deductions/{deductionId}:
+    delete:
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Deduction ID
+        in: path
+        name: deductionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Remove a deduction by stable ID
+      tags:
+      - commissions
+  /commissions/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Commission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pay Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CommissionPayRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Mark commission as paid (PENDING/APPROVED → PAID)
+      tags:
+      - commissions
+  /commissions/batch:
+    post:
+      consumes:
+      - application/json
+      description: Post one commission per broker split for a deal in a single call
+      parameters:
+      - description: Batch Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateCommissionBatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create commissions in batch (manual broker splits)
+      tags:
+      - commissions
+  /commissions/by-broker/{brokerId}:
+    get:
+      parameters:
+      - description: Broker ID
+        in: path
+        name: brokerId
+        required: true
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List commissions by broker
+      tags:
+      - commissions
+  /commissions/by-deal/{dealId}:
+    get:
+      parameters:
+      - description: Deal ID
+        in: path
+        name: dealId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_commission.Commission'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List commissions by deal
+      tags:
+      - commissions
+  /delinquency/aging:
+    get:
+      consumes:
+      - application/json
+      description: Get overdue charges aging report with bucket distribution
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get aging report
+      tags:
+      - delinquency
+  /delinquency/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Get complete delinquency dashboard with KPIs, aging report, and
+        collection stats
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.DelinquencyDashboard'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get delinquency dashboard
+      tags:
+      - delinquency
+  /delinquency/process:
+    post:
+      consumes:
+      - application/json
+      description: Manually trigger the delinquency engine for the current tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.ProcessResult'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Trigger manual delinquency processing
+      tags:
+      - delinquency
+  /delinquency/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get delinquency KPI statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get delinquency stats
+      tags:
+      - delinquency
+  /financial-preview/contracts/{id}:
+    get:
+      description: Como PreviewByDeal, mas usa o contrato como ponto de partida. Útil
+        quando o operador já tem o contrato criado e quer ver a projeção com datas
+        finais.
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.FinancialPreviewDTO'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Projeta o ciclo financeiro do contrato
+      tags:
+      - financial-preview
+  /financial-preview/deals/{id}:
+    get:
+      description: Retorna charges + commissions + transfers projetados sem persistir
+        nada nem chamar o gateway. Útil para a aba "Financeiro (Prévia)" da esteira
+        antes do contract.signed.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Início do plano pré-contrato (AAAA-MM-DD); ausente usa as datas
+          do negócio
+        in: query
+        name: start_date
+        type: string
+      - description: Término do plano pré-contrato (AAAA-MM-DD); define o residual
+          do último aluguel
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.FinancialPreviewDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Projeta o ciclo financeiro do deal
+      tags:
+      - financial-preview
+  /financial-settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_tenant_financial_settings.Settings'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get tenant financial settings
+      tags:
+      - financial-settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateTenantFinancialSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_tenant_financial_settings.Settings'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update tenant financial settings
+      tags:
+      - financial-settings
+  /financial/internal/deals/{id}/sale-plan-readiness:
+    get:
+      description: Tells the deal service whether an active billing draft exists for
+        the deal and its frozen total. Service keys and user JWTs are accepted; the
+        tenant is resolved from the credential.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tenant ID (service callers only; resolved from credential)
+        in: query
+        name: tenant_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_handlers.SalePlanReadinessResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Readiness of the SALE payment plan for a deal (internal)
+      tags:
+      - financial-internal
+  /fiscal/calendar:
+    get:
+      description: Returns fiscal deadlines for the year
+      parameters:
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.FiscalDeadline'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get fiscal calendar
+      tags:
+      - fiscal
+  /fiscal/dimob/{year}:
+    get:
+      description: Returns the DIMOB report status for a given year
+      parameters:
+      - description: Year
+        in: path
+        name: year
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DimobReport'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get DIMOB report status
+      tags:
+      - fiscal
+  /fiscal/dimob/{year}/file:
+    get:
+      description: Builds and streams the DIMOB declaration as a pipe-delimited TXT
+        file in the RFB layout
+      parameters:
+      - description: Year
+        in: path
+        name: year
+        required: true
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download DIMOB TXT file
+      tags:
+      - fiscal
+  /fiscal/dimob/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generates the DIMOB report for a given year
+      parameters:
+      - description: Generate DIMOB Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.GenerateDimobRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.DimobReport'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Generate DIMOB report
+      tags:
+      - fiscal
+  /fiscal/informes:
+    get:
+      description: Returns informes de rendimentos for a given year
+      parameters:
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Informe'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List Informes de Rendimentos
+      tags:
+      - fiscal
+  /fiscal/informes/{id}/pdf:
+    get:
+      description: Generates and streams an owner's income report (informe de rendimentos)
+        as a PDF
+      parameters:
+      - description: Informe ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download informe de rendimentos PDF
+      tags:
+      - fiscal
+  /fiscal/informes/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generates informes de rendimentos for all owners for a given year
+      parameters:
+      - description: Generate Informes Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.GenerateInformesRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Informe'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Generate Informes de Rendimentos
+      tags:
+      - fiscal
+  /fiscal/nfse:
+    get:
+      description: List issued NFS-e with optional filters
+      parameters:
+      - description: Reference month (YYYY-MM)
+        in: query
+        name: month
+        type: string
+      - description: Status filter
+        in: query
+        name: status
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Nfse'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List NFS-e
+      tags:
+      - fiscal
+    post:
+      consumes:
+      - application/json
+      description: Issues a new NFS-e
+      parameters:
+      - description: Issue NFS-e Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.IssueNfseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.Nfse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Issue NFS-e
+      tags:
+      - fiscal
+  /fiscal/reports:
+    get:
+      description: Returns generated fiscal reports history
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_fiscal.ReportHistory'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List fiscal report history
+      tags:
+      - fiscal
+  /fiscal/reports/{id}/download:
+    get:
+      description: Downloads a generated fiscal report file
+      parameters:
+      - description: Report ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download a fiscal report
+      tags:
+      - fiscal
+  /invoices:
+    get:
+      consumes:
+      - application/json
+      description: List invoices with optional status filter
+      parameters:
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Reference ID
+        in: query
+        name: reference_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Invoice'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List invoices
+      tags:
+      - invoices
+    post:
+      consumes:
+      - application/json
+      description: Create a new invoice
+      parameters:
+      - description: Stable invoice command key
+        in: header
+        name: Idempotency-Key
+        required: true
+        type: string
+      - description: Invoice data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Invoice'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create invoice
+      tags:
+      - invoices
+  /invoices/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get an invoice by its ID
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Invoice'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get invoice by ID
+      tags:
+      - invoices
+  /invoices/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Mark an invoice as paid
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Stable invoice payment key
+        in: header
+        name: Idempotency-Key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_invoice.Invoice'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Pay invoice
+      tags:
+      - invoices
+  /owner-statements/{ownerLeadId}:
+    get:
+      parameters:
+      - description: Owner lead ID
+        in: path
+        name: ownerLeadId
+        required: true
+        type: string
+      - description: Year
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month (1-12)
+        in: query
+        name: month
+        required: true
+        type: integer
+      - description: json | pdf (default json)
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.MonthlyStatement'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get monthly owner statement (admin)
+      tags:
+      - owner-statements
+  /owner-statements/{ownerLeadId}/balance:
+    get:
+      parameters:
+      - description: Owner lead ID
+        in: path
+        name: ownerLeadId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.OwnerBalanceSummary'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get current owner balance (admin widget)
+      tags:
+      - owner-statements
+  /proofs:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Multipart upload de um comprovante (PDF/imagem). Devolve um link
+        interno que exige autenticação para leitura.
+      parameters:
+      - description: Arquivo do comprovante
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: payout | charge | commission
+        in: formData
+        name: kind
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_handlers.ProofUploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Upload financial proof
+      tags:
+      - proofs
+  /proofs/content/{token}:
+    get:
+      description: Streams a private proof after authenticating and authorizing the
+        current tenant.
+      parameters:
+      - description: Opaque proof content token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      - image/jpeg
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: View financial proof
+      tags:
+      - proofs
+  /reports/financial/cashflow:
+    get:
+      parameters:
+      - description: Period start
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Period end
+        in: query
+        name: to
+        required: true
+        type: string
+      - description: day | week | month (default day)
+        in: query
+        name: granularity
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.CashFlowReport'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Cash flow time series
+      tags:
+      - reports
+  /reports/financial/chart-of-accounts:
+    get:
+      description: Read-only catalogue of ledger accounts and automatic economic classifications.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_journal.ChartOfAccounts'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Plano de contas de vendas e locações
+      tags:
+      - reports
+  /reports/financial/dre:
+    get:
+      parameters:
+      - description: Period start (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Period end (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.DREReport'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Demonstrativo de resultado (DRE)
+      tags:
+      - reports
+  /reports/financial/kpis:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.KPIs'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Dashboard KPI snapshot
+      tags:
+      - reports
+  /reports/financial/reconciliation:
+    get:
+      consumes:
+      - application/json
+      description: Executes a read-only reconciliation report that detects duplicates,
+        orphans, excess allocation, sub-allocation, and status cascade inconsistencies
+        across commissions, transactions, and payout_orders.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Run reconciliation dry-run
+      tags:
+      - reports
+  /reports/financial/summary:
+    get:
+      description: Tenant-scoped summary of receivables, withdrawals, distributions
+        and delinquency. Optional from/to window (RFC3339 or YYYY-MM-DD).
+      parameters:
+      - description: Period start
+        in: query
+        name: from
+        type: string
+      - description: Period end
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_report.FinancialSummary'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Consolidated financial report
+      tags:
+      - reports
+  /sale-billing-plans/drafts/deals/{id}:
+    get:
+      description: Devolve o draft pré-assinatura ativo. 404 quando ausente — não
+        significa erro, só significa "operador ainda não configurou".
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan_draft.Draft'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get the active SALE billing plan draft for a deal
+      tags:
+      - sale-billing-plans
+    post:
+      consumes:
+      - application/json
+      description: Operator gravam a forma de pagamento ANTES da assinatura. Idempotente
+        por (tenant, deal). Consumido no contract.signed.
+      parameters:
+      - description: Deal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Draft payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpsertDraftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_sale_billing_plan_draft.Draft'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Save or replace the SALE billing plan draft for a deal
+      tags:
+      - sale-billing-plans
+  /transactions/batch:
+    post:
+      consumes:
+      - application/json
+      description: Insere transações e commissions relacionadas em uma única transação,
+        com IDs idempotentes por linha. Em recebimentos com distribuição parcial,
+        commission_retention explicita percentual e valor retidos pela imobiliária
+        sem criar uma obrigação pagável.
+      parameters:
+      - description: Batch
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.BatchTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_services.BatchCreateOutput'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create transactions in batch
+      tags:
+      - transactions
+  /transfers:
+    get:
+      consumes:
+      - application/json
+      description: List owner transfers with pagination and filters
+      parameters:
+      - description: Contract ID
+        in: query
+        name: contract_id
+        type: string
+      - description: Owner ID
+        in: query
+        name: owner_id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Reference Month
+        in: query
+        name: reference_month
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List transfers
+      tags:
+      - transfers
+    post:
+      consumes:
+      - application/json
+      description: Create a new owner transfer
+      parameters:
+      - description: Create Transfer Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create owner transfer
+      tags:
+      - transfers
+  /transfers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get an owner transfer by its ID
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get transfer by ID
+      tags:
+      - transfers
+  /transfers/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      description: Approve an owner transfer
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Approve transfer
+      tags:
+      - transfers
+  /transfers/{id}/process:
+    post:
+      consumes:
+      - application/json
+      description: Process an approved owner transfer
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_transfer.OwnerTransfer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Process transfer
+      tags:
+      - transfers
+  /transfers/{id}/receipt:
+    get:
+      description: Returns the "Demonstrativo de Repasse" as a PDF for download.
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Download transfer receipt PDF
+      tags:
+      - transfers
+  /withdrawals:
+    get:
+      parameters:
+      - description: Status filter
+        in: query
+        name: status
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List withdrawals
+      tags:
+      - withdrawals
+    post:
+      consumes:
+      - application/json
+      description: Requests a withdrawal of the agency's balance ("saque da imobiliária").
+        Created PENDING; an approver must approve it.
+      parameters:
+      - description: Withdrawal Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.RequestWithdrawalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Request an agency withdrawal
+      tags:
+      - withdrawals
+  /withdrawals/{id}:
+    get:
+      parameters:
+      - description: Withdrawal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a withdrawal by id
+      tags:
+      - withdrawals
+  /withdrawals/{id}/approve:
+    post:
+      description: Approves a PENDING withdrawal, moving it to APPROVED so an operator
+        can settle it manually via /submit.
+      parameters:
+      - description: Withdrawal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Approve a withdrawal
+      tags:
+      - withdrawals
+  /withdrawals/{id}/cancel:
+    post:
+      parameters:
+      - description: Withdrawal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Cancel a withdrawal
+      tags:
+      - withdrawals
+  /withdrawals/{id}/submit:
+    post:
+      consumes:
+      - application/json
+      description: Marks an APPROVED withdrawal as settled off-platform (PIX/TED).
+        Records an optional external reference + proof URL. No payment gateway is
+        involved.
+      parameters:
+      - description: Withdrawal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Manual settlement evidence
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_handlers.SettleWithdrawalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-financial_internal_domain_withdrawal.Withdrawal'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Settle an approved withdrawal manually
+      tags:
+      - withdrawals
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

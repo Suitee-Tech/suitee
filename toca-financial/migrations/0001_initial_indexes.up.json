@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    { "collection": "charges", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "charges", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "charges", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "charges", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "due_date", "value": 1 }] },
+    { "collection": "commissions", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "commissions", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "invoices", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "invoices", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "transactions", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "transactions", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "owner_transfers", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "owner_transfers", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "owner_transfers", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "charges", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }, { "key": "due_date", "value": 1 }] },
+    { "collection": "payments", "keys": [{ "key": "transaction_id", "value": 1 }] },
+    { "collection": "payments", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "transaction_id", "value": 1 }] },
+    { "collection": "collections", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "collections", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "charge_ids", "value": 1 }] },
+    { "collection": "collections", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "debtor_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "commissions", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "deal_id", "value": 1 }] },
+    { "collection": "owner_transfers", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "owner_id", "value": 1 }] },
+    { "collection": "rental_charge_configs", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "rental_charge_configs", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "rental_charge_configs", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "property_id", "value": 1 }] }
+  ]
+}
+

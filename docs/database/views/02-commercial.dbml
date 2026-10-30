@@ -1,0 +1,119 @@
+// Recorte gerado; editar a fonte platform.logical.dbml e executar layout_dbml.py.
+
+Project suitee_view {
+
+  database_type: 'PostgreSQL'
+
+  Note: 'CRM, negocios e assinatura. Recorte de leitura: apenas chaves e campos das relacoes visiveis. Modelo logico; nao exportar como migration.'
+
+}
+
+Table toca_auth.accounts [headercolor: #475569] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table crm.brokers [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table crm.leads [headercolor: #2563EB] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__AccountID text [note: 'metadata.AccountID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+  json__AssignedBrokerID text [note: 'metadata.AssignedBrokerID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+  json__ContractID text [note: 'metadata.ContractID; vinculo logico sem FK; fonte: toca-crm/internal/repository/lead_postgres.go']
+}
+
+Table core.properties [headercolor: #0891B2] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+}
+
+Table deal.contracts [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+  json__amends_contract_id text [note: 'metadata.amends_contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/contract/contract.go']
+}
+
+Table deal.deals [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__property_id text [note: 'metadata.property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__owner_id text [note: 'metadata.owner_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__customer_id text [note: 'metadata.customer_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__lead_id text [note: 'metadata.lead_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__broker_id text [note: 'metadata.broker_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+  json__recommended_property_id text [note: 'metadata.recommended_property_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/deal/deal.go']
+}
+
+Table deal.documents [headercolor: #7C3AED] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  json__contract_id text [note: 'metadata.contract_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/document/document.go']
+  json__parent_id text [note: 'metadata.parent_id; vinculo logico sem FK; fonte: toca-deal/internal/domain/document/document.go']
+}
+
+Table signature.envelopes [headercolor: #9333EA] {
+  id text [pk, note: 'Identificador fisico; tipo normalizado para visualizacao']
+  contract_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260510120400_create_signature_schema.sql']
+  deal_id text [note: 'coluna; vinculo logico sem FK; fonte: supabase/migrations/20260510120400_create_signature_schema.sql']
+}
+
+Ref logical_3: crm.leads.json__AccountID > toca_auth.accounts.id [color: #94A3B8]
+
+Ref logical_4: crm.leads.json__AssignedBrokerID > crm.brokers.id [color: #94A3B8]
+
+Ref logical_5: crm.leads.json__ContractID > deal.contracts.id [color: #94A3B8]
+
+Ref logical_6: deal.deals.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_7: deal.deals.json__owner_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_8: deal.deals.json__customer_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_9: deal.deals.json__lead_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_10: deal.deals.json__broker_id > crm.brokers.id [color: #94A3B8]
+
+Ref logical_11: deal.deals.json__recommended_property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_12: deal.contracts.deal_id > deal.deals.id [color: #94A3B8]
+
+Ref logical_13: deal.contracts.json__property_id > core.properties.id [color: #94A3B8]
+
+Ref logical_14: deal.contracts.json__customer_id > crm.leads.id [color: #94A3B8]
+
+Ref logical_15: deal.contracts.json__amends_contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_17: deal.documents.json__contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_18: deal.documents.json__parent_id > deal.documents.id [color: #94A3B8]
+
+Ref logical_57: signature.envelopes.contract_id > deal.contracts.id [color: #94A3B8]
+
+Ref logical_58: signature.envelopes.deal_id > deal.deals.id [color: #94A3B8]
+
+TableGroup "01 Identidade" [color: #475569] {
+  toca_auth.accounts
+}
+
+TableGroup "02 CRM e atendimento" [color: #2563EB] {
+  crm.brokers
+  crm.leads
+}
+
+TableGroup "03 Imoveis e empresa" [color: #0891B2] {
+  core.properties
+}
+
+TableGroup "04 Negocios e contratos" [color: #7C3AED] {
+  deal.contracts
+  deal.deals
+  deal.documents
+}
+
+TableGroup "05 Assinatura" [color: #9333EA] {
+  signature.envelopes
+}
+
+Note legenda_layout {
+  'Cores dos cabecalhos = dominios. Ref logical_* em cinza claro = vinculo de aplicacao; demais Ref em cinza escuro = FK SQL. json__ = projecao JSONB. 8 tabelas; 17 relacoes neste recorte. Modelo completo: platform.logical.dbml.'
+}

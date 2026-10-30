@@ -1,0 +1,17 @@
+# Tables intentionally excluded from the RLS check.
+#
+# Format: one schema.table per line. Inline "# reason" comments are
+# encouraged — they're what a reviewer reads when deciding whether a
+# new entry is justified. See supabase/migrations/GUIDELINES.md for
+# the policy on what is and isn't an acceptable reason.
+#
+# Adding an entry is a security-sensitive change; new lines should be
+# reviewed by someone outside the immediate author's team.
+
+# --- System event plumbing -------------------------------------------------
+# Both event tables carry tenant_id but it is intentionally NULLABLE.
+# 20260718150656 enables RLS and deliberately installs no user policy, so
+# non-BYPASSRLS roles are denied by default. System rows continue through the
+# service-role pool inside pkg/events.
+events.outbox_events    # outbox pattern; written by services, drained by RabbitMQ relay
+events.dlq_events       # dead-letter; surfaced only via ops dashboards under service role

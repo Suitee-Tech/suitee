@@ -1,0 +1,137 @@
+# Índice da Central de Ajuda — Suitee
+# Consumido pela navegação do /ajuda (frontend) e pelas tools search_help/get_help_topic (MCP).
+# Mantenha em sincronia com os arquivos de topicos/.
+
+topics:
+  - id: comecando
+    file: topicos/01-comecando.md
+    title: Começando na Suitee
+    summary: Login, cadastro, convites, primeiro acesso e seleção de empresa.
+    tags: [login, senha, cadastro, convite, onboarding, empresa, primeiro acesso]
+    roles: [admin, gestor, corretor, operacoes, financeiro, marketing, auditor]
+  - id: dashboard
+    file: topicos/02-dashboard.md
+    title: Painel inicial
+    summary: O painel inicial: KPIs, agenda do dia e leads recentes.
+    tags: [painel, dashboard, kpi, agenda, home]
+    roles: [admin, gestor, corretor, operacoes, financeiro, marketing, auditor]
+  - id: leads
+    file: topicos/03-leads.md
+    title: CRM de Leads
+    summary: Captar, qualificar, atribuir e converter leads no CRM.
+    tags: [leads, captação, qualificação, conversão, busca, importação]
+    roles: [admin, gestor, corretor, operacoes, marketing]
+  - id: roleta
+    file: topicos/04-roleta.md
+    title: Roleta de Leads
+    summary: Distribuição automática de leads por pools e SLA.
+    tags: [roleta, distribuição, pool, sla, prioridade]
+    roles: [admin, gestor, operacoes]
+  - id: imoveis
+    file: topicos/05-imoveis.md
+    title: Imóveis e Captações
+    summary: Portfólio de imóveis, captações e mídia.
+    tags: [imóveis, imoveis, portfólio, captação, galeria, publicar]
+    roles: [admin, gestor, corretor, operacoes, marketing]
+  - id: esteira
+    file: topicos/06-esteira.md
+    title: Esteira Digital
+    summary: Esteira digital de negócios: estágios, aprovações e propostas.
+    tags: [esteira, deals, negócio, proposta, estágio, aprovação]
+    roles: [admin, gestor, corretor, operacoes, financeiro]
+  - id: contratos
+    file: topicos/07-contratos.md
+    title: Contratos e Documentos
+    summary: Modelos, contratos, assinatura eletrônica e documentos.
+    tags: [contrato, modelo, assinatura, clicksign, documento, superdoc]
+    roles: [admin, gestor, corretor, operacoes, financeiro]
+  - id: variaveis-contrato
+    file: topicos/21-variaveis-contrato.md
+    title: Variáveis de Contrato
+    summary: Tabela completa, sintaxe, loops, datas calculadas e solução de problemas das variáveis de contrato.
+    tags: [contrato, variáveis, variaveis, docx, modelo, template, loop, data]
+    roles: [admin, gestor, corretor, operacoes, financeiro]
+  - id: locacao
+    file: topicos/08-locacao.md
+    title: Locação e Manutenção
+    summary: Contratos de locação, parcelas, encargos, vistorias e manutenção.
+    tags: [locação, locacao, aluguel, parcela, vistoria, manutenção, fornecedor]
+    roles: [admin, gestor, corretor, operacoes, financeiro]
+  - id: agenda
+    file: topicos/09-agenda.md
+    title: Agenda
+    summary: Calendário, visitas, reuniões e vistorias.
+    tags: [agenda, calendário, visita, reunião, vistoria]
+    roles: [admin, gestor, corretor, operacoes, marketing]
+  - id: mensagens
+    file: topicos/10-mensagens.md
+    title: Mensagens e Notificações
+    summary: Canais de mensagem, Slack e central de notificações.
+    tags: [mensagens, notificações, slack, canal, chat]
+    roles: [admin, gestor, corretor, operacoes, marketing]
+  - id: financeiro
+    file: topicos/11-financeiro.md
+    title: Financeiro
+    summary: Lançamentos, cobranças, recebimentos, comissões, repasses e conferência.
+    tags: [financeiro, cobrança, recebimento, comissão, repasse, conciliação, lançamento]
+    roles: [admin, gestor, operacoes, financeiro]
+  - id: inadimplencia
+    file: topicos/12-inadimplencia.md
+    title: Inadimplência
+    summary: Régua de cobrança, cobranças atrasadas e ações de recuperação.
+    tags: [inadimplência, atraso, cobrança, régua, recuperação]
+    roles: [admin, operacoes, financeiro]
+  - id: fiscal
+    file: topicos/13-fiscal.md
+    title: Fiscal e Relatórios
+    summary: DIMOB, NFS-e, informes de rendimentos e relatórios.
+    tags: [fiscal, dimob, nfs-e, informe, relatório, exportação]
+    roles: [admin, operacoes, financeiro, auditor]
+  - id: chamados
+    file: topicos/14-chamados.md
+    title: Chamados e Parceiros
+    summary: Chamados de clientes, triagem, SLA e parceiros.
+    tags: [chamados, tickets, suporte, sla, parceiros]
+    roles: [admin, gestor, operacoes]
+  - id: equipe
+    file: topicos/15-equipe.md
+    title: Equipe, Permissões e Auditoria
+    summary: Membros, perfis, permissões e trilha de auditoria.
+    tags: [equipe, membros, perfis, permissões, auditoria, audit trail]
+    roles: [admin, gestor, auditor]
+  - id: configuracoes
+    file: topicos/16-configuracoes.md
+    title: Configurações e Assinatura
+    summary: Perfil, empresa, aparência, integrações e assinatura.
+    tags: [configurações, perfil, empresa, aparência, integrações, assinatura, plano]
+    roles: [admin, gestor]
+  - id: inteligencia
+    file: topicos/17-inteligencia.md
+    title: Suitee IA
+    summary: Suitee IA: o que ela faz e exemplos de pedidos.
+    tags: [ia, inteligência, assistente, chat, análise]
+    roles: [admin, gestor, corretor, operacoes, financeiro, marketing, auditor, parceiro]
+  - id: portal-cliente
+    file: topicos/18-portal-cliente.md
+    title: Portal do Cliente
+    summary: Portal do cliente e do proprietário: login OTP, imóveis, negócios, locação e financeiro.
+    tags: [portal, cliente, proprietário, otp, login portal]
+    roles: [cliente, parceiro]
+  - id: seguranca-lgpd
+    file: topicos/19-seguranca-lgpd.md
+    title: Privacidade e LGPD
+    summary: Privacidade, exclusão e exportação de dados (LGPD).
+    tags: [lgpd, privacidade, exclusão, exportação, consentimento]
+    roles: [admin, gestor, operacoes, auditor]
+  - id: site
+    file: topicos/22-site.md
+    title: Site de imóveis
+    summary: Ative e configure a vitrine pública, acompanhe TLS/publicação e veja os resultados.
+    tags: [site, vitrine, domínio, tls, https, marca, branding, seo, leads do site]
+    roles: [admin, gestor, marketing]
+  - id: faq
+    file: topicos/20-faq.md
+    title: Perguntas frequentes
+    summary: Perguntas frequentes com respostas diretas.
+    tags: [faq, dúvidas, ajuda]
+    roles: [admin, gestor, corretor, operacoes, financeiro, marketing, auditor, parceiro]

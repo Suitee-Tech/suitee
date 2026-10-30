@@ -1,0 +1,13 @@
+/* Small internal-only branding tweaks. The public storefront has its own CSS. */
+:root {
+  --theme-elevation-0: #f8fafc;
+}
+
+.template-default__wrap .nav {
+  --nav-width: 260px;
+}
+
+.nav__brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

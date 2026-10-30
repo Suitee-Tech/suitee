@@ -1,0 +1,1086 @@
+services:
+  # Base Infrastructure
+  postgres:
+    profiles: [ "local-db" ]
+    image: postgres:15-alpine@sha256:25d430274d8a31184f9435cc5b2f56aff254952065bbbcac0c51acedb5a1d1e7
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=toca
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres/init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./supabase/migrations/20260421120000_finalize_jsonb_rls.sql:/docker-entrypoint-initdb.d/002_finalize.sql:ro
+      - ./supabase/migrations/20260425120000_create_ai_tables.sql:/docker-entrypoint-initdb.d/003_ai_tables.sql:ro
+      - ./supabase/migrations/20260426120000_create_ai_tool_invocations.sql:/docker-entrypoint-initdb.d/004_ai_tool_invocations.sql:ro
+      # ADR 0006: schema sites.* (vitrine). Em produção as migrations são
+      # aplicadas pelo pipeline; aqui o init do Postgres local/test precisa dela.
+      - ./supabase/migrations/20261026120000_create_sites_schema.sql:/docker-entrypoint-initdb.d/007_sites.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d toca" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toca-network
+
+  redis:
+    image: redis:alpine@sha256:2d3814be5e9b06a30a0be54770b7e12052e7e79ec85271aefd34875c1f393b23
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - toca-network
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
+    # RabbitMQ derives its persisted node name from the hostname. Keep it
+    # stable across container recreations so the same Mnesia data is reused.
+    hostname: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER_required}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS_required}
+    volumes:
+      # Use the image's declared data directory so metadata survives recreates.
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      # The image starts as root and then drops privileges. Run diagnostics as
+      # the service user too; otherwise an early probe can create the Erlang
+      # cookie as root and make the broker fail intermittently with EACCES.
+      test: [ "CMD", "gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      # Docker Desktop can take several minutes to cold-start RabbitMQ while
+      # its metadata and message-store indexes are initialized. Failures
+      # during this grace period must not block all dependent services.
+      start_period: 300s
+    networks:
+      - toca-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest@sha256:968b31672178558da8a0c1bfc86336647d756ee6997ca196698796f5262adef1
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_OTLP_GRPC_PORT:-4317}:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  minio:
+    # S3-compatible storage. Options:
+    # 1. Use MinIO with Quay auth: docker login quay.io
+    # 2. Host your own S3 mock or use a service account.
+    # For now, using a minimal S3 stub; replace with actual image once registry access is available.
+    image: localstack/localstack:3.0@sha256:73698e485240939490134aadd7e429ac87ff068cd5ad09f5de8ccb76727c13e1
+    ports:
+      - "${MINIO_PORT:-9000}:4566"
+      - "${MINIO_CONSOLE_PORT:-9001}:4566"
+    environment:
+      - SERVICES=s3
+      - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY:-minioadmin}
+      - AWS_DEFAULT_REGION=${S3_REGION:-us-east-1}
+      - LOCALSTACK_AUTH_TOKEN=
+      - DISABLE_LICENSE_CHECKS=1
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4566/_localstack/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - toca-network
+
+  imgproxy:
+    image: darthsim/imgproxy:latest@sha256:3f0a711b1b24ac40f33e35dff7b5b2855ced5fc01d309c05d6db7951f5995953
+    ports:
+      - "${IMGPROXY_PORT:-8091}:8080"
+    environment:
+      - IMGPROXY_BIND=:8080
+      - IMGPROXY_USE_S3=true
+      - IMGPROXY_S3_ENDPOINT=http://minio:9000
+      - IMGPROXY_S3_REGION=${S3_REGION:?S3_REGION_required}
+      - IMGPROXY_S3_FORCE_PATH_STYLE=true
+      - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY:?S3_ACCESS_KEY_required}
+      - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY:?S3_SECRET_KEY_required}
+      - IMGPROXY_ALLOWED_SOURCES=s3://
+      - IMGPROXY_CONCURRENCY=4
+      - IMGPROXY_MAX_SRC_RESOLUTION=25
+      - IMGPROXY_DOWNLOAD_TIMEOUT=10
+      - IMGPROXY_WRITE_TIMEOUT=20
+    mem_limit: 512m
+    depends_on:
+      - minio
+    healthcheck:
+      test: [ "CMD", "imgproxy", "health" ]
+      interval: 20s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  prometheus:
+    image: prom/prometheus:v2.55.0@sha256:fe47ca5a4eb2ef06d7adaa583776b1f8e57f1e2a509ab500c538a3c07ebd9625
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - toca-network
+
+  loki:
+    image: grafana/loki:3.1.1@sha256:609c03d2e9becb0bb6b5f4f7e88d05e38321520c23e02e8b00c1caaf60b13523
+    command:
+      - "-config.file=/etc/loki/loki.yml"
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - loki_data:/loki
+    networks:
+      - toca-network
+
+  promtail:
+    image: grafana/promtail:3.1.1@sha256:34a7b851f2f300e35d6b37020aa62c5454d07a40b8ce655a9a1d3eefbb8ae333
+    command:
+      - "-config.file=/etc/promtail/promtail.yml"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+    networks:
+      - toca-network
+
+  grafana:
+    image: grafana/grafana:11.2.0@sha256:37a5d8860aef847dfa09f5f8947f010f6479f98cf7820b5186f9c6314b44be60
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - toca-network
+
+  # Services
+  toca-auth:
+    build:
+      context: .
+      dockerfile: toca-auth/Dockerfile
+    ports:
+      - "${AUTH_PORT}:8081"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - PORT=8081
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_auth
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-3000}}
+      - REDIS_URI=${REDIS_URI}
+      - RATE_LIMIT_RPS=${RATE_LIMIT_RPS:-200}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST:-500}
+      # Refresh-token cookie attributes. In prod with frontend on a different
+      # subdomain than the API, set REFRESH_COOKIE_SAMESITE=none and
+      # REFRESH_COOKIE_DOMAIN=.suitee.com.br so the cookie is sent on
+      # cross-origin XHR. Defaults to None+Secure in non-dev environments.
+      - REFRESH_COOKIE_SAMESITE=${REFRESH_COOKIE_SAMESITE:-}
+      - REFRESH_COOKIE_DOMAIN=${REFRESH_COOKIE_DOMAIN:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/uploads
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-core:
+    build:
+      context: .
+      dockerfile: toca-core/Dockerfile
+    ports:
+      - "${CORE_PORT}:8082"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8082
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_core
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - ADDRESS_VERIFICATION_MODE=${ADDRESS_VERIFICATION_MODE:-best_effort}
+      - ADDRESS_VERIFICATION_PROVIDER=${ADDRESS_VERIFICATION_PROVIDER:-viacep}
+      - ADDRESS_VERIFICATION_BASE_URL=${ADDRESS_VERIFICATION_BASE_URL:-https://viacep.com.br}
+      - ADDRESS_VERIFICATION_TIMEOUT=${ADDRESS_VERIFICATION_TIMEOUT:-2s}
+      - ADDRESS_VERIFICATION_CACHE_TTL=${ADDRESS_VERIFICATION_CACHE_TTL:-24h}
+      - ADDRESS_VERIFICATION_CACHE_MAX_ENTRIES=${ADDRESS_VERIFICATION_CACHE_MAX_ENTRIES:-10000}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - STORAGE_PROVIDER=supabase
+      - S3_ENDPOINT=${S3_ENDPOINT:-minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_USE_SSL=${S3_USE_SSL:-false}
+      # A5: invalidação do cache de permissões ao salvar a matriz. Opcional —
+      # sem isto a revogação propaga apenas pelo TTL de 30s dos consumidores.
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      toca-signature:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/uploads
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-financial:
+    build:
+      context: .
+      dockerfile: toca-financial/Dockerfile
+    ports:
+      - "${FINANCIAL_PORT}:8083"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8083
+      - FINANCIAL_ADJUSTMENT_APPROVAL_THRESHOLD_BRL=${FINANCIAL_ADJUSTMENT_APPROVAL_THRESHOLD_BRL:-5000}
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_financial
+      # O financeiro atende portal + dashboard + jobs; com 1 conexão uma
+      # transação concorrente segura o pool e derruba /client-portal/rentals
+      # em 504 no gateway.
+      - DATABASE_MAX_POOL_SIZE=${FINANCIAL_DATABASE_MAX_POOL_SIZE:-5}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-supabase}
+      - S3_ENDPOINT=${S3_ENDPOINT:-minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_USE_SSL=${S3_USE_SSL:-false}
+      - STORAGE_DIR=/uploads
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - PAYMENT_GATEWAY_API_KEY=${PAYMENT_GATEWAY_API_KEY}
+      - PLATFORM_SUBSCRIPTIONS_ENABLED=${PLATFORM_SUBSCRIPTIONS_ENABLED:-false}
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-false}
+      - ABACATEPAY_DEV_MODE=${ABACATEPAY_DEV_MODE:-false}
+      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL:-http://localhost:3000}
+      - ABACATEPAY_WEBHOOK_SECRET=${ABACATEPAY_WEBHOOK_SECRET}
+      - ABACATEPAY_WEBHOOK_ALLOWED_IPS=${ABACATEPAY_WEBHOOK_ALLOWED_IPS}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - uploads_data:/uploads
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-crm:
+    build:
+      context: .
+      dockerfile: toca-crm/Dockerfile
+    ports:
+      - "${CRM_PORT}:8084"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8084
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_crm
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+
+  # P1-13: antivírus do funil de uploads (clamd na porta 3310).
+  clamav:
+    image: clamav/clamav:stable@sha256:7659dcb0db47941d3cf8336af84bbb63c7e70b76fc00601774358412b42ed186
+    expose:
+      - "3310"
+    volumes:
+      # P1-13: baixa apenas o main.cvd (host ~4 GB de RAM) — ver o arquivo.
+      - ./deploy/clamav/freshclam.conf:/etc/clamav/freshclam.conf:ro
+      # Banco de assinaturas persistido: sem isso, toda recriação do container
+      # (inclusive a de um `make up`) baixa o main.cvd de novo (~85 MB) e o
+      # boot frio passa dos 300 s do `--wait`. É o mesmo volume usado em prod.
+      - clamav_db:/var/lib/clamav
+    # Teto explícito de memória (produção usa 512m; aqui há folga de 1g para o
+    # host de dev). O clamd com só o main.cvd fica em ~400-500 MB de RSS. Em
+    # hosts de 8 GB (Docker Desktop com ~6 GB de VM), deixar o container sem
+    # limite o torna a primeira vítima do OOM killer durante builds pesados
+    # (ex.: a imagem do toca-ocr), e o clamd morre sem que o container saia —
+    # ficando "Up (unhealthy)" para sempre.
+    mem_limit: ${CLAMAV_MEMORY_LIMIT:-1g}
+    environment:
+      - CLAMD_STARTUP_TIMEOUT=600
+    healthcheck:
+      # clamdscan --ping EXIGE argumento nesta versão; sem ele o container
+      # ficava unhealthy e o deploy falhava no wait_for_stack.
+      test: ["CMD", "clamdscan", "--ping=3"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 600s
+    restart: unless-stopped
+    networks:
+      - toca-network
+
+  toca-deal:
+    build:
+      context: .
+      dockerfile: toca-deal/Dockerfile
+    ports:
+      - "${DEAL_PORT}:8085"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8085
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_deal
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - STORAGE_PROVIDER=supabase
+      - S3_ENDPOINT=${S3_ENDPOINT:-minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_USE_SSL=${S3_USE_SSL:-false}
+      - STORAGE_DIR=/uploads
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      - OPS_SERVICE_URL=http://toca-ops:8087
+      - FINANCIAL_SERVICE_URL=http://toca-financial:8083
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - SIGNATURE_SERVICE_URL=http://toca-signature:8093
+      # P1-13: antivírus do funil de uploads (fail-closed).
+      - CLAMAV_URL=clamav:3310
+      - AI_SERVICE_URL=${AI_SERVICE_URL:-http://toca-ai:8092}
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      # Régua de follow-up de proposta (§F6). O sweep é opcional: com
+      # PROPOSAL_FOLLOWUP_MAX_STAGES=0 (ou INTERVAL=0) o motor nem é agendado.
+      - PROPOSAL_FOLLOWUP_INTERVAL_MINUTES=${PROPOSAL_FOLLOWUP_INTERVAL_MINUTES:-60}
+      - PROPOSAL_FOLLOWUP_STAGE1_DAYS=${PROPOSAL_FOLLOWUP_STAGE1_DAYS:-3}
+      - PROPOSAL_FOLLOWUP_GAP_DAYS=${PROPOSAL_FOLLOWUP_GAP_DAYS:-7}
+      - PROPOSAL_FOLLOWUP_MAX_STAGES=${PROPOSAL_FOLLOWUP_MAX_STAGES:-3}
+      - PROPOSAL_FOLLOWUP_MAX_AGE_DAYS=${PROPOSAL_FOLLOWUP_MAX_AGE_DAYS:-30}
+      - RECONCILIATION_INTERVAL_MINUTES=${RECONCILIATION_INTERVAL_MINUTES:-360}
+      - AUTO_READJUST_INTERVAL_HOURS=${AUTO_READJUST_INTERVAL_HOURS:-24}
+      - AUTO_READJUST_DEFAULT_INDEX_PCT=${AUTO_READJUST_DEFAULT_INDEX_PCT:-0}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - uploads_data:/uploads
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-signature:
+    build:
+      context: .
+      dockerfile: toca-signature/Dockerfile
+    ports:
+      - "${SIGNATURE_PORT:-8093}:8093"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8093
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_signature
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CLICKSIGN_BASE_URL=${CLICKSIGN_BASE_URL:-https://sandbox.clicksign.com}
+      - CLICKSIGN_ACCESS_TOKEN=${CLICKSIGN_ACCESS_TOKEN}
+      - CLICKSIGN_WEBHOOK_SECRET=${CLICKSIGN_WEBHOOK_SECRET}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - CLICKSIGN_ENVIRONMENT=${CLICKSIGN_ENVIRONMENT:-sandbox}
+      # P1-14: chave de criptografia das credenciais Clicksign por tenant
+      # (64 hex = 32 bytes). Vazia = fallback global por ambiente.
+      - CLICKSIGN_CREDENTIALS_ENC_KEY=${CLICKSIGN_CREDENTIALS_ENC_KEY:-}
+      - CLICKSIGN_WEBHOOK_ALLOWED_IPS=${CLICKSIGN_WEBHOOK_ALLOWED_IPS:-203.0.113.10,203.0.113.10}
+      # Used to derive the public webhook URL the operator registers in
+      # Clicksign. Override via WEBHOOK_PUBLIC_URL only if there's something
+      # in front of the gateway (CDN, custom domain).
+      - PUBLIC_GATEWAY_URL=${PUBLIC_GATEWAY_URL:-http://localhost:8080}
+      - WEBHOOK_PUBLIC_URL=${WEBHOOK_PUBLIC_URL:-}
+      - GOTENBERG_URL=${GOTENBERG_URL:-http://gotenberg:3000}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8093/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  # Gotenberg renders HTML contracts to PDF before they go to Clicksign. The
+  # toca-signature service hits POST /forms/chromium/convert/html with the
+  # contract HTML; the response is the PDF bytes. v8 is the current major;
+  # the API has been stable since v7.
+  gotenberg:
+    image: gotenberg/gotenberg:8@sha256:3fdee07e0dcd5005c3db4d81d1600d081fc6fb424da87e409e1c1f9624a249b8
+    command:
+      - "gotenberg"
+      - "--api-port=3000"
+      # Recicla o navegador entre lotes: um processo degradado não contamina as
+      # próximas renderizações.
+      - "--chromium-restart-after=25"
+      # Nesta máquina o Chromium leva mais de 20s (o padrão) para subir: o log
+      # registra "websocket url timeout reached; if Chromium is slow to start,
+      # raise --chromium-start-timeout (currently 20s)" e a conversão vira 500.
+      - "--chromium-start-timeout=120s"
+      - "--api-timeout=180s"
+    # O Chromium depende de /dev/shm e o Docker entrega 64MB por padrão. Com
+    # pouca memória compartilhada o navegador trava no meio da renderização: os
+    # logs mostram "browser health check failed: context deadline exceeded" e
+    # "browser start already in progress", e a conversão do contrato ia de 12s a
+    # 55s até virar status 500 — o gargalo real do envio para assinatura, não o
+    # Clicksign (que responde em menos de 2s).
+    shm_size: "1gb"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-comm:
+    build:
+      context: .
+      dockerfile: toca-comm/Dockerfile
+    ports:
+      - "${COMM_PORT}:8086"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - PORT=8086
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_comm
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - STORAGE_PROVIDER=supabase
+      - S3_ENDPOINT=${S3_ENDPOINT:-minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_USE_SSL=${S3_USE_SSL:-false}
+      - STORAGE_DIR=/uploads
+      - RESEND_API_KEY=${EMAIL_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-update@suitee.com.br}
+      # Local: SMTP do Inbucket do Supabase (http://localhost:54324). Em
+      # produção estas variáveis ficam vazias e o provider é o Resend.
+      - SMTP_HOST=${SMTP_HOST:-host.docker.internal}
+      - SMTP_PORT=${SMTP_PORT:-54325}
+      - SMTP_FROM=${SMTP_FROM:-no-reply@toca.local}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-3000}}
+      - GATEWAY_URL=${PUBLIC_GATEWAY_URL:-http://localhost:8080}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - uploads_data:/uploads
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8086/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-ops:
+    build:
+      context: .
+      dockerfile: toca-ops/Dockerfile
+    ports:
+      - "${OPS_PORT}:8087"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - PORT=8087
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_ops
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - STORAGE_PROVIDER=supabase
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8087/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-calendar:
+    build:
+      context: .
+      dockerfile: toca-calendar/Dockerfile
+    ports:
+      - "${CALENDAR_PORT}:8088"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - PORT=8088
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_calendar
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      # Link assinado do .ics no e-mail: a base pública monta a URL e o
+      # segredo assina. Sem os dois o CTA não é emitido.
+      - CALENDAR_LINK_SECRET=${CALENDAR_LINK_SECRET:-}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:?PUBLIC_API_URL_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8088/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  toca-portal:
+    build:
+      context: .
+      dockerfile: toca-portal/Dockerfile
+    ports:
+      - "${PORTAL_PORT}:8089"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8089
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_portal
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - FEED_BASE_URL=${FEED_BASE_URL:-http://localhost:8080}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      toca-core:
+        condition: service_healthy
+      toca-crm:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8089/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  # ─────────────────────────────────────────
+  # Sites (vitrine pública) — ADR 0006
+  # ─────────────────────────────────────────
+  toca-sites:
+    build:
+      context: .
+      dockerfile: toca-sites/Dockerfile
+    ports:
+      - "${SITES_PORT:-8094}:8094"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8094
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - DATABASE_NAME=toca_sites
+      - DATABASE_MAX_POOL_SIZE=${DATABASE_MAX_POOL_SIZE:-1}
+      - DATABASE_MIN_POOL_SIZE=${DATABASE_MIN_POOL_SIZE:-0}
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY_required}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY_required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - RABBITMQ_URI=${RABBITMQ_URI:?RABBITMQ_URI_required}
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - PAYLOAD_API_URL=http://toca-web:3000
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+      - SITE_PUBLIC_SCHEME=${SITE_PUBLIC_SCHEME:-http}
+      # Porta do Next no host local (produção não define: 443 implícita).
+      - SITE_PUBLIC_PORT=${SITE_PUBLIC_PORT:-${WEB_PORT:-3002}}
+      - SITES_PUBLIC_CORS_ORIGIN=${SITES_PUBLIC_CORS_ORIGIN:-http://*.imoveis.localhost}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      toca-core:
+        condition: service_healthy
+      toca-crm:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8094/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  # One-shot de migrations do schema `payload` (a imagem de runtime é Next
+  # standalone e não carrega o CLI/drizzle-kit). O toca-web só sobe depois do
+  # sucesso daqui.
+  toca-web-migrate:
+    build:
+      context: ./toca-web
+      dockerfile: Dockerfile
+      target: migrator
+    environment:
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-local-dev-payload-secret-change-me-32}
+      - PAYLOAD_PUBLIC_SERVER_URL=${PAYLOAD_PUBLIC_SERVER_URL:-http://localhost:3002}
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+      - PAYLOAD_DB_PUSH=false
+    # O banco pode estar subindo (ou ser externo e oscilar): tenta algumas
+    # vezes antes de falhar o deploy. Migration é idempotente.
+    command:
+      - sh
+      - -c
+      - |
+        for attempt in 1 2 3 4 5 6 7 8 9 10; do
+          if pnpm payload migrate; then exit 0; fi
+          echo "payload migrate falhou (tentativa $$attempt/10); aguardando banco..." >&2
+          sleep 3
+        done
+        exit 1
+    restart: "no"
+    networks:
+      - toca-network
+
+  # Payload CMS + Next SSR do site público. O Host comercial
+  # {marca}.imoveis.localhost é resolvido pelo middleware do Next. No macOS o
+  # curinga `.localhost` resolve sozinho; em Linux mapeie em /etc/hosts
+  # (`make sites-hosts`). Ver toca-web/README.md.
+  toca-web:
+    build:
+      context: ./toca-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITES_API_URL: ${NEXT_PUBLIC_SITES_API_URL:-http://localhost:8094}
+        NEXT_PUBLIC_SITE_HOST_SUFFIX: ${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+        PUBLIC_SITE_HOST_SUFFIX: ${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+    ports:
+      - "${WEB_PORT:-3002}:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URI=${DATABASE_URI:-postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable}
+      - PAYLOAD_DB_PUSH=false
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-local-dev-payload-secret-change-me-32}
+      - PAYLOAD_PUBLIC_SERVER_URL=${PAYLOAD_PUBLIC_SERVER_URL:-http://localhost:3002}
+      - PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+      - SITE_PUBLIC_SCHEME=${SITE_PUBLIC_SCHEME:-http}
+      - SITE_NOINDEX=${SITE_NOINDEX:-false}
+      - PORTAL_PUBLIC_URL=${PORTAL_PUBLIC_URL:-http://localhost:3000/portal}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - SITES_INTERNAL_API_URL=http://toca-sites:8094
+      - NEXT_PUBLIC_SITES_API_URL=${NEXT_PUBLIC_SITES_API_URL:-http://localhost:8094}
+      - NEXT_PUBLIC_SITE_HOST_SUFFIX=${PUBLIC_SITE_HOST_SUFFIX:-imoveis.localhost}
+    depends_on:
+      toca-sites:
+        condition: service_healthy
+      toca-web-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - toca-network
+
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    ports:
+      - "${GATEWAY_PORT}:8080"
+      # P2/B1: o scrape de métricas fica num listener interno. Em produção/beta
+      # esta porta NÃO é publicada (só a toca-network alcança); localmente ela é
+      # exposta para conveniência do desenvolvedor.
+      - "${GATEWAY_METRICS_PORT:-9091}:9091"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8080
+      - GATEWAY_METRICS_PORT=9091
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-3000}}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - AUTH_SERVICE_URL=http://toca-auth:8081
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - FINANCIAL_SERVICE_URL=http://toca-financial:8083
+      - PLATFORM_ACCESS_CONTROL_ENABLED=${PLATFORM_ACCESS_CONTROL_ENABLED:-false}
+      - CRM_SERVICE_URL=http://toca-crm:8084
+      - DEAL_SERVICE_URL=http://toca-deal:8085
+      - COMM_SERVICE_URL=http://toca-comm:8086
+      - OPS_SERVICE_URL=http://toca-ops:8087
+      - CALENDAR_SERVICE_URL=http://toca-calendar:8088
+      - PORTAL_SERVICE_URL=http://toca-portal:8089
+      - SIGNATURE_SERVICE_URL=http://toca-signature:8093
+      - SITES_SERVICE_URL=http://toca-sites:8094
+      - PUBLIC_SITE_CORS_ORIGIN=${SITES_PUBLIC_CORS_ORIGIN:-http://*.imoveis.localhost}
+
+    depends_on:
+      toca-auth:
+        condition: service_healthy
+      toca-core:
+        condition: service_healthy
+      toca-financial:
+        condition: service_healthy
+      toca-crm:
+        condition: service_healthy
+      toca-deal:
+        condition: service_healthy
+      toca-comm:
+        condition: service_healthy
+      toca-ops:
+        condition: service_healthy
+      toca-calendar:
+        condition: service_healthy
+      toca-portal:
+        condition: service_healthy
+      toca-signature:
+        condition: service_healthy
+      toca-sites:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - toca-network
+
+  # MCP Server for AI Integration
+  toca-mcp:
+    build:
+      context: .
+      dockerfile: toca-mcp/Dockerfile
+    ports:
+      - "${MCP_PORT:-8090}:8090"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - PORT=8090
+      - GATEWAY_URL=http://gateway:8080
+      # As rotas /mcp/* passaram a validar o JWT do usuário com o mesmo
+      # middleware dos outros serviços (P0/C7). Sem a URL do Supabase o
+      # `pkgAuth.InitJWKS` falha e o grupo inteiro responde 401 — o painel de IA
+      # anunciava "Servidor MCP desconectado" e nenhuma ferramenta ficava
+      # disponível. O `docker-compose.prod.yml` já passava esta variável; o stack
+      # local não, então o endurecimento do C7 quebrou o MCP só no dev.
+      - SUPABASE_URL=${SUPABASE_URL:?SUPABASE_URL_required}
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toca-network
+
+  # OCR: wrapper FastAPI em volta do docling. Converte documentos (PDF/imagem)
+  # em markdown/texto + confiança do OCR. Único serviço Python; sem porta
+  # pública — só o toca-ai consome, dentro da toca-network. Imagem pesada
+  # (torch/easyocr): o primeiro start pode baixar modelos (mitigado pelo volume
+  # docling_models + start_period generoso).
+  toca-ocr:
+    build:
+      context: ./toca-ocr
+      dockerfile: Dockerfile
+      args:
+        # 1 = imagem sem os modelos do Docling (dev local com o volume
+        # docling_models já populado). O build normal baixa e embute os modelos.
+        SKIP_MODEL_DOWNLOAD: ${SKIP_MODEL_DOWNLOAD:-0}
+    # A base do Dockerfile é pinada por digest em linux/amd64 (ver comentário no
+    # toca-ocr/Dockerfile), então em Apple Silicon esta imagem roda por
+    # emulação e o Docker emite o aviso "requested image's platform ... does not
+    # match the host platform". O aviso é esperado e não impede o boot — não
+    # declare `platform:` aqui: no Docker Desktop com image store do containerd
+    # isso faz o `up --no-build` tentar baixar a imagem do registry e falhar.
+    environment:
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?INTERNAL_API_KEY_required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+    volumes:
+      - docling_models:/root/.cache
+    mem_limit: ${OCR_MEMORY_LIMIT:-4g}
+    cpus: "${OCR_CPU_LIMIT:-2.0}"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://localhost:5001/ready', timeout=5).status_code==200 else 1)" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - toca-network
+
+  toca-ai:
+    build:
+      context: .
+      dockerfile: toca-ai/Dockerfile
+    ports:
+      - "${AI_PORT:-8092}:8092"
+    environment:
+      - REDIS_URI=${REDIS_URI:-redis://redis:6379/}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - CORE_SERVICE_URL=http://toca-core:8082
+      - PORT=8092
+      - DATABASE_URI=${DATABASE_URI:?required}
+      - DATABASE_URI_SERVICE=${DATABASE_URI_SERVICE:?required}
+      - SUPABASE_JWKS_URL=${SUPABASE_JWKS_URL:?required}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:?required}
+      - INTERNAL_SERVICE_KEYS=${INTERNAL_SERVICE_KEYS:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:?required}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-http://toca-mcp:8090}
+      - GATEWAY_URL=http://gateway:8080
+      - OCR_SERVICE_URL=${OCR_SERVICE_URL:-http://toca-ocr:5001}
+    depends_on:
+      toca-mcp:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      # NOTE: toca-ocr is intentionally NOT a startup dependency. toca-ai only
+      # calls it lazily during document extraction (async, via toca-deal), so
+      # gating boot on the heavy, slow-warming docling image would needlessly
+      # delay the AI server (and every deploy). If toca-ocr is down/warming,
+      # extraction fails gracefully and retries via the DLQ.
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8092/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - toca-network
+
+  # Frontend (opcional via profile)
+  # Suba com: docker compose --env-file .env --profile frontend up -d
+  toka-frontend:
+    profiles: [ "frontend" ]
+    build:
+      context: ./toka
+      dockerfile: Dockerfile
+      args:
+        # Usar URL relativa evita CORS e funciona com proxy do Nginx
+        - VITE_APP_VERSION=${VITE_APP_VERSION:-unknown}
+        - VITE_API_URL=/api/v1
+        - VITE_IMGPROXY_URL=${VITE_IMGPROXY_URL:-}
+        - VITE_MULTI_PARTY_UI=${VITE_MULTI_PARTY_UI:-true}
+        # O mesmo default rápido e previsível é usado em local, CI e release.
+        - BUILD_MINIFY=${BUILD_MINIFY:-esbuild}
+    environment:
+      - VITE_APP_VERSION=${VITE_APP_VERSION:-unknown}
+      # O entrypoint recusa subir sem esta chave em runtime (env.js). URL
+      # relativa usa o proxy /api/ do nginx para o gateway.
+      - VITE_API_URL=${VITE_API_URL:-/api/v1}
+      - VITE_SUPABASE_URL=${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      - VITE_MULTI_PARTY_UI=${VITE_MULTI_PARTY_UI:-true}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - toca-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  uploads_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  docling_models:
+  clamav_db:
+
+networks:
+  toca-network:
+    driver: bridge

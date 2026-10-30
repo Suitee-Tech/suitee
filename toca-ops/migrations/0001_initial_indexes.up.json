@@ -1,0 +1,15 @@
+{
+  "indexes": [
+    { "collection": "inspections", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "inspections", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "property_id", "value": 1 }] },
+    { "collection": "inspections", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "keys", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "keys", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "property_id", "value": 1 }] },
+    { "collection": "maintenance_tickets", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "maintenance_tickets", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "tickets", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "tickets", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "tickets", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "requester_account_id", "value": 1 }] }
+  ]
+}
+

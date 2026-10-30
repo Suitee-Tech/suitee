@@ -1,0 +1,247 @@
+# ====== Go ======
+/server
+/*/server
+/*/main
+/*/bin/
+bin/
+gateway/gateway
+toca-*/toca-*
+!**/cmd/server
+!**/cmd/server/**
+scripts/seed-mock-data/seed-mock-data
+# Dependências vendorizadas (raiz de módulo Go). O padrão `vendor/` sem âncora
+# engolia pacote-fonte com esse nome — um diretório `vendor` dentro de
+# internal/ ou src/ some do git sem avisar.
+/vendor/
+/pkg/vendor/
+/toca-*/vendor/
+go.work
+go.work.sum
+*.test
+*.out
+*.coverprofile
+*.prof
+*.pprof
+coverage.txt
+profile.out
+__debug_bin
+debug
+
+# Binarios e bibliotecas compiladas
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+*.obj
+
+# ====== Node / Frontend (toka) ======
+node_modules/
+.npm/
+.pnpm-store/
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+dist/
+dist-ssr/
+coverage/
+.nyc_output/
+*.lcov
+*.tgz
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ====== Playwright / Test artifacts ======
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# ====== Python (scripts) ======
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.python-version
+.venv/
+venv/
+
+# ====== Graphify (cache local reproduzivel) ======
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+# Local safety snapshots created by incremental Graphify rebuilds.
+graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+
+# ====== Environment & Secrets ======
+.env
+.env.local
+.env.*
+*.env
+*.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.kdbx
+secrets.yml
+secrets.yaml
+secrets.json
+credentials.json
+credentials.*.json
+service-account*.json
+service_account*.json
+firebase-adminsdk*.json
+google-credentials*.json
+oauth-client*.json
+*.secret
+.npmrc
+.pypirc
+.netrc
+.htpasswd
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*_rsa
+*_dsa
+*_ecdsa
+*_ed25519
+kubeconfig
+kubeconfig.*
+
+# ====== Bancos, dumps e dados locais ======
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.dump
+*.dmp
+*.sql.gz
+*.sql.zip
+*.backup
+*.bak
+*.orig
+*.rej
+/data/
+/tmp/
+/temp/
+
+# ====== Docker ======
+docker-compose.override.yml
+docker-compose.*.override.yml
+
+# Estado local de releases/rollback na VPS
+/.deploy/
+
+# ====== IDE / Editors ======
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.tmp
+*.temp
+*~
+
+# ====== OS ======
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# ====== Logs ======
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# ====== Terraform (se usado) ======
+/terraform/.terraform/
+/terraform/*.tfstate
+/terraform/*.tfstate.*
+/terraform/*.tfplan
+/terraform/.terraform.lock.hcl
+
+# ====== Ferramentas de infraestrutura ======
+.serverless/
+.aws-sam/
+.pulumi/
+.wrangler/
+
+# ====== Claude / agents scratch ======
+.claude/
+.claire/
+.mcp.json
+resend_mcp.yaml
+test_mongo.go
+jwt_gen.go
+test_login.go
+
+# Configuracao local do Codex; o grafo compartilhavel fica em graphify-out/.
+.codex/
+
+.supabase-home/
+.tools/
+supabase/*
+!supabase/README.md
+!supabase/config.toml
+!supabase/roles.sql
+!supabase/seed.sql
+!supabase/migrations/
+!supabase/migrations/*.sql
+
+# DeepSeek Harness — checkout local de ferramenta (não faz parte do produto).
+deepseek-harness/
+
+# Artefatos intermediários do PDF do guia (HTML e prévias PNG).
+docs/.build/
+
+# Artefatos de campanha
+/campanha-suitee
+
+# Landing page local (superfície separada; não faz parte do deploy do produto).
+/suitee-lp
+
+/pitch-sebrae
+
+
+/apresentacao-comercial
+# Configuração pública do pnpm usada pelo Dockerfile da vitrine.
+!toca-web/.npmrc

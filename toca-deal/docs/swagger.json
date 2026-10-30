@@ -1,0 +1,5072 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Deal service for Toca ecosystem",
+        "title": "Toca Deal API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8084",
+    "basePath": "/api/v1",
+    "paths": {
+        "/checklist-templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the built-in templates bundled with the platform.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "checklist"
+                ],
+                "summary": "List checklist templates available for deals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplate"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List deals where the current user is a signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Get my deals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a deal by ID where the current user is a signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Get my deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/checklist": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the document checklist for a deal where the current user is a signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Get my deal checklist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/checklist/{itemId}/download": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a presigned URL to download a checklist item file and redirect to it",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client-portal"
+                ],
+                "summary": "Download checklist item file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to presigned URL",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/checklist/{itemId}/party-fields": {
+            "patch": {
+                "responses": {}
+            }
+        },
+        "/client-portal/deals/{id}/checklist/{itemId}/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a checklist item as uploaded for a deal where the current user is a signer",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Upload my checklist item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File",
+                        "name": "file",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/checklist/{itemId}/upload-complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks a checklist item as uploaded after the client successfully PUT the file to the presigned URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Complete checklist item upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upload Complete Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.CompleteMyChecklistItemUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/checklist/{itemId}/upload-url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generates a presigned PUT URL so the client can upload directly to S3/MinIO",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Get presigned upload URL for my checklist item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upload URL Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.GetMyChecklistItemUploadURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/deals/{id}/signature": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns envelope status + the user's own signer record + a\nPII-filtered list of the other signers (name, role, status).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "portal"
+                ],
+                "summary": "Signature status for the calling portal user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_api_v1_handlers.ClientPortalSignatureDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/client-portal/leads": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all leads/interests where the user is the client",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client-portal"
+                ],
+                "summary": "Get client's leads",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new contract for a deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Create contract",
+                "parameters": [
+                    {
+                        "description": "Create Contract Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.CreateContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a contract by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Get contract by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Update contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Delete contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/amend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new DRAFT contract that inherits unchanged fields\nfrom the original. The amendment links back via\namends_contract_id. The original keeps ACTIVE until the\namendment is signed; envelope_finished on the amendment\nexpires the original.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Issue contract amendment (aditivo)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Original contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Amendment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AmendContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/readjust": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Applies a manual readjustment to the rent value and publishes\ncontract.readjusted so toca-financial updates the recurring\nmonthly amount in RentalChargeConfig. Existing charges are\nNOT modified — only future generations pick up the new value.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Readjust (reajustar) rental contract value",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Readjustment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.ReadjustContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/send-for-signature": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Locks the contract for edits, transitions to PENDING_SIGNATURE,\nand publishes signature.requested for the signature service to process.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Send contract for external signature (Clicksign)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Auth methods per signer",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.SendForSignatureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "contract is locked for signature",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/sign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sign a contract as a signatory",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Sign contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Sign Contract Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.SignContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/signed-file": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the URL of the final signed PDF (post-Clicksign).\nPrefers the persisted MinIO presigned URL (durable, internal)\nand falls back to the Clicksign-hosted URL while persistence\nis still in flight. Returns 404 if the contract isn't SIGNED\nyet or if no URL is available.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Get the signed contract PDF URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_api_v1_handlers.SignedFileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/terminate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks the contract as TERMINATED, records reason/fee/deposit\nacerto, and publishes contract.terminated for toca-financial\nto cancel future recurring charges and process the caução.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Terminate (encerrar) rental contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Termination request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.TerminateContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "exit inspection required",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contracts/{id}/termination-fee-preview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aplica a fórmula canônica da Lei 8245/91 Art. 4 — multa\nproporcional decrescente: 3 × aluguel × (meses_restantes /\ntotal). Endpoint pensado para o portal cliente preview ANTES\nde solicitar encerramento, e para o admin reconciliar o\nnúmero que vai aparecer no Terminate. Não muta nada.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Calcular multa de rescisão antecipada (#438)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Data hipotética de encerramento (YYYY-MM-DD). Default = hoje.",
+                        "name": "date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.TerminationFeeBreakdown"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List deals with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "List deals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Create deal",
+                "parameters": [
+                    {
+                        "description": "Create Deal Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.CreateDealRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/backfill-checklist-documents": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Varre os negócios do tenant e cria/atualiza a linha de documento\nde cada item de checklist já enviado pelo cliente. Idempotente.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Materializa no painel de documentos os arquivos da esteira digital",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_services.ChecklistDocumentBackfillStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get active proposals count and monthly sales value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Get deal stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a deal by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Get deal by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a deal by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Delete deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/accept-counter-offer": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Endpoint admin/operador para aceitar uma contraproposta enviada pelo cliente. Deal.Value é atualizado para o CounterValue da proposal, status vira ACCEPTED, evento publicado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Accept counter-offer (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Counter-offer acceptance",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AcceptCounterOfferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "proposal_id required",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "tenant context required",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "deal or proposal not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "proposal is not in COUNTER_OFFER status",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/audit-log": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Return the audit.events entries for this deal, newest first.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Get audit trail for a deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 100, max 500)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/audit.LogEntry"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/broker-participations": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replace the entire broker_participations array. Sum of percentages must be 100% (±0.01). Locked once the deal reaches CONVERTED (contract signed). Issue #420.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Replace all broker participations on a deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Broker Participations payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.SetBrokerParticipationsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Deal is locked (CONVERTED/CANCELLED)",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Sum is not 100",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a broker with a specific role (captador, visitador, fechamento) to a deal for history and commission purposes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Add broker participation to deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Broker Participation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AddBrokerParticipationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/checklist": {
+            "put": {
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a single item to the deal checklist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Add checklist item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Checklist Item Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AddChecklistItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/checklist/{itemId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove an item from the deal checklist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Remove checklist item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the status of a checklist item (approve, reject, upload)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Update checklist item status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Status Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.UpdateChecklistItemStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/checklist/{itemId}/download": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a presigned URL to download a checklist item file and redirect to it",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Download checklist item file (CRM)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to presigned URL",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/checklist/{itemId}/solicit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a checklist item as solicited (requested from client)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Solicit checklist item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Checklist Item ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/contracts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all contracts associated with a deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "List contracts by deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "deal_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/due-diligence": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update due diligence information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Update due diligence",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Due Diligence Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.UpdateDueDiligenceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/proposals": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a new proposal to a deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Add proposal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Proposal Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AddProposalRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/reconcile-signers": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Forces the deal.Signers projection to be re-applied from\nthe contract's signatories. Recovery hatch for the\nEsteira \"Reconciliar\" button when the periodic event flow\nhas drifted. Idempotent.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Force-resync the signer projection for a deal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/signers": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a signer to the deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Add signer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add Signer Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.AddSignerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/signers/{signerId}": {
+            "put": {
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a signer from the deal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Remove signer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signer ID",
+                        "name": "signerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the status of a signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Update signer status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signer ID",
+                        "name": "signerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Signer Status Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_v1_handlers.UpdateSignerStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/deals/{id}/signers/{signerId}/invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Send an invitation to a deal signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deals"
+                ],
+                "summary": "Invite signer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Deal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signer ID",
+                        "name": "signerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/backfill-signed": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Targets contract-linked documents in `status=assinado` whose",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Re-run the signed-PDF persistence pipeline for stuck rows",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_services.BackfillStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "audit.LogEntry": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "actor_id": {
+                    "type": "string"
+                },
+                "actor_type": {
+                    "type": "string"
+                },
+                "after": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "before": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "entity_id": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "tenant_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.AdjustmentEntry": {
+            "type": "object",
+            "properties": {
+                "applied_at": {
+                    "type": "string"
+                },
+                "effective_from": {
+                    "type": "string"
+                },
+                "index_name": {
+                    "type": "string"
+                },
+                "index_value": {
+                    "type": "number"
+                },
+                "mode": {
+                    "description": "Mode é \"manual\" ou \"auto\"; preserva a origem do reajuste para auditoria.",
+                    "type": "string"
+                },
+                "new_value": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "previous_value": {
+                    "type": "number"
+                },
+                "triggered_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.AmendmentEntry": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "new_contract_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "superseded_at": {
+                    "description": "SupersededAt é preenchido quando o aditivo é assinado e o contrato\noriginal passa para EXPIRED. Antes disso fica vazio.",
+                    "type": "string"
+                },
+                "triggered_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.Contract": {
+            "type": "object",
+            "properties": {
+                "adjust_index": {
+                    "type": "string"
+                },
+                "adjustments": {
+                    "description": "Adjustments mantém o histórico de reajustes aplicados (manual ou auto).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.AdjustmentEntry"
+                    }
+                },
+                "amendments": {
+                    "description": "Amendments lista aditivos emitidos a partir deste contrato. Apenas no\ncontrato original — o aditivo (novo contrato) carrega apenas\nAmendsContractID apontando de volta. Ordem cronológica.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.AmendmentEntry"
+                    }
+                },
+                "amends_contract_id": {
+                    "description": "AmendsContractID, quando preenchido, indica que ESTE contrato é um\naditivo de outro — substitui o original ao ser assinado. O original\npassa para EXPIRED e ganha SupersededAt no AmendmentEntry correspondente.",
+                    "type": "string"
+                },
+                "auto_adjust": {
+                    "type": "boolean"
+                },
+                "client": {
+                    "type": "string"
+                },
+                "commission_pct": {
+                    "type": "number"
+                },
+                "content": {
+                    "description": "Could be HTML or S3 URL",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_id": {
+                    "description": "CustomerID mirrors Deal.CustomerID (the lead/customer party UUID) so\nthe listing UI can fall back to a CRM lookup when Client (the cached\ndisplay name) drifts after a lead rename. Snapshot-derived from the\nDeal at CreateContract time.",
+                    "type": "string"
+                },
+                "deal_id": {
+                    "type": "string"
+                },
+                "display_id": {
+                    "type": "string"
+                },
+                "draft_revisions": {
+                    "description": "DraftRevisions preserves the document replaced by each regeneration.\nSignature attempts remain linked to this same contract.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.DraftRevision"
+                    }
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "entry_inspection_id": {
+                    "description": "EntryInspectionID is set when the ENTRY vistoria created at\ncontract.signed time is concluded with a laudo. Mirrors\nTermination.ExitInspectionID — both are the inspection ids that\nflank the rental's operational window. Empty until the operator\ncloses the entry inspection in toca-ops.",
+                    "type": "string"
+                },
+                "external_envelope_id": {
+                    "description": "External signature integration (Clicksign today; provider-agnostic).\nPopulated when SendForSignature is called; cleared after a successful\ncancel/refusal so the contract is editable again.",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "late_fee_pct": {
+                    "description": "Per-contract financial rules. When set, override the global delinquency\ndefaults (2% multa / 1% juros mês) so the admin UI can tune them per\ncontract. Stored on the contract itself rather than on a separate config\nso they survive renewals/re-signatures of the same lease.",
+                    "type": "number"
+                },
+                "monthly_interest_pct": {
+                    "type": "number"
+                },
+                "next_adjustment": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "property_title": {
+                    "type": "string"
+                },
+                "security_deposit": {
+                    "description": "SecurityDeposit (caução) — valor depositado pelo locatário no início do\ncontrato. Usado pelo TerminateContract para acertar devolução.",
+                    "type": "number"
+                },
+                "sent_for_signature_at": {
+                    "type": "string"
+                },
+                "signatories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory"
+                    }
+                },
+                "signature_locked_at": {
+                    "description": "SignatureLockedAt blocks edits while an envelope is in flight. Cleared\nwhen the envelope is canceled or refused. SIGNED contracts stay locked\npermanently — that's intentional, you can't edit a signed contract.",
+                    "type": "string"
+                },
+                "signature_provider": {
+                    "description": "e.g. \"clicksign\"",
+                    "type": "string"
+                },
+                "signed_document_url": {
+                    "description": "SignedDocumentURL is the URL of the final signed PDF, populated by\nMarkSignedExternally from the SignatureEnvelopeFinishedEvent.",
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Status"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "termination": {
+                    "description": "Termination é preenchido pelo TerminateContract — nil enquanto ativo.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Termination"
+                        }
+                    ]
+                },
+                "type": {
+                    "description": "CRM contract fields",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType": {
+            "type": "string",
+            "enum": [
+                "venda",
+                "locacao"
+            ],
+            "x-enum-varnames": [
+                "TypeVenda",
+                "TypeLocacao"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.CreateContractRequest": {
+            "type": "object",
+            "properties": {
+                "adjust_index": {
+                    "type": "string"
+                },
+                "auto_adjust": {
+                    "type": "boolean"
+                },
+                "client": {
+                    "type": "string"
+                },
+                "commission_pct": {
+                    "type": "number"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "customer_id": {
+                    "description": "CustomerID is accepted but optional — CreateContract overrides it from\nthe linked Deal (authoritative source) so a stale/missing value from\nthe caller cannot poison the snapshot.",
+                    "type": "string"
+                },
+                "deal_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "late_fee_pct": {
+                    "type": "number"
+                },
+                "monthly_interest_pct": {
+                    "type": "number"
+                },
+                "next_adjustment": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "property_title": {
+                    "type": "string"
+                },
+                "signatories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory"
+                    }
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Status"
+                },
+                "type": {
+                    "description": "CRM fields",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.ContractType"
+                        }
+                    ]
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.DraftRevision": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "replaced_at": {
+                    "type": "string"
+                },
+                "replaced_by": {
+                    "type": "string"
+                },
+                "signatories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory"
+                    }
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory": {
+            "type": "object",
+            "properties": {
+                "auth_methods": {
+                    "description": "selected by the operator",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "birthday": {
+                    "description": "YYYY-MM-DD",
+                    "type": "string"
+                },
+                "clicksign_signer_key": {
+                    "description": "External signature integration. Populated by EnvelopeService.CreateForContract\n(via the Clicksign client) and updated by MarkSignerSignedExternally.",
+                    "type": "string"
+                },
+                "documentation": {
+                    "description": "CPF/CNPJ",
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "evidence_url": {
+                    "type": "string"
+                },
+                "group": {
+                    "description": "Group is the default Clicksign signing-order group for this signer.\n0 / unset keeps the legacy behavior (every signer notified together\non envelope activation). Per-envelope overrides at create time take\nprecedence — this is just the contract-level default.",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "description": "Optional contact + identification used by the signature provider\n(Clicksign requires CPF for some auth methods like icp_brasil/biometric).",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "Buyer, Seller, Witness",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryRole"
+                        }
+                    ]
+                },
+                "signature": {
+                    "description": "Digital signature hash",
+                    "type": "string"
+                },
+                "signed_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Mirrors envelope SignerStatus — written by signature_subscribers",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryStatus"
+                        }
+                    ]
+                },
+                "viewed_at": {
+                    "description": "First time the signer opened the signing link",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryRole": {
+            "type": "string",
+            "enum": [
+                "inquilino",
+                "proprietario",
+                "fiador",
+                "locador",
+                "locatario",
+                "comprador",
+                "vendedor",
+                "avalista",
+                "testemunha",
+                "conjuge",
+                "procurador",
+                "representante_legal",
+                "tutor",
+                "curador"
+            ],
+            "x-enum-varnames": [
+                "RoleInquilino",
+                "RoleProprietario",
+                "RoleFiador",
+                "RoleLocador",
+                "RoleLocatario",
+                "RoleComprador",
+                "RoleVendedor",
+                "RoleAvalista",
+                "RoleTestemunha",
+                "RoleConjuge",
+                "RoleProcurador",
+                "RoleRepresentanteLegal",
+                "RoleTutor",
+                "RoleCurador"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.SignatoryStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "VIEWED",
+                "SIGNED",
+                "REFUSED"
+            ],
+            "x-enum-varnames": [
+                "SignatoryStatusPending",
+                "SignatoryStatusViewed",
+                "SignatoryStatusSigned",
+                "SignatoryStatusRefused"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.Status": {
+            "type": "string",
+            "enum": [
+                "DRAFT",
+                "PENDING_SIGNATURE",
+                "PARTIALLY_SIGNED",
+                "SIGNED",
+                "ACTIVE",
+                "EXPIRED",
+                "TERMINATED"
+            ],
+            "x-enum-varnames": [
+                "StatusDraft",
+                "StatusPending",
+                "StatusPartiallySigned",
+                "StatusSigned",
+                "StatusActive",
+                "StatusExpired",
+                "StatusTerminated"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.Termination": {
+            "type": "object",
+            "properties": {
+                "early_termination_fee": {
+                    "type": "number"
+                },
+                "exit_inspection_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "security_deposit_deductions": {
+                    "type": "number"
+                },
+                "security_deposit_return": {
+                    "type": "number"
+                },
+                "terminated_at": {
+                    "type": "string"
+                },
+                "triggered_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_contract.TerminationFeeBreakdown": {
+            "type": "object",
+            "properties": {
+                "cap_applied": {
+                    "description": "CapApplied — true quando a fórmula bruta excederia o teto de 3\nalugueis (Lei 8245/91 Art. 4) e foi clipada. Não acontece com a\nfórmula linear pura, mas defendemos contra extensões futuras.",
+                    "type": "boolean"
+                },
+                "fee_cents": {
+                    "description": "FeeCents — valor da multa em centavos. Sempre \u003e= 0. Centavos para\nevitar erro de ponto flutuante em soma de cobranças.",
+                    "type": "integer"
+                },
+                "fraction_remaining": {
+                    "description": "FractionRemaining — MonthsRemaining / TotalMonths, em [0, 1].",
+                    "type": "number"
+                },
+                "monthly_rent_cents": {
+                    "description": "MonthlyRentCents — aluguel mensal usado no cálculo.",
+                    "type": "integer"
+                },
+                "months_elapsed": {
+                    "description": "MonthsElapsed — meses já cumpridos (corrigido para min(elapsed, total)).",
+                    "type": "integer"
+                },
+                "months_remaining": {
+                    "description": "MonthsRemaining — meses restantes (TotalMonths - MonthsElapsed).",
+                    "type": "integer"
+                },
+                "reason": {
+                    "description": "Reason — string curta para UI explicar zeros: \"contract_already_ended\",\n\"exempt_no_monthly_rent\", etc. Vazia no caminho feliz.",
+                    "type": "string"
+                },
+                "total_months": {
+                    "description": "TotalMonths — duração total contratada.",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipation": {
+            "type": "object",
+            "properties": {
+                "broker_id": {
+                    "type": "string"
+                },
+                "commission": {
+                    "description": "commission amount",
+                    "type": "number"
+                },
+                "percentage": {
+                    "description": "commission split %",
+                    "type": "number"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole": {
+            "type": "string",
+            "enum": [
+                "captador",
+                "co_captador",
+                "visitador",
+                "atendente",
+                "fechamento",
+                "imobiliaria"
+            ],
+            "x-enum-comments": {
+                "BrokerRoleCaptador": "property capture broker",
+                "BrokerRoleFechamento": "deal closing broker",
+                "BrokerRoleVisitador": "visit broker"
+            },
+            "x-enum-descriptions": [
+                "property capture broker",
+                "",
+                "visit broker",
+                "",
+                "deal closing broker",
+                ""
+            ],
+            "x-enum-varnames": [
+                "BrokerRoleCaptador",
+                "BrokerRoleCoCaptador",
+                "BrokerRoleVisitador",
+                "BrokerRoleAtendente",
+                "BrokerRoleFechamento",
+                "BrokerRoleImobiliaria"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory"
+                },
+                "content_type": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_id": {
+                    "type": "string"
+                },
+                "rejection_reason": {
+                    "type": "string"
+                },
+                "request_mode": {
+                    "description": "RequestMode define se o cliente anexa arquivo (\"upload\") ou apenas\npreenche o formulário (\"form\"). Vazio é normalizado para \"upload\".",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode"
+                        }
+                    ]
+                },
+                "requested_fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField"
+                    }
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "reviewed_at": {
+                    "type": "string"
+                },
+                "solicited": {
+                    "type": "boolean"
+                },
+                "solicited_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus"
+                },
+                "storage_key": {
+                    "type": "string"
+                },
+                "uploaded_at": {
+                    "type": "string"
+                },
+                "uploaded_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory": {
+            "type": "string",
+            "enum": [
+                "pessoal",
+                "financeiro",
+                "imovel",
+                "juridico",
+                "outros"
+            ],
+            "x-enum-varnames": [
+                "CategoryPessoal",
+                "CategoryFinanceiro",
+                "CategoryImovel",
+                "CategoryJuridico",
+                "CategoryOutros"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode": {
+            "type": "string",
+            "enum": [
+                "upload",
+                "form"
+            ],
+            "x-enum-varnames": [
+                "RequestModeUpload",
+                "RequestModeForm"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "UPLOADED",
+                "APPROVED",
+                "REJECTED"
+            ],
+            "x-enum-varnames": [
+                "ChecklistPending",
+                "ChecklistUploaded",
+                "ChecklistApproved",
+                "ChecklistRejected"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistStats": {
+            "type": "object",
+            "properties": {
+                "approved": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "rejected": {
+                    "type": "integer"
+                },
+                "required": {
+                    "type": "integer"
+                },
+                "required_approved": {
+                    "type": "integer"
+                },
+                "required_complete": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "uploaded": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplate": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplateItem"
+                    }
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistTemplateItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "request_mode": {
+                    "description": "RequestMode (opcional): \"form\" = apenas preenchimento de formulário\n(sem anexo) — ex.: CPF e telefone digitados. Vazio = \"upload\".",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemRequestMode"
+                        }
+                    ]
+                },
+                "requested_fields": {
+                    "description": "RequestedFields (opcional) são os campos solicitados ao cliente\nquando RequestMode = \"form\" (ou complemento do anexo).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField"
+                    }
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Deal": {
+            "type": "object",
+            "required": [
+                "broker_id",
+                "customer_id",
+                "owner_id",
+                "property_id",
+                "status",
+                "tenant_id",
+                "type"
+            ],
+            "properties": {
+                "broker_id": {
+                    "description": "Primary responsible broker",
+                    "type": "string"
+                },
+                "broker_participations": {
+                    "description": "BrokerParticipations tracks all brokers involved (captador, visitador, fechamento)\nfor history and commission split purposes",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipation"
+                    }
+                },
+                "checklist": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem"
+                    }
+                },
+                "checklist_stats": {
+                    "description": "ChecklistStats is a derived view of `Checklist` populated by\ncallers (see `PopulateChecklistStats`) before serialization. Tagged\n`bson:\"-\"` so the repository never persists it — the source of\ntruth is the items themselves. Surfaced on GetByID so the Esteira\nDocumentation tab can render a \"X de Y obrigatórios aprovados\"\nbadge without re-computing client-side.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistStats"
+                        }
+                    ]
+                },
+                "co_brokering": {
+                    "type": "boolean"
+                },
+                "commission": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_id": {
+                    "description": "CustomerID is ALWAYS the lead.id of the buyer or tenant. Stays constant\nacross the lead→client lifecycle. To get the portal account, look up\nthe lead's `account_id` field via toca-crm — don't reuse this column\nfor that purpose.",
+                    "type": "string"
+                },
+                "display_id": {
+                    "type": "string"
+                },
+                "documents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Document"
+                    }
+                },
+                "due_diligence": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence"
+                },
+                "favorites": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Favorite"
+                    }
+                },
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.History"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "idempotency_key": {
+                    "description": "IdempotencyKey identifica a INTENÇÃO de criação: o mesmo formulário\nreenviado (duplo clique, retry de rede) usa a mesma chave e o backend\ndevolve o negócio já criado em vez de duplicar. Vazio em negócios\ncriados por clientes sem a chave.",
+                    "type": "string"
+                },
+                "lead_id": {
+                    "description": "LeadID is kept for explicit lead↔customer separation. Defaults to\nCustomerID; in pre-conversion deals they're identical. Useful when a\ndeal is later transferred between leads (rare).",
+                    "type": "string"
+                },
+                "owner_id": {
+                    "description": "OwnerID is the lead.id of the property owner (lead with role='owner').\nIt does NOT change after lead→client conversion — `account_id` is a\nprojection layered onto the same lead, not a replacement for the id.",
+                    "type": "string"
+                },
+                "parties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Party"
+                    }
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "proposals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Proposal"
+                    }
+                },
+                "recommended_property_id": {
+                    "description": "RecommendedPropertyID é o imóvel que o corretor recomenda explicitamente\nao cliente (exibido no portal como \"Sugestão do seu corretor\").",
+                    "type": "string"
+                },
+                "signers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Signer"
+                    }
+                },
+                "source_company_id": {
+                    "description": "SourceCompanyID is the tenant that OWNS the shared resource the deal\nwas started from. Only set when CoBrokering is true. Lets the Esteira\nand the financial split identify the owner company.",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Status"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Type"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Document": {
+            "type": "object",
+            "properties": {
+                "deal_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentStatus"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentType"
+                },
+                "uploaded_at": {
+                    "type": "string"
+                },
+                "uploaded_by": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "UPLOADED",
+                "APPROVED",
+                "REJECTED"
+            ],
+            "x-enum-varnames": [
+                "DocumentStatusPending",
+                "DocumentStatusUploaded",
+                "DocumentStatusApproved",
+                "DocumentStatusRejected"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.DocumentType": {
+            "type": "string",
+            "enum": [
+                "IDENTITY",
+                "INCOME",
+                "RESIDENCE",
+                "PROPERTY",
+                "CONTRACT",
+                "SIGNED_CONTRACT",
+                "OTHER"
+            ],
+            "x-enum-comments": {
+                "DocumentTypeContract": "Minuta do Contrato",
+                "DocumentTypeIdentity": "RG, CPF",
+                "DocumentTypeIncome": "Comprovante de Renda",
+                "DocumentTypeProperty": "Matrícula, IPTU",
+                "DocumentTypeResidence": "Comprovante de Residência",
+                "DocumentTypeSignedContract": "Contrato Assinado"
+            },
+            "x-enum-descriptions": [
+                "RG, CPF",
+                "Comprovante de Renda",
+                "Comprovante de Residência",
+                "Matrícula, IPTU",
+                "Minuta do Contrato",
+                "Contrato Assinado",
+                ""
+            ],
+            "x-enum-varnames": [
+                "DocumentTypeIdentity",
+                "DocumentTypeIncome",
+                "DocumentTypeResidence",
+                "DocumentTypeProperty",
+                "DocumentTypeContract",
+                "DocumentTypeSignedContract",
+                "DocumentTypeOther"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence": {
+            "type": "object",
+            "properties": {
+                "cnd_status": {
+                    "description": "\"PENDING\", \"CLEAN\", \"RESTRICTED\"",
+                    "type": "string"
+                },
+                "legal_opinion": {
+                    "type": "string"
+                },
+                "score_serasa": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "\"PENDING\", \"APPROVED\", \"REJECTED\"",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Favorite": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.FieldProvenance": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number"
+                },
+                "document_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validated_at": {
+                    "type": "string"
+                },
+                "validated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.History": {
+            "type": "object",
+            "properties": {
+                "deal_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Status"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Party": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "custom_fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "document": {
+                    "type": "string"
+                },
+                "due_diligence": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.DueDiligence"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "field_provenance": {
+                    "description": "FieldProvenance registra, por campo, a origem do dado (IA/manual/validado) e\na confiança. Preenchido pela extração OCR+IA (auto-apply) e pela validação do\noperador. Reside na JSONB do Deal — sem migration.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.FieldProvenance"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind"
+                },
+                "lead_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "no_spouse_declared": {
+                    "type": "boolean"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "representation": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole"
+                },
+                "share_pct": {
+                    "type": "number"
+                },
+                "sign_status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus"
+                },
+                "signature_required": {
+                    "description": "SignatureRequired marks whether this party's acceptance is mandatory for\nthe deal to advance past the proposal stage. nil means \"not configured\" —\nthe helper IsSignatureRequired() falls back to IsPrimary so deals created\nbefore this field existed keep the previous behavior.",
+                    "type": "boolean"
+                },
+                "signature_url": {
+                    "type": "string"
+                },
+                "signed_at": {
+                    "type": "string"
+                },
+                "spouse_of_party_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind": {
+            "type": "string",
+            "enum": [
+                "person",
+                "company"
+            ],
+            "x-enum-varnames": [
+                "PartyKindPerson",
+                "PartyKindCompany"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation": {
+            "type": "object",
+            "properties": {
+                "allow_representative_proposal": {
+                    "type": "boolean"
+                },
+                "representative_party_id": {
+                    "type": "string"
+                },
+                "requires_principal_signature": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.RepresentationType"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole": {
+            "type": "string",
+            "enum": [
+                "tenant",
+                "buyer",
+                "owner",
+                "guarantor",
+                "witness",
+                "spouse",
+                "attorney",
+                "legal_representative",
+                "guardian",
+                "curator"
+            ],
+            "x-enum-varnames": [
+                "PartyRoleTenant",
+                "PartyRoleBuyer",
+                "PartyRoleOwner",
+                "PartyRoleGuarantor",
+                "PartyRoleWitness",
+                "PartyRoleSpouse",
+                "PartyRoleAttorney",
+                "PartyRoleLegalRep",
+                "PartyRoleGuardian",
+                "PartyRoleCurator"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Proposal": {
+            "type": "object",
+            "properties": {
+                "accepted_by": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalAcceptance"
+                    }
+                },
+                "counter_value": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "down_payment": {
+                    "type": "number"
+                },
+                "follow_up_last_at": {
+                    "description": "FollowUpLastAt é quando o último lembrete saiu — âncora da cadência\nseguinte. Vazio significa que nenhum lembrete saiu ainda e a âncora é\no envio da proposta.",
+                    "type": "string"
+                },
+                "follow_ups": {
+                    "description": "FollowUps conta os lembretes temporais já disparados para esta proposta\n(plano beta §F6). É o \"grupo\" da régua: cada estágio dispara UMA vez e\nsó depois do intervalo da cadência, nunca a cada varredura.",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "installments": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalStatus"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalAcceptance": {
+            "type": "object",
+            "properties": {
+                "accepted_at": {
+                    "type": "string"
+                },
+                "party_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.ProposalStatus": {
+            "type": "string",
+            "enum": [
+                "DRAFT",
+                "SENT",
+                "ACCEPTED",
+                "REJECTED",
+                "COUNTER_OFFER"
+            ],
+            "x-enum-varnames": [
+                "ProposalStatusDraft",
+                "ProposalStatusSent",
+                "ProposalStatusAccepted",
+                "ProposalStatusRejected",
+                "ProposalStatusCounter"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.RepresentationType": {
+            "type": "string",
+            "enum": [
+                "attorney",
+                "legal_representative",
+                "guardian",
+                "curator"
+            ],
+            "x-enum-varnames": [
+                "RepresentationTypeAttorney",
+                "RepresentationTypeLegalRep",
+                "RepresentationTypeGuardian",
+                "RepresentationTypeCurator"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole": {
+            "type": "string",
+            "enum": [
+                "inquilino",
+                "proprietario",
+                "fiador",
+                "locador",
+                "locatario",
+                "comprador",
+                "vendedor",
+                "avalista",
+                "testemunha",
+                "conjuge",
+                "procurador",
+                "representante_legal",
+                "tutor",
+                "curador"
+            ],
+            "x-enum-varnames": [
+                "SignatoryRoleInquilino",
+                "SignatoryRoleProprietario",
+                "SignatoryRoleFiador",
+                "SignatoryRoleLocador",
+                "SignatoryRoleLocatario",
+                "SignatoryRoleComprador",
+                "SignatoryRoleVendedor",
+                "SignatoryRoleAvalista",
+                "SignatoryRoleTestemunha",
+                "SignatoryRoleConjuge",
+                "SignatoryRoleProcurador",
+                "SignatoryRoleRepLegal",
+                "SignatoryRoleTutor",
+                "SignatoryRoleCurador"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Signer": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "auth_evidence_url": {
+                    "description": "AuthEvidenceURL is Clicksign's link to the proof-of-authentication\ndocument (e.g. selfie+document scan, ICP-Brasil certificate\nsnapshot). Stored separately from WidgetEventLogURL because legal\nusually wants both attached side-by-side.",
+                    "type": "string"
+                },
+                "auth_method_used": {
+                    "description": "AuthMethodUsed mirrors clicksign.AuthMethod (email | whatsapp |\nsms | selfie | icp_brasil | selfie+document). Surfaces in the\naudit trail so operators can answer \"how did this signer\nauthenticate?\" without joining against the envelope.",
+                    "type": "string"
+                },
+                "certificate_serial": {
+                    "description": "CertificateSerial is the X.509 serial of the ICP-Brasil\ncertificate used to sign (when AuthMethodUsed=icp_brasil). Empty\nfor non-ICP signature methods. Stored as the canonical\nuppercase-hex string Clicksign reports.",
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_required": {
+                    "description": "IsRequired marks whether this signer must sign for the contract to be\nconsidered complete. nil means \"not configured\" — defaults to true so\nexisting deals don't suddenly bypass signatures.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole"
+                },
+                "signature_url": {
+                    "type": "string"
+                },
+                "signed_at": {
+                    "type": "string"
+                },
+                "signed_ip": {
+                    "description": "SignedIP is the client IP recorded by Clicksign for the signature\nevent. Useful for fraud investigations (\"the signer claims they\nnever signed but our log shows they did from X.Y.Z.W at HH:MM\").",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus"
+                },
+                "widget_event_log_url": {
+                    "description": "WidgetEventLogURL is Clicksign's link to the per-signer event\nlog (page-views, downloads, signature acceptance). Operators\ndrop this into legal hand-offs as the canonical \"audit trail of\nthe act of signing\" for a single signer.",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "SIGNED",
+                "REJECTED"
+            ],
+            "x-enum-varnames": [
+                "SignerStatusPending",
+                "SignerStatusSigned",
+                "SignerStatusRejected"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Status": {
+            "type": "string",
+            "enum": [
+                "NEGOTIATION",
+                "PROPOSAL",
+                "ANALYSIS",
+                "CONTRACT",
+                "CONVERTED",
+                "CANCELLED"
+            ],
+            "x-enum-varnames": [
+                "StatusNegotiation",
+                "StatusProposal",
+                "StatusAnalysis",
+                "StatusContract",
+                "StatusConverted",
+                "StatusCancelled"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_domain_deal.Type": {
+            "type": "string",
+            "enum": [
+                "SALE",
+                "RENT"
+            ],
+            "x-enum-varnames": [
+                "TypeSale",
+                "TypeRent"
+            ]
+        },
+        "github_com_oginoino_toca_toca-deal_internal_services.BackfillStats": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "type": "integer"
+                },
+                "failed_doc_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reattempted": {
+                    "type": "integer"
+                },
+                "scanned": {
+                    "type": "integer"
+                },
+                "skipped_no_url": {
+                    "type": "integer"
+                },
+                "succeeded": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-deal_internal_services.ChecklistDocumentBackfillStats": {
+            "type": "object",
+            "properties": {
+                "deals_scanned": {
+                    "type": "integer"
+                },
+                "documents": {
+                    "type": "integer"
+                },
+                "items_scanned": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_v1_handlers.AcceptCounterOfferRequest": {
+            "type": "object",
+            "required": [
+                "proposal_id"
+            ],
+            "properties": {
+                "proposal_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.AddBrokerParticipationRequest": {
+            "type": "object",
+            "required": [
+                "broker_id",
+                "role"
+            ],
+            "properties": {
+                "broker_id": {
+                    "type": "string"
+                },
+                "commission": {
+                    "type": "number"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "role": {
+                    "enum": [
+                        "captador",
+                        "co_captador",
+                        "visitador",
+                        "atendente",
+                        "fechamento",
+                        "imobiliaria"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole"
+                        }
+                    ]
+                }
+            }
+        },
+        "internal_api_v1_handlers.AddChecklistItemRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemCategory"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_id": {
+                    "type": "string"
+                },
+                "request_mode": {
+                    "description": "RequestMode: \"upload\" (anexo) ou \"form\" (apenas preenchimento).",
+                    "type": "string"
+                },
+                "requested_fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistRequestedField"
+                    }
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_api_v1_handlers.AddProposalRequest": {
+            "type": "object",
+            "required": [
+                "payment_method",
+                "value"
+            ],
+            "properties": {
+                "down_payment": {
+                    "type": "number"
+                },
+                "installments": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_api_v1_handlers.AddSignerRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "role"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignatoryRole"
+                }
+            }
+        },
+        "internal_api_v1_handlers.AmendContractRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "adjust_index": {
+                    "type": "string"
+                },
+                "auto_adjust": {
+                    "type": "boolean"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "late_fee_pct": {
+                    "type": "number"
+                },
+                "monthly_interest_pct": {
+                    "type": "number"
+                },
+                "next_adjustment": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "security_deposit": {
+                    "type": "number"
+                },
+                "signatories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_contract.Signatory"
+                    }
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_api_v1_handlers.ClientPortalSignatureDTO": {
+            "type": "object",
+            "properties": {
+                "contract_id": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "envelope_id": {
+                    "type": "string"
+                },
+                "envelope_status": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "has_envelope": {
+                    "type": "boolean"
+                },
+                "my_signer": {
+                    "$ref": "#/definitions/internal_api_v1_handlers.ClientPortalSignerDTO"
+                },
+                "other_signers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.ClientPortalSignerDTO"
+                    }
+                },
+                "signed_count": {
+                    "type": "integer"
+                },
+                "signed_document_url": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_v1_handlers.ClientPortalSignerDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "request_signature_key": {
+                    "description": "RequestSignatureKey is the per-signer Clicksign widget token. Only\npopulated for the calling user's record (MySigner) — never leaks\nfor OtherSigners.",
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "signed_at": {
+                    "type": "string"
+                },
+                "signer_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.CompleteMyChecklistItemUploadRequest": {
+            "type": "object",
+            "required": [
+                "file_name",
+                "storage_key"
+            ],
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "storage_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.CreateDealRequest": {
+            "type": "object",
+            "required": [
+                "broker_id",
+                "customer_id",
+                "owner_id",
+                "property_id",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "broker_id": {
+                    "type": "string"
+                },
+                "broker_participations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.SetBrokerParticipationItem"
+                    }
+                },
+                "customer_account_id": {
+                    "type": "string"
+                },
+                "customer_email": {
+                    "type": "string"
+                },
+                "customer_id": {
+                    "description": "Lead/Client ID (buyer or tenant)",
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_role": {
+                    "description": "e.g., \"comprador\", \"locatario\", \"inquilino\"",
+                    "type": "string"
+                },
+                "lead_id": {
+                    "description": "Explicit lead reference (optional, defaults to CustomerID)",
+                    "type": "string"
+                },
+                "owner_account_id": {
+                    "type": "string"
+                },
+                "owner_document": {
+                    "type": "string"
+                },
+                "owner_email": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "owner_name": {
+                    "description": "Owner identity hints — when the caller already has the property owner's\nlead profile loaded (e.g. the captação leads list in the CRM), passing\nthese fields lets us populate the owner Party directly instead of relying\non a service-to-service CRM lookup that may fail silently (missing\nINTERNAL_API_KEY, CRM_SERVICE_URL, network).",
+                    "type": "string"
+                },
+                "owner_phone": {
+                    "type": "string"
+                },
+                "parties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.CreatePartyRequest"
+                    }
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.Type"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_api_v1_handlers.CreatePartyRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "document": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyKind"
+                },
+                "lead_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "no_spouse_declared": {
+                    "type": "boolean"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "representation": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRepresentation"
+                },
+                "role": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.PartyRole"
+                },
+                "share_pct": {
+                    "type": "number"
+                },
+                "spouse_of_party_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.GetMyChecklistItemUploadURLRequest": {
+            "type": "object",
+            "required": [
+                "file_name"
+            ],
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_v1_handlers.InitChecklistRequest": {
+            "type": "object",
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItem"
+                    }
+                }
+            }
+        },
+        "internal_api_v1_handlers.ReadjustContractRequest": {
+            "type": "object",
+            "properties": {
+                "effective_from": {
+                    "type": "string"
+                },
+                "index_name": {
+                    "type": "string"
+                },
+                "index_value": {
+                    "type": "number"
+                },
+                "new_value": {
+                    "type": "number"
+                },
+                "next_adjustment": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.SendForSignatureRequest": {
+            "type": "object",
+            "properties": {
+                "attachment_document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "inline_attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.SendInlineAttachmentInput"
+                    }
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "signer_auth": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "signer_groups": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "internal_api_v1_handlers.SendInlineAttachmentInput": {
+            "type": "object",
+            "properties": {
+                "content_base64": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.SetBrokerParticipationItem": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "broker_id": {
+                    "type": "string"
+                },
+                "commission": {
+                    "type": "number"
+                },
+                "percentage": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "role": {
+                    "enum": [
+                        "captador",
+                        "co_captador",
+                        "visitador",
+                        "atendente",
+                        "fechamento",
+                        "imobiliaria"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.BrokerParticipationRole"
+                        }
+                    ]
+                }
+            }
+        },
+        "internal_api_v1_handlers.SetBrokerParticipationsRequest": {
+            "type": "object",
+            "required": [
+                "participations"
+            ],
+            "properties": {
+                "commission": {
+                    "type": "number",
+                    "maximum": 100
+                },
+                "participations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/internal_api_v1_handlers.SetBrokerParticipationItem"
+                    }
+                }
+            }
+        },
+        "internal_api_v1_handlers.SignContractRequest": {
+            "type": "object",
+            "required": [
+                "signatory_id",
+                "signature"
+            ],
+            "properties": {
+                "signatory_id": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.SignedFileResponse": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.TerminateContractRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "early_termination_fee": {
+                    "type": "number"
+                },
+                "exit_inspection_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "require_exit_inspection": {
+                    "type": "boolean"
+                },
+                "security_deposit_deductions": {
+                    "type": "number"
+                },
+                "security_deposit_return": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_api_v1_handlers.UpdateChecklistItemStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "rejection_reason": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "P0/A18: allowlist explícita. Antes era só `binding:\"required\"` e o valor\nera gravado literalmente (inclusive qualquer string fora do domínio).",
+                    "enum": [
+                        "PENDING",
+                        "UPLOADED",
+                        "APPROVED",
+                        "REJECTED"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.ChecklistItemStatus"
+                        }
+                    ]
+                }
+            }
+        },
+        "internal_api_v1_handlers.UpdateDueDiligenceRequest": {
+            "type": "object",
+            "properties": {
+                "cnd_status": {
+                    "type": "string"
+                },
+                "legal_opinion": {
+                    "type": "string"
+                },
+                "score_serasa": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_v1_handlers.UpdateSignerStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "signature_url": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_oginoino_toca_toca-deal_internal_domain_deal.SignerStatus"
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                },
+                "statusCode": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

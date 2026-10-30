@@ -1,0 +1,618 @@
+basePath: /api/v1
+definitions:
+  api_v1_handlers.CreateIntegrationRequest:
+    properties:
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      portal:
+        enum:
+        - zap_imoveis
+        - olx_grupo_zap
+        - vivareal
+        type: string
+      property_filter:
+        $ref: '#/definitions/integration.FeedPropertyFilter'
+      publication_type:
+        enum:
+        - STANDARD
+        - PREMIUM
+        - SUPER_PREMIUM
+        type: string
+      sync_frequency:
+        enum:
+        - 6h
+        - 12h
+        - 24h
+        type: string
+    required:
+    - contact_email
+    - contact_name
+    - contact_phone
+    - portal
+    - publication_type
+    - sync_frequency
+    type: object
+  api_v1_handlers.UpdateIntegrationRequest:
+    properties:
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      property_filter:
+        $ref: '#/definitions/integration.FeedPropertyFilter'
+      publication_type:
+        type: string
+      status:
+        type: string
+      sync_frequency:
+        type: string
+    type: object
+  integration.FeedPropertyFilter:
+    properties:
+      listing_types:
+        description: e.g., ["sale", "rent"]
+        items:
+          type: string
+        type: array
+      max_price:
+        type: number
+      min_price:
+        type: number
+      property_types:
+        description: e.g., ["apartment", "house"]
+        items:
+          type: string
+        type: array
+      statuses:
+        description: e.g., ["published", "available"]
+        items:
+          type: string
+        type: array
+    type: object
+  integration.PortalIntegration:
+    properties:
+      consecutive_fails:
+        type: integer
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      created_at:
+        type: string
+      error_message:
+        type: string
+      feed_url:
+        type: string
+      id:
+        type: string
+      last_sync_at:
+        type: string
+      last_sync_status:
+        type: string
+      portal:
+        enum:
+        - zap_imoveis
+        - olx_grupo_zap
+        - vivareal
+        type: string
+      property_filter:
+        $ref: '#/definitions/integration.FeedPropertyFilter'
+      publication_type:
+        enum:
+        - STANDARD
+        - PREMIUM
+        - SUPER_PREMIUM
+        type: string
+      status:
+        type: string
+      sync_frequency:
+        enum:
+        - 6h
+        - 12h
+        - 24h
+        type: string
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      webhook_url:
+        type: string
+    required:
+    - contact_email
+    - contact_name
+    - contact_phone
+    - id
+    - portal
+    - publication_type
+    - status
+    - sync_frequency
+    - tenant_id
+    type: object
+  internal_api_v1_handlers.CreateIntegrationRequest:
+    properties:
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      portal:
+        enum:
+        - zap_imoveis
+        - olx_grupo_zap
+        - vivareal
+        type: string
+      property_filter:
+        $ref: '#/definitions/integration.FeedPropertyFilter'
+      publication_type:
+        enum:
+        - STANDARD
+        - PREMIUM
+        - SUPER_PREMIUM
+        type: string
+      sync_frequency:
+        enum:
+        - 6h
+        - 12h
+        - 24h
+        type: string
+    required:
+    - contact_email
+    - contact_name
+    - contact_phone
+    - portal
+    - publication_type
+    - sync_frequency
+    type: object
+  internal_api_v1_handlers.UpdateIntegrationRequest:
+    properties:
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      property_filter:
+        $ref: '#/definitions/integration.FeedPropertyFilter'
+      publication_type:
+        type: string
+      status:
+        type: string
+      sync_frequency:
+        type: string
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+host: localhost:8089
+info:
+  contact:
+    email: support@toca.com.br
+    name: API Support
+  description: Portal integration service for Toca ecosystem - ZAP Imoveis, OLX/Grupo
+    ZAP, VivaReal
+  title: Toca Portal API
+  version: "1.0"
+paths:
+  /integrations:
+    get:
+      description: List all portal integrations for the current tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/integration.PortalIntegration'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List integrations
+      tags:
+      - integrations
+    post:
+      consumes:
+      - application/json
+      description: Create a new portal integration (ZAP Imoveis, OLX/Grupo ZAP, VivaReal)
+      parameters:
+      - description: Create Integration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.CreateIntegrationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/integration.PortalIntegration'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create integration
+      tags:
+      - integrations
+  /integrations/{id}:
+    delete:
+      description: Delete an integration permanently
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete integration
+      tags:
+      - integrations
+    get:
+      description: Retrieve a single integration by its ID
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/integration.PortalIntegration'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get integration by ID
+      tags:
+      - integrations
+    put:
+      consumes:
+      - application/json
+      description: Update an existing integration's contact info, filters, or status
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Integration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.UpdateIntegrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/integration.PortalIntegration'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update integration
+      tags:
+      - integrations
+  /integrations/{id}/leads:
+    get:
+      description: Paginated list of leads captured from a specific integration
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Limit (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List leads for an integration
+      tags:
+      - integrations
+  /integrations/{id}/sync:
+    post:
+      description: Manually trigger a sync run for an integration (rebuilds the feed)
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Trigger sync
+      tags:
+      - integrations
+  /integrations/{id}/syncs:
+    get:
+      description: Return paginated sync history for an integration
+      parameters:
+      - description: Integration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Limit (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List sync history
+      tags:
+      - integrations
+  /portal-stats/dashboard:
+    get:
+      description: Overview stats for portal integrations (counts, last syncs, leads
+        by portal)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Portal dashboard
+      tags:
+      - portal-stats
+  /portal-stats/leads:
+    get:
+      description: Paginated list of leads captured from all portal integrations for
+        the tenant
+      parameters:
+      - description: Limit (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List portal leads
+      tags:
+      - portal-stats
+  /portals/feed/{token}:
+    get:
+      description: Public endpoint crawled by portal bots (ZAP, OLX, VivaReal). Returns
+        cached VRSync XML.
+      parameters:
+      - description: Feed token (per-integration)
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: XML feed
+          schema:
+            type: string
+        "400":
+          description: Missing feed token
+          schema:
+            type: string
+        "404":
+          description: Feed not found
+          schema:
+            type: string
+        "503":
+          description: Feed not available yet
+          schema:
+            type: string
+      summary: Serve portal XML feed
+      tags:
+      - portals
+  /portals/webhook/{integrationID}:
+    post:
+      consumes:
+      - application/json
+      description: Public endpoint that receives lead webhooks from portals (ZAP,
+        OLX, VivaReal). Validated via HMAC signature in X-Hub-Signature header.
+      parameters:
+      - description: Integration ID
+        in: path
+        name: integrationID
+        required: true
+        type: string
+      - description: HMAC signature of the request body
+        in: header
+        name: X-Hub-Signature
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Receive portal lead webhook
+      tags:
+      - portals
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

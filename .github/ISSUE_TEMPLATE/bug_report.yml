@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a reproducible problem in Suitee.
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, tokens, customer data or personal information.
+        For security vulnerabilities, follow SECURITY.md instead of opening a public issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the behavior and the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser/OS, local or hosted, and the commit SHA if known.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Redact tokens, emails, tenant IDs and personal data.

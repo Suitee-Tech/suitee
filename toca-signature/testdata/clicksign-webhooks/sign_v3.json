@@ -1,0 +1,17 @@
+{
+  "event": {
+    "name": "Event::Sign",
+    "occurred_at": "2026-05-10T18:30:00Z",
+    "delivery_id": "delivery-sign-v3-1"
+  },
+  "document": {
+    "key": "cs-env-1",
+    "status": "running"
+  },
+  "signer": {
+    "key": "cs-sig-1",
+    "email": "inq@example.com",
+    "name": "Inquilino Teste",
+    "evidence_url": "https://app.clicksign.com/evidence/abc"
+  }
+}

@@ -1,0 +1,1947 @@
+basePath: /api/v1
+definitions:
+  clients.PropertyDTO:
+    properties:
+      area_total:
+        description: Areas — total_area_m2.
+        type: number
+      available_for:
+        items:
+          type: string
+        type: array
+      bathrooms:
+        type: integer
+      bedrooms:
+        description: |-
+          Features — só os campos do score (bedrooms) + extras para
+          render no card de sugestão (bathrooms, parking).
+        type: integer
+      city:
+        type: string
+      condo_fee:
+        type: number
+      display_id:
+        type: string
+      id:
+        type: string
+      listing_type:
+        type: string
+      media_images:
+        items:
+          type: string
+        type: array
+      neighborhood:
+        type: string
+      parking_spaces:
+        type: integer
+      property_type:
+        type: string
+      rent_price:
+        type: number
+      sale_price:
+        description: |-
+          Pricing — só os "current_amount" que importam pro score.
+          Pode vir 0 quando o imóvel não tem o preço daquele tipo (ex.: só locação).
+        type: number
+      state:
+        type: string
+      status:
+        type: string
+      street:
+        description: Address — flat para facilitar matching/render.
+        type: string
+      thumbnail_url:
+        description: |-
+          Media — só a thumbnail principal. O frontend pode pedir mais
+          fotos via GET /properties/:id quando o usuário clicar no card.
+        type: string
+      title:
+        type: string
+    type: object
+  exports.Format:
+    enum:
+    - csv
+    - pdf
+    type: string
+    x-enum-varnames:
+    - FormatCSV
+    - FormatPDF
+  exports.Job:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        description: |-
+          Timestamps separados pro frontend distinguir "queued há 30s"
+          vs "started há 5min" vs "done há 10min".
+        type: string
+      entity_type:
+        type: string
+      error_message:
+        type: string
+      filters:
+        additionalProperties: true
+        description: shape definido pelo Generator
+        type: object
+      format:
+        $ref: '#/definitions/exports.Format'
+      id:
+        type: string
+      requested_by:
+        description: accountID
+        type: string
+      result_bucket:
+        type: string
+      result_path:
+        type: string
+      result_url:
+        description: |-
+          ResultURL é o link pré-assinado quando SUCCEEDED. Vazio enquanto
+          QUEUED/RUNNING/FAILED.
+        type: string
+      row_count:
+        type: integer
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/exports.Status'
+      tenant_id:
+        type: string
+    type: object
+  exports.Status:
+    enum:
+    - QUEUED
+    - RUNNING
+    - SUCCEEDED
+    - FAILED
+    type: string
+    x-enum-varnames:
+    - StatusQueued
+    - StatusRunning
+    - StatusSucceeded
+    - StatusFailed
+  github_com_oginoino_toca_toca-crm_internal_domain_broker.BusinessHours:
+    properties:
+      timezone:
+        type: string
+      windows:
+        additionalProperties:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_broker.TimeWindow'
+        type: object
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_broker.TimeWindow:
+    properties:
+      end:
+        type: string
+      start:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.ClientRole:
+    enum:
+    - owner
+    - buyer
+    - tenant
+    - guarantor
+    type: string
+    x-enum-comments:
+      ClientRoleBuyer: Comprador
+      ClientRoleGuarantor: Fiador
+      ClientRoleOwner: Proprietário (owner of a property)
+      ClientRoleTenant: Inquilino
+    x-enum-descriptions:
+    - Proprietário (owner of a property)
+    - Comprador
+    - Inquilino
+    - Fiador
+    x-enum-varnames:
+    - ClientRoleOwner
+    - ClientRoleBuyer
+    - ClientRoleTenant
+    - ClientRoleGuarantor
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.DistMethod:
+    enum:
+    - sequential
+    - load_balance
+    - weighted
+    - priority
+    type: string
+    x-enum-varnames:
+    - DistMethodSequential
+    - DistMethodLoadBalance
+    - DistMethodWeighted
+    - DistMethodPriority
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.EscalationStep:
+    properties:
+      action:
+        type: string
+      afterMinutes:
+        type: integer
+      id:
+        type: string
+      label:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead:
+    properties:
+      accountID:
+        description: AccountID links to the unified auth account for client portal
+          access
+        type: string
+      assignedAt:
+        description: SLA and Routing fields
+        type: string
+      assignedBrokerID:
+        type: string
+      authID:
+        type: string
+      authProvider:
+        type: string
+      avatar:
+        type: string
+      captacaoPropertyID:
+        description: Captação lead fields — set when this lead represents an owner
+          from property acquisition
+        type: string
+      contractID:
+        description: ContractID is set when the lead is converted to a client via
+          a signed contract
+        type: string
+      createdAt:
+        type: string
+      displayID:
+        type: string
+      email:
+        type: string
+      escalationLevel:
+        type: integer
+      expiresAt:
+        type: string
+      firstContactAt:
+        description: |-
+          FirstContactAt — registrada quando o corretor faz o primeiro
+          contato com o lead (telefone, WhatsApp, etc.) ou quando o status
+          transita explicitamente para CONTACTED. Issue #427.
+
+          SLA primeiro contato: leads atribuídos sem FirstContactAt em 1h
+          (configurável via FirstContactSLAMinutes) disparam evento
+          lead.first_contact_sla_violated. Worker em LeadSLAService varre
+          a cada minuto.
+
+          Idempotência: uma vez setado, MarkFirstContact() não sobrescreve.
+          O timestamp original é o que importa — o primeiro contato cumpriu
+          (ou violou) o SLA e isso é o que ficou registrado.
+        type: string
+      firstContactSLAViolatedAt:
+        description: |-
+          FirstContactSLAViolatedAt — preenchido quando o worker detecta
+          que o lead atravessou o limite de 1h sem first contact. Marca o
+          evento como já notificado (idempotência: lead que já violou não
+          dispara evento duplicado).
+        type: string
+      history:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadHistory'
+        type: array
+      id:
+        type: string
+      isClient:
+        description: |-
+          Client segmentation — set when lead is converted to a client
+          A lead keeps the same ID throughout its lifecycle (lead → client)
+        type: boolean
+      lastInteraction:
+        type: string
+      name:
+        type: string
+      ownerLeadID:
+        description: owner lead linked at captação
+        type: string
+      partnership_shared:
+        description: |-
+          PartnershipShared is the per-lead opt-in for the partner shared-content
+          feature: when true, this lead is exposed (privacy-projected) to partner
+          companies whose active partnership grants the `leads` view scope.
+
+          NOTE: the Lead struct is otherwise bson-tagged only, so json.Marshal
+          stores every other field under its Go field name (PascalCase). This
+          field carries an explicit json tag so it is persisted under the
+          lowercase `partnership_shared` key — the key the shared-leads query
+          (metadata->>'partnership_shared') and the cross-tenant repo both read.
+        type: boolean
+      passwordHash:
+        type: string
+      phone:
+        type: string
+      propertyIDs:
+        items:
+          type: string
+        type: array
+      propertyInterest:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadProperty'
+      qualification:
+        additionalProperties: true
+        type: object
+      recommended_property_id:
+        description: |-
+          RecommendedPropertyID é o imóvel que o corretor recomenda ao cliente
+          (exibido no portal como "Sugestão do seu corretor").
+        type: string
+      recommended_property_snapshot:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.RecommendedPropertySnapshot'
+        description: |-
+          RecommendedPropertySnapshot guarda um resumo do imóvel recomendado
+          (título/localização/valor) para o portal exibir sem depender do token
+          do cliente acessar o core.
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.ClientRole'
+        description: owner, buyer, tenant, guarantor
+      rouletteRetries:
+        type: integer
+      slaretries:
+        additionalProperties:
+          type: integer
+        description: SLA retries por tier_id (controla redirecionamentos automáticos)
+        type: object
+      source:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadSource'
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus'
+      tenantID:
+        type: string
+      updatedAt:
+        type: string
+      updatedSeq:
+        type: integer
+      visit_operation:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitOperation'
+        description: |-
+          VisitRequest guarda a solicitação de visita do cliente para o imóvel
+          recomendado (agendamento por lead, sem depender de negócio).
+      visit_request:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitRequest'
+    required:
+    - email
+    - id
+    - name
+    - phone
+    - source
+    - status
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadAction:
+    enum:
+    - CREATED
+    - ASSIGNED
+    - STATUS_CHANGED
+    - CONTACT_ATTEMPT
+    - CONTACTED
+    - PROPOSAL_SENT
+    - PROPOSAL_ACCEPTED
+    - PROPOSAL_REJECTED
+    - LOST
+    - CONVERTED
+    - NOTE
+    - DISQUALIFIED
+    type: string
+    x-enum-varnames:
+    - LeadActionCreated
+    - LeadActionAssigned
+    - LeadActionStatusChanged
+    - LeadActionContactAttempt
+    - LeadActionContacted
+    - LeadActionProposalSent
+    - LeadActionProposalAccepted
+    - LeadActionProposalRejected
+    - LeadActionLost
+    - LeadActionConverted
+    - LeadActionNote
+    - LeadActionDisqualified
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadHistory:
+    properties:
+      action:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadAction'
+      details:
+        type: string
+      id:
+        type: string
+      leadID:
+        type: string
+      newStatus:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus'
+      previousStatus:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus'
+      timestamp:
+        type: string
+      userID:
+        type: string
+    required:
+    - action
+    - id
+    - leadID
+    - timestamp
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadProperty:
+    properties:
+      features:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.PropertyFeatures'
+      notes:
+        type: string
+      preferred_location:
+        type: string
+      price_range:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.PriceRange'
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.PropertyType'
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadSource:
+    enum:
+    - WEBSITE
+    - REFERRAL
+    - SOCIAL
+    - MANUAL
+    - CAMPAIGN
+    - OTHER
+    - ZAP_IMOVEIS
+    - OLX_GRUPO_ZAP
+    - VIVAREAL
+    type: string
+    x-enum-varnames:
+    - LeadSourceWebsite
+    - LeadSourceReferral
+    - LeadSourceSocial
+    - LeadSourceManual
+    - LeadSourceCampaign
+    - LeadSourceOther
+    - LeadSourceZAP
+    - LeadSourceOLX
+    - LeadSourceVivaReal
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus:
+    enum:
+    - NEW
+    - PENDING_ACCEPTANCE
+    - CONTACTED
+    - QUALIFIED
+    - VISIT_SCHEDULED
+    - PROPOSAL
+    - NEGOTIATION
+    - CONVERTED
+    - LOST
+    - DISQUALIFIED
+    type: string
+    x-enum-varnames:
+    - LeadStatusNew
+    - LeadStatusPendingAcceptance
+    - LeadStatusContacted
+    - LeadStatusQualified
+    - LeadStatusVisitScheduled
+    - LeadStatusProposal
+    - LeadStatusNegotiation
+    - LeadStatusConverted
+    - LeadStatusLost
+    - LeadStatusDisqualified
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.NotifChannel:
+    properties:
+      description:
+        type: string
+      enabled:
+        type: boolean
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.PriceRange:
+    properties:
+      max:
+        minimum: 0
+        type: number
+      min:
+        minimum: 0
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.PropertyFeatures:
+    properties:
+      area_max:
+        minimum: 0
+        type: number
+      area_min:
+        minimum: 0
+        type: number
+      bathrooms:
+        minimum: 0
+        type: integer
+      bedrooms:
+        minimum: 0
+        type: integer
+      parking:
+        minimum: 0
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.PropertyType:
+    enum:
+    - APARTMENT
+    - HOUSE
+    - LAND
+    - COMMERCIAL
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - PropertyTypeApartment
+    - PropertyTypeHouse
+    - PropertyTypeLand
+    - PropertyTypeCommercial
+    - PropertyTypeOther
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.QualField:
+    properties:
+      active:
+        type: boolean
+      conditionalOn:
+        type: string
+      conditionalValue:
+        type: string
+      helpText:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      options:
+        items:
+          type: string
+        type: array
+      placeholder:
+        type: string
+      required:
+        type: boolean
+      type:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.QualRoutingConfig:
+    properties:
+      regionFieldId:
+        type: string
+      specialtyFieldIds:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.RecommendedPropertySnapshot:
+    properties:
+      city:
+        type: string
+      id:
+        type: string
+      listing_type:
+        type: string
+      media_images:
+        items:
+          type: string
+        type: array
+      neighborhood:
+        type: string
+      rent_price:
+        type: number
+      sale_price:
+        type: number
+      state:
+        type: string
+      thumbnail_url:
+        type: string
+      title:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.RouletteConfig:
+    properties:
+      activeBrokers:
+        items:
+          type: string
+        type: array
+      autoCapLimit:
+        type: boolean
+      distMethod:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.DistMethod'
+        description: Rules & SLA
+      enabled:
+        type: boolean
+      escalation:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.EscalationStep'
+        type: array
+      globalBusinessHours:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_broker.BusinessHours'
+      lastIndex:
+        type: integer
+      maxEscalations:
+        description: |-
+          MaxEscalations caps how many escalation steps a single lead can go through
+          before being marked LOST. Zero or negative is treated as DefaultMaxEscalations.
+        type: integer
+      notifChannels:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.NotifChannel'
+        type: array
+      qualFields:
+        description: Qualification Forms
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.QualField'
+        type: array
+      qualRouting:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.QualRoutingConfig'
+      respectRegion:
+        type: boolean
+      respectSchedule:
+        type: boolean
+      respectSpecialty:
+        type: boolean
+      simulationSeed:
+        type: integer
+      slatiers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.SLATier'
+        type: array
+      stageBrokerPools:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        description: |-
+          Esteira (pipeline) → pool de corretores por etapa/status do lead.
+          Se uma etapa não estiver configurada (ou estiver vazia), cai no fallback ActiveBrokers.
+        type: object
+      stageLastIndex:
+        additionalProperties:
+          type: integer
+        description: Índice de round-robin por etapa/status (para não misturar a rotação
+          entre etapas).
+        type: object
+      tenantID:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.SLATier:
+    properties:
+      actions:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.SLATierActions'
+      appliesTo:
+        items:
+          type: string
+        type: array
+      color:
+        type: string
+      id:
+        type: string
+      maxRetries:
+        type: integer
+      name:
+        type: string
+      timeLimitMin:
+        type: integer
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.SLATierActions:
+    properties:
+      autoPauseBroker:
+        type: boolean
+      autoPauseCooldownMin:
+        description: |-
+          AutoPauseCooldownMin define quantos minutos o broker fica auto-pausado
+          antes de voltar à roleta sem intervenção manual. Zero ou negativo
+          significa "use o default do domínio" (broker.DefaultBrokerPauseCooldown).
+          Wave P1.7 — pausa indefinida virou seam crítica em plantão.
+        type: integer
+      escalateToSupervisor:
+        type: boolean
+      markAsUrgent:
+        type: boolean
+      notifyManager:
+        type: boolean
+      redirectNext:
+        type: boolean
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.UpdateRouletteConfigDTO:
+    properties:
+      active_brokers:
+        items:
+          type: string
+        type: array
+      assign_unassigned_leads:
+        type: boolean
+      autoCapLimit:
+        type: boolean
+      distMethod:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.DistMethod'
+      enabled:
+        type: boolean
+      escalation:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.EscalationStep'
+        type: array
+      globalBusinessHours:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_broker.BusinessHours'
+      maxEscalations:
+        type: integer
+      notifChannels:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.NotifChannel'
+        type: array
+      qualFields:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.QualField'
+        type: array
+      qualRouting:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.QualRoutingConfig'
+      respectRegion:
+        type: boolean
+      respectSchedule:
+        type: boolean
+      respectSpecialty:
+        type: boolean
+      simulationSeed:
+        type: integer
+      slaTiers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.SLATier'
+        type: array
+      stage_broker_pools:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitOperation:
+    properties:
+      account_id:
+        type: string
+      before:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitRequest'
+      broker_id:
+        type: string
+      create:
+        type: boolean
+      customer_account_id:
+        type: string
+      desired:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitRequest'
+      expected_agenda_updated_at:
+        type: string
+      id:
+        type: string
+      lease_until:
+        type: string
+      token:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitRequest:
+    properties:
+      appointment_id:
+        type: string
+      date:
+        type: string
+      end_time:
+        type: string
+      note:
+        type: string
+      property_id:
+        type: string
+      status:
+        type: string
+      time:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_service.ClientPortalOverviewLead:
+    properties:
+      broker_avatar:
+        type: string
+      broker_email:
+        type: string
+      broker_name:
+        type: string
+      email:
+        type: string
+      has_preferences:
+        type: boolean
+      id:
+        type: string
+      interest:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadProperty'
+      matched_properties:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.MatchedProperty'
+        type: array
+      name:
+        type: string
+      phone:
+        type: string
+      recommended_property:
+        $ref: '#/definitions/clients.PropertyDTO'
+      recommended_property_id:
+        type: string
+      role:
+        description: |-
+          Role é o papel do cliente no atendimento (buyer/tenant/owner): é o que
+          permite abrir a busca na finalidade certa para quem não tem negócio
+          aberto (comprador → venda, locatário → locação).
+        type: string
+      visit_request:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.VisitRequest'
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_service.MatchBreakdown:
+    properties:
+      area:
+        description: 0..AreaWeight
+        type: number
+      bedrooms:
+        description: 0..BedroomsWeight
+        type: number
+      business:
+        description: 0..BusinessWeight
+        type: number
+      location:
+        description: 0..LocationWeight
+        type: number
+      price:
+        description: 0..PriceWeight
+        type: number
+      used_weights:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.Weights'
+        description: pesos efetivos após redistribuição
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_service.MatchedProperty:
+    properties:
+      property:
+        $ref: '#/definitions/clients.PropertyDTO'
+      reasons:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.MatchBreakdown'
+        description: explicabilidade por critério
+      score:
+        description: 0..100, com 2 casas decimais
+        type: number
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_service.SharedLead:
+    properties:
+      lead:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+      partnership_id:
+        type: string
+      source_company_id:
+        type: string
+      source_company_name:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-crm_internal_service.Weights:
+    properties:
+      area:
+        type: number
+      bedrooms:
+        type: number
+      business:
+        type: number
+      location:
+        type: number
+      price:
+        type: number
+    type: object
+  internal_api_v1_handlers.AddNoteRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  internal_api_v1_handlers.ConvertToClientRequest:
+    properties:
+      contract_id:
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.ClientRole'
+        enum:
+        - owner
+        - buyer
+        - tenant
+        - guarantor
+    required:
+    - role
+    type: object
+  internal_api_v1_handlers.CreateLeadExportRequest:
+    properties:
+      filters:
+        additionalProperties: true
+        type: object
+      format:
+        type: string
+    required:
+    - format
+    type: object
+  internal_api_v1_handlers.CreateLeadRequest:
+    properties:
+      assigned_broker_id:
+        type: string
+      avatar:
+        type: string
+      captacao_property_id:
+        description: Captação link
+        type: string
+      email:
+        type: string
+      is_client:
+        type: boolean
+      name:
+        type: string
+      owner_lead_id:
+        type: string
+      partnership_shared:
+        description: PartnershipShared opts this lead into the partner shared-content
+          feature.
+        type: boolean
+      phone:
+        type: string
+      property_interest:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadProperty'
+      qualification:
+        additionalProperties: true
+        type: object
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.ClientRole'
+        description: Client segmentation
+      source:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadSource'
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus'
+    required:
+    - email
+    - name
+    - phone
+    - source
+    type: object
+  internal_api_v1_handlers.DisqualifyLeadRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  internal_api_v1_handlers.RejectAssignmentRequest:
+    properties:
+      reason:
+        maxLength: 500
+        minLength: 2
+        type: string
+    required:
+    - reason
+    type: object
+  internal_api_v1_handlers.SimulateRouletteRequest:
+    properties:
+      count:
+        minimum: 1
+        type: integer
+      persist:
+        type: boolean
+      seed:
+        type: integer
+      stage:
+        type: string
+    required:
+    - count
+    type: object
+  internal_api_v1_handlers.UpdateLeadRequest:
+    properties:
+      assigned_broker_id:
+        type: string
+      captacao_property_id:
+        description: Captação fields — updatable so the lead can be linked to a property
+          after creation
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      owner_lead_id:
+        type: string
+      partnership_shared:
+        description: PartnershipShared — per-lead opt-in to the partner shared-content
+          feature.
+        type: boolean
+      phone:
+        type: string
+      property_interest:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadProperty'
+      qualification:
+        additionalProperties: true
+        type: object
+      role:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.ClientRole'
+      source:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadSource'
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.LeadStatus'
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+host: localhost:8083
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: CRM service for Toca ecosystem
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Toca CRM API
+  version: "1.0"
+paths:
+  /client-portal/leads/{id}/channel:
+    post:
+      responses: {}
+  /client-portal/leads/{id}/visit-request:
+    post:
+      responses: {}
+  /client-portal/overview:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Resolve o(s) lead(s) do cliente convidado (account_id) e,
+        quando houver preferências, os imóveis recomendados (match #415).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.ClientPortalOverviewLead'
+                  type: array
+              type: object
+      summary: Client portal overview (lead + imóveis recomendados)
+      tags:
+      - portal
+  /client-portal/properties:
+    get:
+      description: Imóveis disponíveis das imobiliárias com quem o cliente se relaciona
+        (tenants dos leads dele). Mesmo recorte de disponibilidade e finalidade da
+        busca do negócio.
+      parameters:
+      - description: sale|rent
+        in: query
+        name: listing_type
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Vitrine do cliente (sem negócio aberto)
+      tags:
+      - client-portal
+  /exports/{id}:
+    get:
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/exports.Job'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Status de um export job
+      tags:
+      - exports
+  /exports/mine:
+    get:
+      parameters:
+      - description: Limit (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/exports.Job'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Listar exports do usuário corrente
+      tags:
+      - exports
+  /leads:
+    get:
+      consumes:
+      - application/json
+      description: List leads with pagination
+      parameters:
+      - description: Limit (default 25, max 100, tenant scope max 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
+      - description: Role (owner, buyer, tenant, guarantor)
+        in: query
+        name: role
+        type: string
+      - description: Is Client
+        in: query
+        name: is_client
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List leads
+      tags:
+      - leads
+    post:
+      consumes:
+      - application/json
+      description: Create a new lead
+      parameters:
+      - description: Create Lead Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.CreateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create lead
+      tags:
+      - leads
+  /leads/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a lead by its ID
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get lead by ID
+      tags:
+      - leads
+    put:
+      consumes:
+      - application/json
+      description: Update an existing lead
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Lead Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.UpdateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update lead
+      tags:
+      - leads
+  /leads/{id}/accept-assignment:
+    post:
+      consumes:
+      - application/json
+      description: Broker accepts a lead assigned by the roulette. Lead must be in
+        PENDING_ACCEPTANCE; broker_id from JWT must match assigned_broker_id. Lead
+        transitions to CONTACTED.
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: lead is not assigned to caller
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: lead not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: lead status does not allow acceptance
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Accept lead assignment (broker accepts roulette lead)
+      tags:
+      - leads
+  /leads/{id}/convert:
+    post:
+      consumes:
+      - application/json
+      description: Promote a lead to a client with a specified role (owner, buyer,
+        tenant, guarantor), preserving the unique ID
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Convert to Client Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.ConvertToClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Convert lead to client
+      tags:
+      - leads
+  /leads/{id}/disqualify:
+    post:
+      consumes:
+      - application/json
+      description: Marks a lead as DISQUALIFIED with a mandatory reason, recorded
+        in the lead history and audit trail
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Disqualify Lead Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.DisqualifyLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Disqualify lead
+      tags:
+      - leads
+  /leads/{id}/first-contact:
+    post:
+      description: |-
+        Marca FirstContactAt = now() e transita status para
+        CONTACTED quando aplicável. Idempotente — chamadas
+        subsequentes retornam o lead com o timestamp original.
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Registrar primeiro contato com o lead (#427)
+      tags:
+      - leads
+  /leads/{id}/invite:
+    post:
+      consumes:
+      - application/json
+      description: Sends an invitation to the lead to access the client portal
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Invite lead to portal
+      tags:
+      - leads
+  /leads/{id}/matched-properties:
+    get:
+      consumes:
+      - application/json
+      description: 'Devolve imóveis disponíveis que batem com as preferências do lead,
+        rankeados por score (faixa de preço, localização, área, quartos). Issue #415.'
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Max matches (default 10, cap 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.MatchedProperty'
+                  type: array
+              type: object
+        "403":
+          description: tenant context required
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: lead not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "422":
+          description: lead has no preferences
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Match Properties (cruzamento inteligente)
+      tags:
+      - leads
+  /leads/{id}/notes:
+    post:
+      consumes:
+      - application/json
+      description: Add a manual note to a lead
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Note Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add note to lead
+      tags:
+      - leads
+  /leads/{id}/recommended-property:
+    put:
+      responses: {}
+  /leads/{id}/reject-assignment:
+    post:
+      consumes:
+      - application/json
+      description: Broker rejects a lead assigned by the roulette. Reason is required.
+        Lead returns to NEW status and re-enters roulette on next sweep.
+      parameters:
+      - description: Lead ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reject reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.RejectAssignmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.Lead'
+              type: object
+        "400":
+          description: reason is required
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: lead is not assigned to caller
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: lead not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: lead status does not allow rejection
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Reject lead assignment (broker declines roulette lead)
+      tags:
+      - leads
+  /leads/export:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Enfileira CSV/PDF dos leads filtrados. Retorna 202 +
+        job ID; cliente faz polling em GET /exports/:id ou
+        abre a tela "Meus exports".
+      parameters:
+      - description: Export request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.CreateLeadExportRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/exports.Job'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Criar export async de leads (#474)
+      tags:
+      - exports
+  /leads/roulette:
+    get:
+      consumes:
+      - application/json
+      description: Get roulette configuration for the tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.RouletteConfig'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get roulette configuration
+      tags:
+      - leads
+    put:
+      consumes:
+      - application/json
+      description: Update roulette configuration for the tenant
+      parameters:
+      - description: Update Roulette Config Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.UpdateRouletteConfigDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_domain_lead.RouletteConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update roulette configuration
+      tags:
+      - leads
+  /leads/roulette/history:
+    get:
+      consumes:
+      - application/json
+      description: List roulette history entries for the tenant
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List roulette history
+      tags:
+      - leads
+  /leads/roulette/simulate:
+    post:
+      consumes:
+      - application/json
+      description: Simulate round-robin distribution for N leads without creating
+        leads. If persist=true, advances the roulette pointer.
+      parameters:
+      - description: Simulation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.SimulateRouletteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Simulate roulette distribution
+      tags:
+      - leads
+  /leads/roulette/unassigned:
+    get:
+      consumes:
+      - application/json
+      description: Returns whether there are leads without assigned broker for the
+        tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Check unassigned leads when enabling roulette
+      tags:
+      - leads
+  /leads/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get lead stats
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get lead stats
+      tags:
+      - leads
+  /partnerships/shared/leads:
+    get:
+      consumes:
+      - application/json
+      description: Aggregates the leads shared with the caller across every ACTIVE
+        partnership that grants the leads view scope. Each lead is privacy-projected
+        (LGPD); the response carries the originating partnership id and source company
+        id.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-crm_internal_service.SharedLead'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List all partner-shared leads
+      tags:
+      - leads
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

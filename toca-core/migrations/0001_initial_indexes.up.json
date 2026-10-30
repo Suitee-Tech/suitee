@@ -1,0 +1,17 @@
+{
+  "indexes": [
+    { "collection": "properties", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "properties", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "properties", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "property_type", "value": 1 }] },
+    { "collection": "partnerships", "keys": [{ "key": "requester_id", "value": 1 }] },
+    { "collection": "partnerships", "keys": [{ "key": "target_id", "value": 1 }] },
+    { "collection": "partnerships", "keys": [{ "key": "status", "value": 1 }] },
+    { "collection": "company_settings", "keys": [{ "key": "tenant_id", "value": 1 }], "unique": true },
+    { "collection": "appearance_settings", "keys": [{ "key": "tenant_id", "value": 1 }], "unique": true },
+    { "collection": "role_permissions", "keys": [{ "key": "tenant_id", "value": 1 }], "unique": true },
+    { "collection": "notification_settings", "keys": [{ "key": "tenant_id", "value": 1 }], "unique": true },
+    { "collection": "webhooks", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "api_keys", "keys": [{ "key": "tenant_id", "value": 1 }] }
+  ]
+}
+

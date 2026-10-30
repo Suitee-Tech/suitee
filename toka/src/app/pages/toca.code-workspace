@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "toca",
+			"path": "../../../.."
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}

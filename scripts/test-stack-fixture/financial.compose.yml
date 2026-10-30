@@ -1,0 +1,79 @@
+# Private services attached to the disposable Supabase database's network.
+x-test-environment: &test-environment
+  APP_ENV: test
+  # QA shares its privileged fixture connection; SQL RLS is exercised
+  # separately with SET ROLE authenticated. Production pool guards stay on.
+  APP_MODE: debug
+  CORS_ALLOWED_ORIGINS: http://test.example.invalid
+  DATABASE_URI: ${FINANCIAL_QA_DATABASE_URI:?QA database required}
+  DATABASE_URI_SERVICE: ${FINANCIAL_QA_DATABASE_URI:?QA database required}
+  DATABASE_MAX_POOL_SIZE: 2
+  DATABASE_MIN_POOL_SIZE: 0
+  SUPABASE_URL: http://test-auth:9000
+  SUPABASE_JWKS_URL: http://test-auth:9000/auth/v1/.well-known/jwks.json
+  SUPABASE_ANON_KEY: test-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: test-service-key
+  INTERNAL_API_KEY: test-internal-key
+  RABBITMQ_URI: amqp://test-user:test-password@rabbitmq:5672/
+  DEAL_SERVICE_URL: http://toca-deal:8085
+  FINANCIAL_SERVICE_URL: http://toca-financial:8083
+
+services:
+  test-auth:
+    build:
+      context: ./scripts/test-stack-fixture
+    environment:
+      GATEWAY_URL: http://toca-financial:8083
+      DEAL_SERVICE_URL: http://toca-deal:8085
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://localhost:9000/health]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  rabbitmq:
+    image: rabbitmq:3.13.7-management@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
+    environment:
+      RABBITMQ_DEFAULT_USER: test-user
+      RABBITMQ_DEFAULT_PASS: test-password
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: +S 2:2
+    healthcheck:
+      test: [CMD, gosu, rabbitmq, rabbitmq-diagnostics, -q, check_running]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+  toca-deal:
+    build:
+      context: .
+      dockerfile: toca-deal/Dockerfile
+    environment:
+      <<: *test-environment
+      PORT: 8085
+    depends_on:
+      test-auth: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://localhost:8085/health]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  toca-financial:
+    build:
+      context: .
+      dockerfile: toca-financial/Dockerfile
+    environment:
+      <<: *test-environment
+      PORT: 8083
+    depends_on:
+      test-auth: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://localhost:8083/health]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+networks:
+  default:
+    external: true
+    name: ${FINANCIAL_QA_NETWORK:?QA network required}

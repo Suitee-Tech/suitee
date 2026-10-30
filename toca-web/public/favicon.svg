@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Imóveis">
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <path d="M14 32.5 32 17l18 15.5" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 30v18h24V30" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M28 48V37h8v11" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linejoin="round"/>
+</svg>

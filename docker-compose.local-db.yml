@@ -1,0 +1,46 @@
+x-db-env: &dbEnv
+  DATABASE_URI: postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable
+  DATABASE_URI_SERVICE: postgresql://postgres:postgres@postgres:5432/toca?sslmode=disable
+  DATABASE_MAX_POOL_SIZE: "10"
+  DATABASE_MIN_POOL_SIZE: "0"
+
+services:
+  toca-auth:
+    environment:
+      <<: *dbEnv
+
+  toca-core:
+    environment:
+      <<: *dbEnv
+
+  toca-financial:
+    environment:
+      <<: *dbEnv
+
+  toca-crm:
+    environment:
+      <<: *dbEnv
+
+  toca-deal:
+    environment:
+      <<: *dbEnv
+
+  toca-comm:
+    environment:
+      <<: *dbEnv
+
+  toca-ops:
+    environment:
+      <<: *dbEnv
+
+  toca-calendar:
+    environment:
+      <<: *dbEnv
+
+  toca-portal:
+    environment:
+      <<: *dbEnv
+
+  toca-ai:
+    environment:
+      <<: *dbEnv

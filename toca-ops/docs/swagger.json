@@ -1,0 +1,381 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/inspections/template": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devolve o template de checklist da vistoria configurado para o tenant atual. Quando não há override, devolve o template default residencial. Issue #432.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inspections"
+                ],
+                "summary": "Get inspection template for tenant",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_handlers.InspectionTemplateRoom"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "tenant context required",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/inspections/{id}/findings/{finding_id}/photos": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Multipart endpoint que aceita até 5 fotos para uma Finding específica da Inspection. Backend processa (resize 1920px largest side, JPEG q=85), faz upload para storage privado prefixed por tenant_id, devolve URLs e anexa em Finding.Photos. Issue #440.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inspections"
+                ],
+                "summary": "Upload photos to an inspection finding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Inspection ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Finding ID (UUID estável dentro da Inspection)",
+                        "name": "finding_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Foto (1..5 arquivos no campo files)",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "request malformado",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "tenant context required",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "inspection / finding not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "nenhuma foto válida processada",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/inspections/{id}/generate-laudo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Renderiza o laudo a partir das Findings registradas\n(HTML → Gotenberg), faz upload no storage e grava a\nReportURL na inspeção. Regerar sobrescreve a versão\nanterior. Necessário antes de marcar a vistoria como\nConcluída (que exige ReportURL preenchida).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inspections"
+                ],
+                "summary": "Gerar PDF do laudo de vistoria (#435)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Inspection ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_oginoino_toca_toca-ops_internal_models_inspection.Inspection"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "renderer de PDF indisponível",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_oginoino_toca_toca-ops_internal_models_inspection.Deduction": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "evidence_photos": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "room": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-ops_internal_models_inspection.Finding": {
+            "type": "object",
+            "properties": {
+                "condition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "photos": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "room": {
+                    "type": "string"
+                },
+                "thumbnails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_oginoino_toca_toca-ops_internal_models_inspection.Inspection": {
+            "type": "object",
+            "properties": {
+                "completed_date": {
+                    "type": "string"
+                },
+                "contract_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deductions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-ops_internal_models_inspection.Deduction"
+                    }
+                },
+                "findings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_oginoino_toca_toca-ops_internal_models_inspection.Finding"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inspector_id": {
+                    "type": "string"
+                },
+                "inspector_name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "report_url": {
+                    "type": "string"
+                },
+                "scheduled_by": {
+                    "type": "string"
+                },
+                "scheduled_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "time_zone": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.InspectionTemplateRoom": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_handlers.InspectionTemplateRoomItem"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.InspectionTemplateRoomItem": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                },
+                "statusCode": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

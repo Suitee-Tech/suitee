@@ -1,0 +1,649 @@
+basePath: /api/v1
+definitions:
+  api_v1_handlers.AddSignerRequest:
+    properties:
+      auth:
+        items:
+          type: string
+        type: array
+      birthday:
+        type: string
+      documentation:
+        type: string
+      email:
+        type: string
+      group:
+        type: integer
+      name:
+        type: string
+      phone_number:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  api_v1_handlers.EditSignerRequest:
+    properties:
+      birthday:
+        type: string
+      documentation:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  api_v1_handlers.SignatureConfig:
+    properties:
+      base_url:
+        type: string
+      environment:
+        type: string
+      has_secret:
+        type: boolean
+      has_token:
+        type: boolean
+      webhook_url:
+        type: string
+    type: object
+  api_v1_handlers.StoreCredentialRequest:
+    properties:
+      access_token:
+        type: string
+      auth_scheme:
+        type: string
+      base_url:
+        type: string
+      environment:
+        type: string
+      note:
+        type: string
+      webhook_secret:
+        type: string
+    required:
+    - access_token
+    type: object
+  api_v1_handlers.StoreCredentialResponse:
+    properties:
+      revision:
+        type: integer
+      tenant_id:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-signature_internal_domain_credential.CredentialRotation:
+    properties:
+      createdAt:
+        type: string
+      note:
+        type: string
+      revision:
+        type: integer
+      rotatedBy:
+        type: string
+      tenantID:
+        type: string
+    type: object
+  github_com_oginoino_toca_toca-signature_internal_domain_credential.MaskedInfo:
+    properties:
+      auth_scheme:
+        type: string
+      base_url:
+        type: string
+      environment:
+        type: string
+      has_token:
+        type: boolean
+      has_webhook_secret:
+        type: boolean
+      revision:
+        type: integer
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      uses_fallback:
+        type: boolean
+    type: object
+  internal_api_v1_handlers.AddSignerRequest:
+    properties:
+      auth:
+        items:
+          type: string
+        type: array
+      birthday:
+        type: string
+      documentation:
+        type: string
+      email:
+        type: string
+      group:
+        type: integer
+      name:
+        type: string
+      phone_number:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  internal_api_v1_handlers.EditSignerRequest:
+    properties:
+      birthday:
+        type: string
+      documentation:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  internal_api_v1_handlers.SignatureConfig:
+    properties:
+      base_url:
+        type: string
+      environment:
+        type: string
+      has_secret:
+        type: boolean
+      has_token:
+        type: boolean
+      webhook_url:
+        type: string
+    type: object
+  internal_api_v1_handlers.StoreCredentialRequest:
+    properties:
+      access_token:
+        type: string
+      auth_scheme:
+        type: string
+      base_url:
+        type: string
+      environment:
+        type: string
+      note:
+        type: string
+      webhook_secret:
+        type: string
+    required:
+    - access_token
+    type: object
+  internal_api_v1_handlers.StoreCredentialResponse:
+    properties:
+      revision:
+        type: integer
+      tenant_id:
+        type: string
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+host: localhost:8093
+info:
+  contact:
+    email: support@suitee.com.br
+    name: API Support
+  description: Signature service (Clicksign integration) for the Toca ecosystem
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Toca Signature API
+  version: "1.0"
+paths:
+  /signature/admin/clicksign-credentials:
+    get:
+      description: Devolve o estado mascarado (base_url, environment, auth_scheme,
+        revision, has_token) — nunca os segredos.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca_toca-signature_internal_domain_credential.MaskedInfo'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get masked tenant Clicksign credentials state
+      tags:
+      - signature-admin
+    put:
+      consumes:
+      - application/json
+      description: Grava (ou rotaciona) a credencial Clicksign do tenant, criptografada
+        em repouso; registra a rotação na trilha. Secrets nunca são devolvidos.
+      parameters:
+      - description: Credential payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.StoreCredentialRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_api_v1_handlers.StoreCredentialResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Store/rotate tenant Clicksign credentials
+      tags:
+      - signature-admin
+  /signature/admin/clicksign-credentials/rotations:
+    get:
+      description: Trilha append-only de rotações (quem, quando, revisão).
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca_toca-signature_internal_domain_credential.CredentialRotation'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List tenant Clicksign credential rotations
+      tags:
+      - signature-admin
+  /signature/config:
+    get:
+      description: |-
+        Returns the webhook URL the operator should register in the
+        Clicksign dashboard, plus a summary of which credentials are
+        configured. No secret values are returned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_api_v1_handlers.SignatureConfig'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Clicksign integration config
+      tags:
+      - signature
+  /signature/envelopes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List signature envelopes
+      tags:
+      - signature
+  /signature/envelopes/{id}:
+    get:
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a signature envelope by id
+      tags:
+      - signature
+  /signature/envelopes/{id}/cancel:
+    post:
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Cancel an active signature envelope
+      tags:
+      - signature
+  /signature/envelopes/{id}/events:
+    get:
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List webhook events received for an envelope (audit trail)
+      tags:
+      - signature
+  /signature/envelopes/{id}/reconcile:
+    post:
+      description: |-
+        Force-refresh local state from Clicksign. Useful when webhooks
+        were missed (e.g. payload shape regressions, queue outages).
+        Republishes the matching domain events so toca-deal catches up.
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Reconcile local envelope state with Clicksign
+      tags:
+      - signature
+  /signature/envelopes/{id}/resend:
+    post:
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Internal signer id; empty resends to every pending signer
+        in: query
+        name: signer_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Resend signing notification to all or a single signer
+      tags:
+      - signature
+  /signature/envelopes/{id}/signers:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Pushes a new signer + qualification + auth requirements to
+        Clicksign and triggers the notification when the envelope is
+        already RUNNING. Rejected for terminal envelopes.
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Signer fields
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.AddSignerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add a signer to an active envelope
+      tags:
+      - signature
+  /signature/envelopes/{id}/signers/{signerId}:
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Updates name/email/phone/documentation on Clicksign + locally.
+        Rejected if envelope is terminal or signer already
+        signed/refused.
+      parameters:
+      - description: Envelope ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Internal Signer ID
+        in: path
+        name: signerId
+        required: true
+        type: string
+      - description: Signer fields
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_v1_handlers.EditSignerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Edit a signer that hasn't acted yet
+      tags:
+      - signature
+  /signature/envelopes/by-contract/{contractId}:
+    get:
+      parameters:
+      - description: Contract ID
+        in: path
+        name: contractId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get the active envelope for a contract
+      tags:
+      - signature
+  /webhooks/clicksign:
+    post:
+      consumes:
+      - application/json
+      description: Public webhook receiver for Clicksign envelope events. Authenticated
+        via HMAC signature in Content-Hmac header and optional IP allowlist (CLICKSIGN_WEBHOOK_ALLOWED_IPS).
+      parameters:
+      - description: HMAC-SHA256 of the body, formatted as sha256=<hex>
+        in: header
+        name: Content-Hmac
+        required: true
+        type: string
+      - description: Clicksign delivery id (for idempotency)
+        in: header
+        name: X-Delivery-Id
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Receive Clicksign webhook
+      tags:
+      - webhooks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

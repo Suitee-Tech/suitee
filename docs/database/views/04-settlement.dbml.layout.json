@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "positions": {
+    "table-deal.contracts": {
+      "x": 256.42325581395346,
+      "y": -65.36279069767441
+    },
+    "table-financial.charges": {
+      "x": 512.8465116279071,
+      "y": 288.46976744186054
+    },
+    "table-financial.commissions": {
+      "x": -977.9279069767442,
+      "y": 0.5627906976743589
+    },
+    "table-financial.managed_bills": {
+      "x": -457.9279069767442,
+      "y": 0.5627906976743589
+    },
+    "table-financial.payout_orders": {
+      "x": -977.9279069767442,
+      "y": 360.56279069767436
+    },
+    "table-financial.transfer_deduction_claims": {
+      "x": -457.9279069767442,
+      "y": 360.56279069767436
+    },
+    "table-financial.transfers": {
+      "x": -977.9279069767442,
+      "y": 656.5627906976744
+    },
+    "table-financial.journal_entries": {
+      "x": -5.027906976744248,
+      "y": 797.1790697674421
+    },
+    "table-financial.transactions": {
+      "x": -0.3883720930234347,
+      "y": 1098.8534883720931
+    },
+    "note-legenda_layout": {
+      "x": 711.4488372093023,
+      "y": -148.3232558139535,
+      "width": 250,
+      "height": 180
+    }
+  }
+}

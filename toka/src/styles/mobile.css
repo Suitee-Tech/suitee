@@ -1,0 +1,23 @@
+/* ── iOS Safari: zoom automático ao focar um controle ────────────────────────
+ * O Safari do iOS amplia a página quando um `<input>`, `<select>` ou
+ * `<textarea>` com `font-size` menor que 16px recebe foco. No chat, o
+ * compositor da mensagem usa `text-sm` (14px), então a tela "pulava" a cada
+ * foco no iPhone.
+ *
+ * Forçar 16px somente em viewports pequenas resolve o zoom SEM desligar o
+ * pinch-zoom do usuário — ao contrário de `maximum-scale=1` no viewport, que
+ * prejudica a acessibilidade. `!important` é necessário porque as utilities do
+ * Tailwind (`text-sm`, `text-xs`, ...) vivem em `@layer utilities` e venceriam
+ * uma regra de elemento por especificidade; o explícito é mais previsível do
+ * que depender da ordem interna das layers do Tailwind.
+ *
+ * (checkbox/radio não recebem texto e não disparam o zoom; o font-size não tem
+ * efeito visual neles, então a regra pode abranger todos os `input`.)
+ */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

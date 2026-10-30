@@ -1,0 +1,143 @@
+flowchart LR
+
+%% =====================================================
+%% ENTRADA
+%% =====================================================
+subgraph A["Entrada"]
+    User["Usuário"]
+    Frontend["fas:fa-desktop toca-frontend<br/>opcional"]
+end
+
+subgraph B["Gateway"]
+    Gateway["fas:fa-sitemap toca-gateway<br/>API Gateway<br/>8080"]
+end
+
+User --> Frontend
+User --> Gateway
+Frontend --> Gateway
+
+%% =====================================================
+%% DOMÍNIOS
+%% =====================================================
+subgraph C["Serviços de Negócio"]
+    Auth["fas:fa-shield-alt Auth"]
+    Core["fas:fa-cube Core"]
+    Financial["fas:fa-dollar-sign Financial"]
+    CRM["fas:fa-users CRM"]
+    Deal["fas:fa-handshake Deal (Orchestrator/Saga)"]
+    Comm["fas:fa-comments Comm"]
+    Ops["fas:fa-cogs Ops"]
+    Calendar["fas:fa-calendar-alt Calendar"]
+    Portal["fas:fa-globe Portal"]
+    Signature["fas:fa-file-signature Signature"]
+end
+
+Gateway --> Auth
+Gateway --> Core
+Gateway --> Financial
+Gateway --> CRM
+Gateway --> Deal
+Gateway --> Comm
+Gateway --> Ops
+Gateway --> Calendar
+Gateway --> Portal
+Gateway --> Signature
+
+%% =====================================================
+%% DEPENDÊNCIAS DE DOMÍNIO
+%% =====================================================
+Deal --> Core
+Deal --> Financial
+Deal -->|events| Broker
+Broker -->|events| Comm
+Broker -->|events| Ops
+Broker -->|events| Calendar
+Broker -->|events| Signature
+
+CRM --> Auth
+CRM --> Core
+Portal --> Core
+Portal --> CRM
+Financial --> Core
+Signature --> Core
+
+%% =====================================================
+%% IA
+%% =====================================================
+subgraph D["IA / MCP"]
+    MCP["fas:fa-plug toca-mcp"]
+    AI["fas:fa-brain toca-ai"]
+end
+
+AI --> MCP
+AI --> Gateway
+MCP --> Gateway
+
+%% =====================================================
+%% INFRA
+%% =====================================================
+subgraph E["Infraestrutura"]
+    DB[("Postgres")]
+    Cache[("Redis")]
+    Broker[("RabbitMQ")]
+    Storage[("MinIO")]
+    Img["imgproxy"]
+    PDF["Gotenberg"]
+end
+
+C --> DB
+C -->|events| Broker
+Auth --> Cache
+Financial --> Cache
+CRM --> Cache
+Deal --> Cache
+Core --> Storage
+Deal --> Storage
+Comm --> Storage
+Img --> Storage
+Signature --> PDF
+AI --> DB
+
+%% =====================================================
+%% OBSERVABILIDADE
+%% =====================================================
+subgraph F["Observabilidade"]
+    Jaeger["Jaeger"]
+    Prometheus["Prometheus"]
+    Loki["Loki"]
+    Promtail["Promtail"]
+    Grafana["Grafana"]
+end
+
+C -. traces .-> Jaeger
+Gateway -. traces .-> Jaeger
+AI -. traces .-> Jaeger
+MCP -. traces .-> Jaeger
+
+Promtail --> Loki
+Grafana --> Prometheus
+Grafana --> Loki
+
+%% =====================================================
+%% EXTERNOS
+%% =====================================================
+subgraph G["Serviços Externos"]
+    SupabaseAuth["Supabase Auth<br/>JWT/JWKS + Admin"]
+    SupabaseDB["Supabase Postgres<br/>DB (opcional)"]
+    SupabaseStorage["Supabase Storage<br/>Object Storage (opcional)"]
+    Clicksign["Clicksign"]
+    Deepseek["DeepSeek"]
+    Email["Email API"]
+    Payment["Payment Gateway"]
+end
+
+Auth -->|Auth API| SupabaseAuth
+Gateway -->|JWKS| SupabaseAuth
+DB ---|opcional| SupabaseDB
+Storage ---|opcional| SupabaseStorage
+Signature --> Clicksign
+AI --> Deepseek
+Comm --> Email
+Financial --> Payment
+
+linkStyle 15,16,17,18,19,30 stroke-dasharray: 6 4;

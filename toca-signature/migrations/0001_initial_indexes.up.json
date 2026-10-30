@@ -1,0 +1,8 @@
+{
+  "indexes": [
+    { "collection": "signature.envelopes", "keys": [{ "key": "tenant_id", "value": 1 }] },
+    { "collection": "signature.envelopes", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "contract_id", "value": 1 }] },
+    { "collection": "signature.envelopes", "keys": [{ "key": "tenant_id", "value": 1 }, { "key": "status", "value": 1 }] },
+    { "collection": "signature.envelopes", "keys": [{ "key": "external_envelope_id", "value": 1 }] }
+  ]
+}

@@ -1,0 +1,323 @@
+{
+  "version": 1,
+  "positions": {
+    "table-toca_auth.accounts": {
+      "x": -343.9578829357231,
+      "y": 419.635722589137
+    },
+    "table-toca_auth.credentials": {
+      "x": -5.957882935723092,
+      "y": 373.635722589137
+    },
+    "table-toca_auth.groups": {
+      "x": 332.04211706427697,
+      "y": 388.635722589137
+    },
+    "table-toca_auth.invitations": {
+      "x": 665.6247828154468,
+      "y": 297.71438284732665
+    },
+    "table-toca_auth.password_resets": {
+      "x": 1008.0421170642771,
+      "y": 418.635722589137
+    },
+    "table-toca_auth.tenant_settings": {
+      "x": 1310.0421170642771,
+      "y": 388.635722589137
+    },
+    "table-toca_auth.user_preferences": {
+      "x": 1648.0421170642771,
+      "y": 449.635722589137
+    },
+    "table-crm.brokers": {
+      "x": -345.3386842951373,
+      "y": 960.9322298594574
+    },
+    "table-crm.lead_phone_quarantine": {
+      "x": 156.41021469379996,
+      "y": 956.0442030239667
+    },
+    "table-crm.leads": {
+      "x": -364.15133528595925,
+      "y": 7704.042972405812
+    },
+    "table-crm.roulette_audit": {
+      "x": 699.5746757080515,
+      "y": 933.0498470681772
+    },
+    "table-crm.roulette_configs": {
+      "x": 1259.1599480503671,
+      "y": 981.0844725110845
+    },
+    "table-crm.roulette_history": {
+      "x": 1630.595653671459,
+      "y": 964.2456197957569
+    },
+    "table-core.api_keys": {
+      "x": -347.6398909183722,
+      "y": 1594.6369221274847
+    },
+    "table-core.appearance_settings": {
+      "x": -9.639890918372203,
+      "y": 1609.6369221274847
+    },
+    "table-core.company_settings": {
+      "x": 328.3601090816278,
+      "y": 1609.6369221274847
+    },
+    "table-core.notification_settings": {
+      "x": 666.3601090816278,
+      "y": 1609.6369221274847
+    },
+    "table-core.partnerships": {
+      "x": 1004.3601090816283,
+      "y": 1564.6369221274847
+    },
+    "table-core.properties": {
+      "x": 1342.3601090816283,
+      "y": 1534.6369221274847
+    },
+    "table-core.role_permissions": {
+      "x": 1680.3601090816283,
+      "y": 1609.6369221274847
+    },
+    "table-core.webhooks": {
+      "x": 2018.3601090816283,
+      "y": 1594.6369221274847
+    },
+    "table-deal.contracts": {
+      "x": -361.02927851168624,
+      "y": 2166.53756014802
+    },
+    "table-deal.deals": {
+      "x": -23.029278511686243,
+      "y": 2181.53756014802
+    },
+    "table-deal.documents": {
+      "x": 314.97072148831376,
+      "y": 2181.53756014802
+    },
+    "table-deal.templates": {
+      "x": -365.956803124516,
+      "y": 5706.391022336355
+    },
+    "table-signature.envelopes": {
+      "x": -358.89764145355525,
+      "y": 2701.2275053349485
+    },
+    "table-signature.webhook_events": {
+      "x": -13.897641453555252,
+      "y": 2730.2275053349485
+    },
+    "table-financial.charges": {
+      "x": 2450.226087915979,
+      "y": 3438.5822504242956
+    },
+    "table-financial.collections": {
+      "x": -350.89803312976204,
+      "y": 3417.925568468914
+    },
+    "table-financial.invoices": {
+      "x": -12.898033129762041,
+      "y": 3417.925568468914
+    },
+    "table-financial.payments": {
+      "x": 325.10196687023796,
+      "y": 3417.925568468914
+    },
+    "table-financial.rental_charge_configs": {
+      "x": 663.1019668702379,
+      "y": 3417.925568468914
+    },
+    "table-financial.rentals": {
+      "x": 1013.1019668702379,
+      "y": 3433.925568468914
+    },
+    "table-financial.sale_billing_plan": {
+      "x": 1351.101966870238,
+      "y": 3433.925568468914
+    },
+    "table-financial.sale_billing_plan_drafts": {
+      "x": 1689.101966870238,
+      "y": 3418.925568468914
+    },
+    "table-financial.utility_accounts": {
+      "x": 2063.101966870238,
+      "y": 3433.925568468914
+    },
+    "table-financial.commissions": {
+      "x": 2933.781036148884,
+      "y": 3576.2136126574096
+    },
+    "table-financial.managed_bills": {
+      "x": 3271.781036148884,
+      "y": 3428.3378635661866
+    },
+    "table-financial.partner_royalties": {
+      "x": 4423.591663420826,
+      "y": 3473.0698252028483
+    },
+    "table-financial.payout_orders": {
+      "x": 3631.8365195583096,
+      "y": 3996.5470325661004
+    },
+    "table-financial.transfer_deduction_claims": {
+      "x": 3993.620838376468,
+      "y": 3938.654873157021
+    },
+    "table-financial.transfers": {
+      "x": 4033.369210330986,
+      "y": 3458.128434840202
+    },
+    "table-financial.withdrawals": {
+      "x": 3646.2350612862806,
+      "y": 3691.3149410664023
+    },
+    "table-financial.dimob": {
+      "x": -363.1149325669853,
+      "y": 3989.550667560753
+    },
+    "table-financial.fiscal_deadlines": {
+      "x": -25.114932566985317,
+      "y": 4005.550667560753
+    },
+    "table-financial.informes": {
+      "x": 312.8850674330147,
+      "y": 3989.550667560753
+    },
+    "table-financial.journal_entries": {
+      "x": 650.8850674330147,
+      "y": 3989.550667560753
+    },
+    "table-financial.nfse": {
+      "x": 988.8850674330147,
+      "y": 3989.550667560753
+    },
+    "table-financial.report_history": {
+      "x": 1326.8850674330147,
+      "y": 4005.550667560753
+    },
+    "table-financial.transactions": {
+      "x": 1664.8850674330147,
+      "y": 3989.550667560753
+    },
+    "table-financial.platform_subscriptions": {
+      "x": -372.8015499087463,
+      "y": 4579.941746973325
+    },
+    "table-financial.reminder_rules": {
+      "x": -14.801549908746324,
+      "y": 4579.941746973325
+    },
+    "table-financial.tenant_commission_rules": {
+      "x": 323.1984500912537,
+      "y": 4548.941746973325
+    },
+    "table-financial.tenant_financial_settings": {
+      "x": 689.1984500912537,
+      "y": 4563.941746973325
+    },
+    "table-ops.deployment_migration_checksums": {
+      "x": -366.53442367727484,
+      "y": 5138.056711134076
+    },
+    "table-ops.inspections": {
+      "x": 7.4655763227251555,
+      "y": 5122.056711134076
+    },
+    "table-ops.keys": {
+      "x": 345.46557632272516,
+      "y": 5122.056711134076
+    },
+    "table-ops.maintenance": {
+      "x": 683.4655763227252,
+      "y": 5122.056711134076
+    },
+    "table-ops.suppliers": {
+      "x": 1013.9680829750992,
+      "y": 5122.056711134076
+    },
+    "table-ops.tickets": {
+      "x": 1359.4655763227252,
+      "y": 5122.056711134076
+    },
+    "table-calendar.appointments": {
+      "x": 1794.9343473857355,
+      "y": 5135.775551991302
+    },
+    "table-comm.channels": {
+      "x": -31.06798633345784,
+      "y": 5707.358902419076
+    },
+    "table-comm.inapp_notifications": {
+      "x": 317.9682521597788,
+      "y": 5711.221124361351
+    },
+    "table-comm.messages": {
+      "x": 493.8753409526172,
+      "y": 6394.45287359029
+    },
+    "table-comm.sent_externals": {
+      "x": 689.2129304976235,
+      "y": 5713.389321343997
+    },
+    "table-comm.templates": {
+      "x": 1031.8765365323313,
+      "y": 5711.221124361351
+    },
+    "table-ai.conversations": {
+      "x": 54.27152101469443,
+      "y": 6921.920581168751
+    },
+    "table-ai.messages": {
+      "x": -340.0491684822757,
+      "y": 6383.395231420512
+    },
+    "table-ai.tool_invocations": {
+      "x": 92.3419311718604,
+      "y": 6389.484979785296
+    },
+    "table-portal.feed_cache": {
+      "x": -24.15133528595925,
+      "y": 7679.042972405812
+    },
+    "table-portal.integrations": {
+      "x": 313.84866471404075,
+      "y": 7679.042972405812
+    },
+    "table-portal.leads": {
+      "x": 651.8486647140408,
+      "y": 7679.042972405812
+    },
+    "table-portal.sync_history": {
+      "x": 989.8486647140408,
+      "y": 7679.042972405812
+    },
+    "table-events.dlq_events": {
+      "x": -366.495936110436,
+      "y": 8202.456544518009
+    },
+    "table-events.outbox_events": {
+      "x": -21.49593611043599,
+      "y": 8217.456544518009
+    },
+    "table-events.processed_events": {
+      "x": 351.504063889564,
+      "y": 8322.456544518009
+    },
+    "table-audit.events": {
+      "x": 810.3879243629076,
+      "y": 8201.209574836968
+    },
+    "table-exports.jobs": {
+      "x": 1257.3527542080776,
+      "y": 8198.63227173792
+    },
+    "note-legenda_layout": {
+      "x": -356.3631706445596,
+      "y": -200.70343259778937,
+      "width": 250,
+      "height": 180
+    }
+  }
+}

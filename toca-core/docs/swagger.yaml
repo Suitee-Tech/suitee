@@ -1,0 +1,1929 @@
+basePath: /api/v1
+definitions:
+  github_com_oginoino_toca-core_internal_domain_core_address.Address:
+    properties:
+      city:
+        description: cidade
+        type: string
+      complement:
+        description: complemento (apto, bloco, sala)
+        type: string
+      country:
+        description: país
+        type: string
+      countryCode:
+        description: código ISO do país
+        type: string
+      district:
+        description: distrito ou região administrativa
+        type: string
+      formatted_address:
+        description: endereço formatado
+        type: string
+      is_verified:
+        description: se o endereço foi verificado
+        type: boolean
+      latitude:
+        description: latitude
+        type: string
+      longitude:
+        description: longitude
+        type: string
+      neighborhood:
+        description: bairro
+        type: string
+      number:
+        description: número
+        type: string
+      postalCode:
+        description: CEP
+        type: string
+      reference_point:
+        description: ponto de referência
+        type: string
+      state:
+        description: estado
+        type: string
+      stateCode:
+        description: sigla do estado (SP, RJ)
+        type: string
+      street:
+        description: nome da rua
+        type: string
+    required:
+    - city
+    - country
+    - countryCode
+    - neighborhood
+    - number
+    - postalCode
+    - state
+    - stateCode
+    - street
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.AuditLog:
+    properties:
+      action:
+        type: string
+      after: {}
+      before: {}
+      details:
+        type: string
+      tenant_id:
+        type: string
+      timestamp:
+        type: string
+      user_id:
+        type: string
+      version:
+        type: integer
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.CommissionModel:
+    properties:
+      closing_company_pct:
+        maximum: 100
+        minimum: 0
+        type: number
+      owner_company_pct:
+        maximum: 100
+        minimum: 0
+        type: number
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.Company:
+    properties:
+      active:
+        type: boolean
+      city:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      state:
+        type: string
+      tax_id:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig:
+    properties:
+      admin_fee:
+        minimum: 0
+        type: number
+      commission_model:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.CommissionModel'
+        description: CommissionModel is the structured cross-company commission split.
+      commission_split:
+        description: |-
+          CommissionSplit is the legacy "X/Y" string. No longer required — kept
+          only so old rows keep deserialising. Prefer CommissionModel.
+        type: string
+      fee_payer:
+        type: string
+      royalty_base:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.RoyaltyBase'
+        description: |-
+          RoyaltyBase is the base the royalty percentage is applied to. Empty
+          is treated as gross_commission by EffectiveRoyaltyBase().
+        enum:
+        - gross_commission
+        - net_commission
+        - revenue
+      royalty_percentage:
+        maximum: 100
+        minimum: 0
+        type: number
+      transaction_fee:
+        minimum: 0
+        type: number
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialProposal:
+    properties:
+      financial_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig'
+      proposed_by:
+        type: string
+      version:
+        type: integer
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership:
+    properties:
+      audit_logs:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.AuditLog'
+        type: array
+      companies:
+        additionalProperties:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Company'
+        type: object
+      created_at:
+        type: string
+      financial_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig'
+      financial_version:
+        type: integer
+      grants:
+        additionalProperties:
+          $ref: '#/definitions/partnershipaccess.Grant'
+        type: object
+      id:
+        type: string
+      pending_financial:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialProposal'
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission'
+        type: array
+      requester_id:
+        description: Franchisor or Initiator
+        type: string
+      sharing_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig'
+      status:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipStatus'
+      target_id:
+        description: Franchisee or Partner
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType'
+      updated_at:
+        type: string
+      version:
+        type: integer
+    required:
+    - requester_id
+    - status
+    - target_id
+    - type
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipStatus:
+    enum:
+    - active
+    - pending
+    - inactive
+    type: string
+    x-enum-varnames:
+    - PartnershipStatusActive
+    - PartnershipStatusPending
+    - PartnershipStatusInactive
+  github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType:
+    enum:
+    - franchise
+    - partner
+    type: string
+    x-enum-varnames:
+    - PartnershipTypeFranchise
+    - PartnershipTypePartner
+  github_com_oginoino_toca-core_internal_domain_core_partnership.Permission:
+    properties:
+      access_level:
+        type: string
+      scope:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_partnership.RoyaltyBase:
+    enum:
+    - gross_commission
+    - net_commission
+    - revenue
+    type: string
+    x-enum-varnames:
+    - RoyaltyBaseGrossCommission
+    - RoyaltyBaseNetCommission
+    - RoyaltyBaseRevenue
+  github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig:
+    properties:
+      allow_co_brokering:
+        type: boolean
+      share_lead_contact:
+        type: boolean
+      share_owner_contact:
+        type: boolean
+      shared_property_types:
+        items:
+          type: string
+        type: array
+      shared_regions:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Areas:
+    properties:
+      built_area_m2:
+        type: number
+      land_area_m2:
+        type: number
+      total_area_m2:
+        type: number
+      usable_area_m2:
+        type: number
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef:
+    properties:
+      creci:
+        type: string
+      id:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.BrokerRole:
+    enum:
+    - captador
+    - visitador
+    - atendente
+    - fechamento
+    - co_captador
+    - imobiliaria
+    type: string
+    x-enum-comments:
+      BrokerRoleAtendente: Lead service broker
+      BrokerRoleCaptador: Capturing broker
+      BrokerRoleCoCaptador: Co-capturing broker
+      BrokerRoleFechamento: Closing broker
+      BrokerRoleImobiliaria: Agency retained share
+      BrokerRoleVisitador: Visiting broker
+    x-enum-descriptions:
+    - Capturing broker
+    - Visiting broker
+    - Lead service broker
+    - Closing broker
+    - Co-capturing broker
+    - Agency retained share
+    x-enum-varnames:
+    - BrokerRoleCaptador
+    - BrokerRoleVisitador
+    - BrokerRoleAtendente
+    - BrokerRoleFechamento
+    - BrokerRoleCoCaptador
+    - BrokerRoleImobiliaria
+  github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity:
+    enum:
+    - open
+    - exclusive
+    type: string
+    x-enum-varnames:
+    - CaptureExclusivityOpen
+    - CaptureExclusivityExclusive
+  github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef:
+    properties:
+      captured_at:
+        type: string
+      commission_pct:
+        type: number
+      creci:
+        type: string
+      id:
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRole'
+        description: captador, co_captador, etc.
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef:
+    properties:
+      business_unit_id:
+        type: string
+      division_id:
+        type: string
+      id:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Features:
+    properties:
+      bathrooms:
+        type: integer
+      bedrooms:
+        type: integer
+      floor_number:
+        type: integer
+      floors:
+        type: integer
+      furnished:
+        type: boolean
+      has_elevator:
+        type: boolean
+      parking_spaces:
+        type: integer
+      pets_allowed:
+        type: boolean
+      suites:
+        type: integer
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Image:
+    properties:
+      description:
+        type: string
+      order:
+        type: integer
+      url:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.InterestedLeadRef:
+    properties:
+      interested_at:
+        type: string
+      lead_id:
+        type: string
+      source:
+        description: '"manual", "website", etc.'
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Legal:
+    properties:
+      deed_status:
+        type: string
+      notary_office:
+        type: string
+      registration_number:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.ListingType:
+    enum:
+    - sale
+    - rent
+    - exchange
+    type: string
+    x-enum-varnames:
+    - ListingTypeSale
+    - ListingTypeRent
+    - ListingTypeExchange
+  github_com_oginoino_toca-core_internal_domain_core_property.Media:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Image'
+        type: array
+      videos:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Video'
+        type: array
+      virtual_tours:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.VirtualTour'
+        type: array
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Money:
+    properties:
+      currency:
+        type: string
+      current_amount:
+        type: number
+      original_amount:
+        type: number
+    required:
+    - currency
+    - current_amount
+    - original_amount
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef:
+    properties:
+      id:
+        type: string
+      percentage:
+        description: ownership share (0–100)
+        type: number
+      since:
+        type: string
+      type:
+        description: '"person", "company"'
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Pricing:
+    properties:
+      condominium_fee:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money'
+      property_tax:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money'
+      rent_price:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money'
+      sale_price:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Money'
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.Property:
+    properties:
+      active_deal_id:
+        description: ActiveDealID references the current active deal (negotiation)
+          for this property
+        type: string
+      address:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address'
+      amenities:
+        items:
+          type: string
+        type: array
+      areas:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas'
+      available_for:
+        description: 'Available business types: a property can be available for sale,
+          rent and/or exchange simultaneously'
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        type: array
+      broker:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef'
+      capture_exclusivity:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity'
+        description: |-
+          CaptureExclusivity is the brokerage exclusivity of the capture. Empty
+          is treated as "open". An "exclusive" capture can never be shared in
+          the partnership portfolio (see CanSharePartnershipPortfolio).
+        enum:
+        - open
+        - exclusive
+      capturing_brokers:
+        description: 'Capturing brokers: multiple brokers with roles (captador, co_captador,
+          etc.)'
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef'
+        type: array
+      company:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef'
+      condition:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition'
+        enum:
+        - new
+        - used
+        - under_construction
+      description:
+        type: string
+      display_id:
+        type: string
+      external_id:
+        type: string
+      features:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features'
+      id:
+        type: string
+      interested_leads:
+        description: InterestedLeads lists leads that expressed interest in this property
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.InterestedLeadRef'
+        type: array
+      intermediation_contract_id:
+        description: IntermediationContractID references the intermediation/administration/brokerage
+          contract
+        type: string
+      legal:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal'
+      listing_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        enum:
+        - sale
+        - rent
+      media:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media'
+      owner:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+        description: Legacy single owner/broker (kept for backward compatibility)
+      owners:
+        description: 'Multi-owner support: multiple owners with ownership percentage'
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+        type: array
+      partnership_portfolio:
+        description: PartnershipPortfolio indicates this property is shared in the
+          partnership portfolio
+        type: boolean
+      pricing:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing'
+      property_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType'
+        enum:
+        - apartment
+        - house
+        - land
+        - commercial
+      publication_status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus'
+        enum:
+        - draft
+        - published
+      status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus'
+        enum:
+        - prospecting
+        - in_portfolio
+        - published
+        - attending
+        - negotiating
+        - proposal
+        - analysis
+        - contract
+        - rented
+        - sold
+        - administered
+        - rescission
+        - available
+        - inactive
+      tags:
+        items:
+          type: string
+        type: array
+      tenant_id:
+        description: TenantID is the identifier for multi-tenancy context (AccountID)
+        type: string
+      title:
+        type: string
+    required:
+    - condition
+    - id
+    - listing_type
+    - property_type
+    - publication_status
+    - status
+    - tenant_id
+    - title
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition:
+    enum:
+    - new
+    - used
+    - under_construction
+    type: string
+    x-enum-varnames:
+    - PropertyConditionNew
+    - PropertyConditionUsed
+    - PropertyConditionUnderConstruction
+  github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus:
+    enum:
+    - prospecting
+    - in_portfolio
+    - published
+    - attending
+    - negotiating
+    - proposal
+    - analysis
+    - contract
+    - rented
+    - sold
+    - administered
+    - rescission
+    - available
+    - inactive
+    type: string
+    x-enum-comments:
+      PropertyStatusAdministered: Em Administração
+      PropertyStatusAnalysis: Em Análise
+      PropertyStatusAttending: Em Atendimento
+      PropertyStatusAvailable: Disponível
+      PropertyStatusContract: Em Contrato
+      PropertyStatusInPortfolio: Em Portfólio
+      PropertyStatusInactive: Inativo
+      PropertyStatusNegotiating: Em Negociação
+      PropertyStatusProposal: Em Proposta
+      PropertyStatusProspecting: Em Captação
+      PropertyStatusPublished: Anunciado
+      PropertyStatusRented: Alugado
+      PropertyStatusRescission: Em Rescisão
+      PropertyStatusSold: Vendido
+    x-enum-descriptions:
+    - Em Captação
+    - Em Portfólio
+    - Anunciado
+    - Em Atendimento
+    - Em Negociação
+    - Em Proposta
+    - Em Análise
+    - Em Contrato
+    - Alugado
+    - Vendido
+    - Em Administração
+    - Em Rescisão
+    - Disponível
+    - Inativo
+    x-enum-varnames:
+    - PropertyStatusProspecting
+    - PropertyStatusInPortfolio
+    - PropertyStatusPublished
+    - PropertyStatusAttending
+    - PropertyStatusNegotiating
+    - PropertyStatusProposal
+    - PropertyStatusAnalysis
+    - PropertyStatusContract
+    - PropertyStatusRented
+    - PropertyStatusSold
+    - PropertyStatusAdministered
+    - PropertyStatusRescission
+    - PropertyStatusAvailable
+    - PropertyStatusInactive
+  github_com_oginoino_toca-core_internal_domain_core_property.PropertyType:
+    enum:
+    - apartment
+    - house
+    - land
+    - commercial
+    type: string
+    x-enum-varnames:
+    - PropertyTypeApartment
+    - PropertyTypeHouse
+    - PropertyTypeLand
+    - PropertyTypeCommercial
+  github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus:
+    enum:
+    - draft
+    - published
+    type: string
+    x-enum-varnames:
+    - PublicationStatusDraft
+    - PublicationStatusPublished
+  github_com_oginoino_toca-core_internal_domain_core_property.Video:
+    properties:
+      platform:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_domain_core_property.VirtualTour:
+    properties:
+      url:
+        type: string
+    type: object
+  github_com_oginoino_toca-core_internal_services.SharedProperty:
+    properties:
+      partnership_id:
+        type: string
+      property:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+      source_company_id:
+        type: string
+      source_company_name:
+        type: string
+    type: object
+  internal_handlers.AddCapturingBrokerRequest:
+    properties:
+      broker_id:
+        type: string
+      commission_pct:
+        maximum: 100
+        minimum: 0
+        type: number
+      creci:
+        type: string
+      role:
+        enum:
+        - captador
+        - co_captador
+        - visitador
+        - atendente
+        - fechamento
+        - imobiliaria
+        type: string
+    required:
+    - broker_id
+    - role
+    type: object
+  internal_handlers.AddInterestedLeadRequest:
+    properties:
+      lead_id:
+        type: string
+      source:
+        type: string
+    required:
+    - lead_id
+    type: object
+  internal_handlers.AddOwnerRequest:
+    properties:
+      owner_id:
+        type: string
+      owner_type:
+        enum:
+        - person
+        - company
+        type: string
+      percentage:
+        type: number
+    required:
+    - owner_id
+    - owner_type
+    type: object
+  internal_handlers.CaptacaoRequest:
+    properties:
+      capturing_brokers:
+        items:
+          $ref: '#/definitions/internal_handlers.AddCapturingBrokerRequest'
+        minItems: 1
+        type: array
+      owners:
+        items:
+          $ref: '#/definitions/internal_handlers.AddOwnerRequest'
+        minItems: 1
+        type: array
+      property:
+        $ref: '#/definitions/internal_handlers.CreatePropertyRequest'
+    required:
+    - capturing_brokers
+    - owners
+    - property
+    type: object
+  internal_handlers.CreatePartnershipRequest:
+    properties:
+      financial_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig'
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission'
+        type: array
+      sharing_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig'
+      target_id:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.PartnershipType'
+    required:
+    - target_id
+    - type
+    type: object
+  internal_handlers.CreatePropertyRequest:
+    properties:
+      address:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address'
+      amenities:
+        items:
+          type: string
+        type: array
+      areas:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas'
+      available_for:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        type: array
+      broker:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef'
+      capture_exclusivity:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity'
+        description: |-
+          CaptureExclusivity — "open" (default) or "exclusive". An exclusive
+          capture can never be shared in the partnership portfolio.
+        enum:
+        - open
+        - exclusive
+      capturing_brokers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef'
+        type: array
+      company:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef'
+      condition:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition'
+        enum:
+        - new
+        - used
+        - under_construction
+      description:
+        type: string
+      external_id:
+        type: string
+      features:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features'
+      legal:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal'
+      listing_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        enum:
+        - sale
+        - rent
+        - exchange
+      media:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media'
+      owner:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+      owners:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+        type: array
+      partnership_portfolio:
+        description: |-
+          PartnershipPortfolio opts this property into the shared partnership
+          portfolio. Rejected by the service when CaptureExclusivity=exclusive.
+        type: boolean
+      pricing:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing'
+      property_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType'
+        enum:
+        - apartment
+        - house
+        - land
+        - commercial
+      publication_status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus'
+        enum:
+        - draft
+        - published
+      status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus'
+        enum:
+        - prospecting
+        - in_portfolio
+        - published
+        - attending
+        - negotiating
+        - proposal
+        - analysis
+        - contract
+        - rented
+        - sold
+        - administered
+        - rescission
+        - available
+        - inactive
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - condition
+    - listing_type
+    - property_type
+    - publication_status
+    - status
+    - title
+    type: object
+  internal_handlers.SetActiveDealRequest:
+    properties:
+      deal_id:
+        description: empty string clears the active deal
+        type: string
+    type: object
+  internal_handlers.UpdateFinancialConfigRequest:
+    properties:
+      financial_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.FinancialConfig'
+    required:
+    - financial_config
+    type: object
+  internal_handlers.UpdatePermissionsRequest:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Permission'
+        type: array
+    required:
+    - permissions
+    type: object
+  internal_handlers.UpdatePropertyRequest:
+    properties:
+      address:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_address.Address'
+      amenities:
+        items:
+          type: string
+        type: array
+      areas:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Areas'
+      available_for:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        type: array
+      broker:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.BrokerRef'
+      capture_exclusivity:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CaptureExclusivity'
+        description: |-
+          CaptureExclusivity — "open" (default) or "exclusive". An exclusive
+          capture can never be shared in the partnership portfolio.
+        enum:
+        - open
+        - exclusive
+      capturing_brokers:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CapturingBrokerRef'
+        type: array
+      company:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.CompanyRef'
+      condition:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyCondition'
+        enum:
+        - new
+        - used
+        - under_construction
+      description:
+        type: string
+      external_id:
+        type: string
+      features:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Features'
+      legal:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Legal'
+      listing_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.ListingType'
+        enum:
+        - sale
+        - rent
+        - exchange
+      media:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Media'
+      owner:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+      owners:
+        items:
+          $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.OwnerRef'
+        type: array
+      partnership_portfolio:
+        description: |-
+          PartnershipPortfolio opts this property into the shared partnership
+          portfolio. Rejected by the service when CaptureExclusivity=exclusive.
+        type: boolean
+      pricing:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Pricing'
+      property_type:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyType'
+        enum:
+        - apartment
+        - house
+        - land
+        - commercial
+      publication_status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PublicationStatus'
+        enum:
+        - draft
+        - published
+      status:
+        allOf:
+        - $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.PropertyStatus'
+        enum:
+        - prospecting
+        - in_portfolio
+        - published
+        - attending
+        - negotiating
+        - proposal
+        - analysis
+        - contract
+        - rented
+        - sold
+        - administered
+        - rescission
+        - available
+        - inactive
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - condition
+    - listing_type
+    - property_type
+    - publication_status
+    - status
+    - title
+    type: object
+  internal_handlers.UpdateSharingConfigRequest:
+    properties:
+      sharing_config:
+        $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.SharingConfig'
+    required:
+    - sharing_config
+    type: object
+  partnershipaccess.Grant:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/partnershipaccess.Permission'
+        type: array
+      sharing_config:
+        $ref: '#/definitions/partnershipaccess.Sharing'
+    type: object
+  partnershipaccess.Permission:
+    properties:
+      access_level:
+        type: string
+      scope:
+        type: string
+    type: object
+  partnershipaccess.Sharing:
+    properties:
+      allow_co_brokering:
+        type: boolean
+      share_lead_contact:
+        type: boolean
+      share_owner_contact:
+        type: boolean
+      shared_property_types:
+        items:
+          type: string
+        type: array
+      shared_regions:
+        items:
+          type: string
+        type: array
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/response.PaginationMeta'
+      statusCode:
+        type: integer
+      success:
+        type: boolean
+    type: object
+host: localhost:8082
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Core service for Toca ecosystem (Properties, etc)
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Toca Core API
+  version: "1.0"
+paths:
+  /captacao:
+    post:
+      consumes:
+      - application/json
+      description: 'One-shot captação: cria Property + owners + capturing_brokers
+        e emite property.captured'
+      parameters:
+      - description: Captação Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CaptacaoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Captar imóvel
+      tags:
+      - captacao
+  /partnerships:
+    get:
+      consumes:
+      - application/json
+      description: List partnerships for the current company context
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List partnerships
+      tags:
+      - partnerships
+    post:
+      consumes:
+      - application/json
+      description: Create a new partnership agreement
+      parameters:
+      - description: Create Partnership Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreatePartnershipRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create partnership
+      tags:
+      - partnerships
+  /partnerships/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get partnership details
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get partnership by ID
+      tags:
+      - partnerships
+  /partnerships/{id}/accept:
+    post:
+      consumes:
+      - application/json
+      description: The invited (target) company accepts a pending partnership/franchise
+        invitation, moving it to active
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Accept partnership invitation
+      tags:
+      - partnerships
+  /partnerships/{id}/financial-config:
+    put:
+      consumes:
+      - application/json
+      description: Update royalties, fees, etc.
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Config
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateFinancialConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update financial configuration
+      tags:
+      - partnerships
+  /partnerships/{id}/permissions:
+    put:
+      consumes:
+      - application/json
+      description: Update access rights for the partner
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Permissions
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdatePermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update permissions
+      tags:
+      - partnerships
+  /partnerships/{id}/reject:
+    post:
+      consumes:
+      - application/json
+      description: The invited (target) company rejects a pending partnership/franchise
+        invitation, moving it to inactive
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_partnership.Partnership'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Reject partnership invitation
+      tags:
+      - partnerships
+  /partnerships/{id}/shared-portfolio:
+    get:
+      consumes:
+      - application/json
+      description: Returns the COUNTERPART company's shared properties for an active
+        partnership the caller belongs to. Each property is privacy-projected (PII
+        stripped, address coarsened). Requires the partnership to grant shared_portfolio
+        view.
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get the partner's shared portfolio
+      tags:
+      - partnerships
+  /partnerships/{id}/sharing-config:
+    put:
+      consumes:
+      - application/json
+      description: Update the partnership's shared-portfolio rules (owner-contact
+        PII visibility, co-brokering, property type/region whitelists)
+      parameters:
+      - description: Partnership ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Sharing Config
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateSharingConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update sharing configuration
+      tags:
+      - partnerships
+  /partnerships/shared/properties:
+    get:
+      consumes:
+      - application/json
+      description: Aggregates the shared portfolio across every ACTIVE partnership
+        the caller participates in (and that grants shared_portfolio view). Each property
+        is privacy-projected; the response carries the originating partnership id
+        and source company id.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca-core_internal_services.SharedProperty'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List all partner-shared properties
+      tags:
+      - partnerships
+  /properties:
+    get:
+      consumes:
+      - application/json
+      description: Get all properties with pagination and filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Property Type
+        in: query
+        name: type
+        type: string
+      - description: Listing Type
+        in: query
+        name: listing_type
+        type: string
+      - description: Available business type
+        in: query
+        name: available_for
+        type: string
+      - description: Min Price
+        in: query
+        name: min_price
+        type: number
+      - description: Max Price
+        in: query
+        name: max_price
+        type: number
+      - description: Min Bedrooms
+        in: query
+        name: min_bedrooms
+        type: integer
+      - description: Min Bathrooms
+        in: query
+        name: min_bathrooms
+        type: integer
+      - description: Min Area
+        in: query
+        name: min_area
+        type: number
+      - description: Max Area
+        in: query
+        name: max_area
+        type: number
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all properties
+      tags:
+      - properties
+    post:
+      consumes:
+      - application/json
+      description: Create a new property
+      parameters:
+      - description: Create Property Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreatePropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create property
+      tags:
+      - properties
+  /properties/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete property
+      tags:
+      - properties
+    get:
+      consumes:
+      - application/json
+      description: Get a property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get property by ID
+      tags:
+      - properties
+    put:
+      consumes:
+      - application/json
+      description: Update a property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Property Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdatePropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_oginoino_toca-core_internal_domain_core_property.Property'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Update property
+      tags:
+      - properties
+  /properties/{id}/active-deal:
+    patch:
+      consumes:
+      - application/json
+      description: Link or unlink an active deal/negotiation to a property
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Set Active Deal
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.SetActiveDealRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Link active deal to property
+      tags:
+      - properties
+  /properties/{id}/capturing-brokers:
+    post:
+      consumes:
+      - application/json
+      description: Register a capturing broker on a property from the time of captação
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Capturing Broker
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.AddCapturingBrokerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add capturing broker to property
+      tags:
+      - properties
+  /properties/{id}/interested-leads:
+    post:
+      consumes:
+      - application/json
+      description: Register a lead as interested in a property (single source of truth)
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Interested Lead
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.AddInterestedLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add interested lead to property
+      tags:
+      - properties
+  /properties/{id}/interested-leads/{leadId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a lead from the property's interest list
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Lead ID
+        in: path
+        name: leadId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove interested lead from property
+      tags:
+      - properties
+  /properties/{id}/owners:
+    post:
+      consumes:
+      - application/json
+      description: Add an owner to the property's owners list with optional percentage
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add Owner
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.AddOwnerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Add owner to property
+      tags:
+      - properties
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

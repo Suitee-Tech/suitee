@@ -1,0 +1,4 @@
+services:
+  toca-portal:
+    ports:
+      - "8089:8089"

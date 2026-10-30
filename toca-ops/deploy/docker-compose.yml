@@ -1,0 +1,5 @@
+services:
+  toca-ops:
+    ports:
+      - "8087:8087"
+

@@ -1,0 +1,50 @@
+{
+  "name": "toca-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Public real-estate websites powered by Payload CMS and Next.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
+    "payload": "payload"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.92.0",
+    "@payloadcms/next": "3.92.0",
+    "@payloadcms/plugin-multi-tenant": "3.92.0",
+    "@payloadcms/richtext-lexical": "3.92.0",
+    "@payloadcms/storage-s3": "3.92.0",
+    "@payloadcms/ui": "3.92.0",
+    "graphql": "^16.8.1",
+    "next": "16.4.3",
+    "payload": "3.92.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild"
+    ]
+  }
+}
