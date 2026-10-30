@@ -126,7 +126,7 @@ func TestRender_LayoutOficial(t *testing.T) {
 			t.Errorf("R01 %s [%d..%d] = %q, esperado %q", tc.name, tc.start, tc.start+tc.width-1, got, tc.want)
 		}
 	}
-	if got := strings.TrimSpace(field(r01, 44, 60)); got != "Exemplo IMOVEIS LTDA" {
+	if got := strings.TrimSpace(field(r01, 44, 60)); got != "IMOBILIARIA EXEMPLO LTDA" {
 		t.Errorf("R01 nome empresarial = %q", got)
 	}
 	if got := strings.TrimSpace(field(r01, 115, 120)); got != "RUA DAS PALMEIRAS 152 JARDINS" {

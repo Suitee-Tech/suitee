@@ -57,7 +57,7 @@ func TestBuildUpgrader_CheckOrigin(t *testing.T) {
 		{
 			name:           "case-sensitive match (strict)",
 			allowedOrigins: []string{"https://app.example.com"},
-			requestOrigin:  "https://app.example.com",
+			requestOrigin:  "https://APP.example.com",
 			wantAllowed:    false,
 		},
 	}
