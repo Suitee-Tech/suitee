@@ -58,7 +58,7 @@ const overview = {
   site: {
     id: "site-1",
     tenant_id: "tenant-1",
-    slug: "Exemplo",
+    slug: "exemplo",
     name: "Imobiliária Exemplo",
     enabled: true,
     public_base_url: "https://exemplo.imoveis.example.com",

@@ -7,14 +7,14 @@ describe("site.service — contrato do host comercial", () => {
     expect(previewSiteUrl("https", "imobiliaria-exemplo", "imoveis.example.com")).toBe(
       "https://imobiliaria-exemplo.imoveis.example.com",
     );
-    expect(previewSiteUrl("http", "Exemplo", "imoveis.localhost")).toBe(
-      "http://Exemplo.imoveis.localhost",
+    expect(previewSiteUrl("http", "exemplo", "imoveis.localhost")).toBe(
+      "http://exemplo.imoveis.localhost",
     );
     expect(previewSiteUrl("https", "", "imoveis.example.com")).toBe("");
-    expect(previewSiteUrl("http", "Exemplo", "imoveis.localhost", "3002")).toBe(
-      "http://Exemplo.imoveis.localhost:3002",
+    expect(previewSiteUrl("http", "exemplo", "imoveis.localhost", "3002")).toBe(
+      "http://exemplo.imoveis.localhost:3002",
     );
-    expect(previewSiteUrl("https", "Exemplo", "imoveis.example.com", "")).toBe(
+    expect(previewSiteUrl("https", "exemplo", "imoveis.example.com", "")).toBe(
       "https://exemplo.imoveis.example.com",
     );
   });
@@ -32,11 +32,11 @@ describe("site.service — contrato do host comercial", () => {
     expect(validateSiteSlug("Exemplo-")).not.toBeNull();
     expect(validateSiteSlug("-Exemplo")).not.toBeNull();
     expect(validateSiteSlug("ca--riri")).not.toBeNull();
-    expect(validateSiteSlug("Exemplo")).not.toBeNull();
+    expect(validateSiteSlug("exemplo")).not.toBeNull();
   });
 
   it("aceita as marcas válidas que o backend aceita", () => {
-    for (const slug of ["Exemplo", "imobiliaria-exemplo", "casa-2", "a1b"]) {
+    for (const slug of ["exemplo", "imobiliaria-exemplo", "casa-2", "a1b"]) {
       expect(validateSiteSlug(slug)).toBeNull();
     }
   });

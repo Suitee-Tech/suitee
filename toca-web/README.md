@@ -96,20 +96,20 @@ Modern browsers resolve `*.localhost` to loopback automatically. Usually this is
 enough:
 
 ```
-http://imobiliaria-Exemplo.imoveis.localhost:3000
+http://imobiliaria-exemplo.imoveis.localhost:3000
 ```
 
 If the browser or OS does not resolve wildcard localhost, add one entry per brand:
 
 ```bash
 # macOS/Linux
-echo "127.0.0.1 imobiliaria-Exemplo.imoveis.localhost" | sudo tee -a /etc/hosts
+echo "127.0.0.1 imobiliaria-exemplo.imoveis.localhost" | sudo tee -a /etc/hosts
 ```
 
 For server-side checks without DNS changes:
 
 ```bash
-curl -H 'Host: imobiliaria-Exemplo.imoveis.localhost' http://127.0.0.1:3000/
+curl -H 'Host: imobiliaria-exemplo.imoveis.localhost' http://127.0.0.1:3000/
 ```
 
 ## First run (local)
@@ -268,10 +268,10 @@ Then `POST /api/tenants` or `PATCH /api/tenants/:payloadId`:
 ```json
 {
   "suiteeTenantId": "<company-uuid>",
-  "slug": "imobiliaria-Exemplo",
+  "slug": "imobiliaria-exemplo",
   "name": "Imobiliária Exemplo",
   "enabled": true,
-  "domains": [{ "domain": "imobiliaria-Exemplo.imoveis.suitee.com.br" }],
+  "domains": [{ "domain": "imobiliaria-exemplo.imoveis.suitee.com.br" }],
   "branding": {
     "logoUrl": "",
     "coverUrl": "",
@@ -378,7 +378,7 @@ POST /api/revalidate
 Content-Type: application/json
 X-Internal-Key: <INTERNAL_API_KEY>
 
-{ "tenantSlug": "imobiliaria-Exemplo", "paths": ["/", "/imoveis", "/imoveis/apartamento-3-quartos-centro"] }
+{ "tenantSlug": "imobiliaria-exemplo", "paths": ["/", "/imoveis", "/imoveis/apartamento-3-quartos-centro"] }
 ```
 
 Response: `200 {"revalidated":true}`. Missing/bad key: `401
@@ -400,7 +400,7 @@ Public Payload REST reads remain safe:
 
 ```http
 GET /api/listings?where[status][equals]=published&limit=10
-Host: imobiliaria-Exemplo.imoveis.suitee.com.br
+Host: imobiliaria-exemplo.imoveis.suitee.com.br
 ```
 
 - Access is ANDed with `tenant = <tenant resolved from Host>` and
@@ -427,7 +427,7 @@ Both include `X-Site-Host: <hostname without port>` and a JSON body:
 ```json
 {
   "property_id": "uuid",
-  "site_slug": "imobiliaria-Exemplo",
+  "site_slug": "imobiliaria-exemplo",
   "path": "/imoveis/apartamento-3-quartos-centro",
   "referrer": "https://...",
   "session_id": "anonymous-session-id",
@@ -442,7 +442,7 @@ Both include `X-Site-Host: <hostname without port>` and a JSON body:
 ```json
 {
   "property_id": "uuid",
-  "site_slug": "imobiliaria-Exemplo",
+  "site_slug": "imobiliaria-exemplo",
   "name": "Nome",
   "email": "email@exemplo.com",
   "phone": "(85) 99999-9999",

@@ -15,7 +15,7 @@ func TestMaskString(t *testing.T) {
 		in   string
 		want string
 	}{
-		{"email_normal", KindEmail, "maria@cutia.tech", "g***o@cutia.tech"},
+		{"email_normal", KindEmail, "maria@cutia.tech", "m***a@cutia.tech"},
 		{"email_short_local", KindEmail, "ab@x.io", "a***@x.io"},
 		{"email_invalid", KindEmail, "notanemail", "<redacted>"},
 		{"cpf_formatted", KindCPF, "123.456.789-00", "***8900"},

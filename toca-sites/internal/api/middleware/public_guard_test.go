@@ -48,13 +48,13 @@ func TestPublicGuardRequiresJSONContentType(t *testing.T) {
 
 func TestPublicGuardAllowsTenantOriginOnly(t *testing.T) {
 	r := guardEngine(100)
-	if w := doPOST(r, `{}`, "https://Exemplo.imoveis.suitee.com.br", "Exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
+	if w := doPOST(r, `{}`, "https://exemplo.imoveis.suitee.com.br", "exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
 		t.Fatalf("origem da zona pública deveria passar, status=%d", w.Code)
 	}
-	if w := doPOST(r, `{}`, "https://evil.example", "Exemplo.imoveis.suitee.com.br"); w.Code != http.StatusForbidden {
+	if w := doPOST(r, `{}`, "https://evil.example", "exemplo.imoveis.suitee.com.br"); w.Code != http.StatusForbidden {
 		t.Fatalf("origem estranha deveria ser 403, status=%d", w.Code)
 	}
-	if w := doPOST(r, `{}`, "https://app.example.com", "Exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
+	if w := doPOST(r, `{}`, "https://app.example.com", "exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
 		t.Fatalf("origem extra configurada deveria passar, status=%d", w.Code)
 	}
 }
@@ -62,11 +62,11 @@ func TestPublicGuardAllowsTenantOriginOnly(t *testing.T) {
 func TestPublicGuardRateLimitsPerHostAndIP(t *testing.T) {
 	r := guardEngine(2)
 	for i := 0; i < 2; i++ {
-		if w := doPOST(r, `{}`, "", "Exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
+		if w := doPOST(r, `{}`, "", "exemplo.imoveis.suitee.com.br"); w.Code != http.StatusAccepted {
 			t.Fatalf("request %d status=%d", i, w.Code)
 		}
 	}
-	w := doPOST(r, `{}`, "", "Exemplo.imoveis.suitee.com.br")
+	w := doPOST(r, `{}`, "", "exemplo.imoveis.suitee.com.br")
 	if w.Code != http.StatusTooManyRequests {
 		t.Fatalf("terceira request deveria ser 429, veio %d", w.Code)
 	}

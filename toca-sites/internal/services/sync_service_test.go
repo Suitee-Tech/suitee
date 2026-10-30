@@ -40,8 +40,8 @@ func eligibleProperty() *site.PropertySnapshot {
 
 func enabledSite() *site.Site {
 	return &site.Site{
-		ID: testSiteID, TenantID: testTenant, Slug: "Exemplo", Name: "Imobiliária Exemplo",
-		Enabled: true, PublicBaseURL: "https://Exemplo.imoveis.suitee.com.br",
+		ID: testSiteID, TenantID: testTenant, Slug: "exemplo", Name: "Imobiliária Exemplo",
+		Enabled: true, PublicBaseURL: "https://exemplo.imoveis.suitee.com.br",
 	}
 }
 

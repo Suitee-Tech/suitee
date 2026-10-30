@@ -51,8 +51,8 @@ beforeEach(() => {
   mocks.getDealProperty.mockResolvedValue({ id: "property", title: "Imóvel da negociação" });
   mocks.getSite.mockResolvedValue({
     name: "Imobiliária Exemplo",
-    slug: "Exemplo",
-    public_url: "https://Exemplo.imoveis.suitee.com.br",
+    slug: "exemplo",
+    public_url: "https://exemplo.imoveis.suitee.com.br",
     branding: { primary_color: "#1C905B" },
   });
   mocks.getDealSignature.mockResolvedValue(null);
@@ -65,7 +65,7 @@ describe("agendamentos durante a jornada", () => {
     expect(await screen.findByText("Site da imobiliária")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Visitar site/i })).toHaveAttribute(
       "href",
-      "https://Exemplo.imoveis.suitee.com.br",
+      "https://exemplo.imoveis.suitee.com.br",
     );
   });
 

@@ -24,10 +24,10 @@ func TestSaveSiteDerivesSlugAndPublicURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Save: %v", err)
 	}
-	if out.Site.Slug != "imobiliaria-Exemplo" {
+	if out.Site.Slug != "imobiliaria-exemplo" {
 		t.Fatalf("slug=%q", out.Site.Slug)
 	}
-	if out.Site.PublicBaseURL != "https://imobiliaria-Exemplo.imoveis.suitee.com.br" {
+	if out.Site.PublicBaseURL != "https://imobiliaria-exemplo.imoveis.suitee.com.br" {
 		t.Fatalf("public_base_url=%q", out.Site.PublicBaseURL)
 	}
 	if projection.ensured != 1 {
@@ -57,7 +57,7 @@ func TestSaveSiteDerivesSemanticSlugFromNumericName(t *testing.T) {
 func TestSaveSiteValidatesBrandingBeforePayload(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo",
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo",
 		Enabled: true,
 		Branding: site.Branding{
 			PrimaryColor: "#1C905B", AccentColor: "#10b981", Theme: "light",
@@ -66,7 +66,7 @@ func TestSaveSiteValidatesBrandingBeforePayload(t *testing.T) {
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https")
 
 	_, err := svc.Save(context.Background(), testTenant, SaveSiteInput{
-		Name: "Exemplo", Branding: site.Branding{PrimaryColor: "#xyz"},
+		Name: "exemplo", Branding: site.Branding{PrimaryColor: "#xyz"},
 	})
 	var ve ValidationError
 	if !errors.As(err, &ve) || ve.Field != "branding.primary_color" {
@@ -74,7 +74,7 @@ func TestSaveSiteValidatesBrandingBeforePayload(t *testing.T) {
 	}
 
 	out, err := svc.Save(context.Background(), testTenant, SaveSiteInput{
-		Name: "Exemplo", Branding: site.Branding{Tagline: "Nova frase"},
+		Name: "exemplo", Branding: site.Branding{Tagline: "Nova frase"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -89,11 +89,11 @@ func TestSaveSiteValidatesBrandingBeforePayload(t *testing.T) {
 
 func TestSaveSiteRejectsLongBrandingTagline(t *testing.T) {
 	sites := newFakeSites()
-	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo", Enabled: true}
+	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo", Enabled: true}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https")
 
 	_, err := svc.Save(context.Background(), testTenant, SaveSiteInput{
-		Name: "Exemplo", Branding: site.Branding{Tagline: strings.Repeat("a", 161)},
+		Name: "exemplo", Branding: site.Branding{Tagline: strings.Repeat("a", 161)},
 	})
 	var ve ValidationError
 	if !errors.As(err, &ve) || ve.Field != "branding.tagline" {
@@ -114,10 +114,10 @@ func TestSaveSiteRejectsReservedSlug(t *testing.T) {
 
 func TestSaveSiteRejectsSlugFromAnotherTenant(t *testing.T) {
 	sites := newFakeSites()
-	sites.byTenant["other-tenant"] = &site.Site{TenantID: "other-tenant", Slug: "Exemplo", Enabled: true}
+	sites.byTenant["other-tenant"] = &site.Site{TenantID: "other-tenant", Slug: "exemplo", Enabled: true}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https")
 
-	_, err := svc.Save(context.Background(), testTenant, SaveSiteInput{Name: "Outra", Slug: "Exemplo"})
+	_, err := svc.Save(context.Background(), testTenant, SaveSiteInput{Name: "Outra", Slug: "exemplo"})
 	if !errors.Is(err, site.ErrSlugTaken) {
 		t.Fatalf("esperava ErrSlugTaken, veio %v", err)
 	}
@@ -125,14 +125,14 @@ func TestSaveSiteRejectsSlugFromAnotherTenant(t *testing.T) {
 
 func TestSaveSiteDerivesUniqueSlugWhenTaken(t *testing.T) {
 	sites := newFakeSites()
-	sites.byTenant["other-tenant"] = &site.Site{TenantID: "other-tenant", Slug: "imobiliaria-Exemplo", Enabled: true}
+	sites.byTenant["other-tenant"] = &site.Site{TenantID: "other-tenant", Slug: "imobiliaria-exemplo", Enabled: true}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https")
 
 	out, err := svc.Save(context.Background(), testTenant, SaveSiteInput{Name: "Imobiliária Exemplo"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.Site.Slug != "imobiliaria-Exemplo-2" {
+	if out.Site.Slug != "imobiliaria-exemplo-2" {
 		t.Fatalf("slug derivado=%q", out.Site.Slug)
 	}
 }
@@ -140,8 +140,8 @@ func TestSaveSiteDerivesUniqueSlugWhenTaken(t *testing.T) {
 func TestDisablingSiteAlsoDisablesPayloadTenant(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo",
-		Enabled: true, PublicBaseURL: "https://Exemplo.imoveis.suitee.com.br",
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo",
+		Enabled: true, PublicBaseURL: "https://exemplo.imoveis.suitee.com.br",
 		PayloadTenantID: "payload-Exemplo",
 	}
 	projection := &fakeProjection{}
@@ -165,7 +165,7 @@ func TestSaveSiteWithPayloadDownDoesNotPersistEnabled(t *testing.T) {
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, projection, "imoveis.suitee.com.br", "https")
 	enabled := true
 
-	if _, err := svc.Save(context.Background(), testTenant, SaveSiteInput{Name: "Exemplo", Enabled: &enabled}); err == nil {
+	if _, err := svc.Save(context.Background(), testTenant, SaveSiteInput{Name: "exemplo", Enabled: &enabled}); err == nil {
 		t.Fatal("esperava erro do Payload")
 	}
 	if _, err := sites.GetByTenant(context.Background(), testTenant); !errors.Is(err, site.ErrNotFound) {
@@ -211,7 +211,7 @@ func TestListingURLOnlyForPublishedListingOnEnabledSite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !out.Published || out.PublicURL != "https://Exemplo.imoveis.suitee.com.br/imoveis/apartamento-centro" {
+	if !out.Published || out.PublicURL != "https://exemplo.imoveis.suitee.com.br/imoveis/apartamento-centro" {
 		t.Fatalf("URL pública inesperada: %+v", out)
 	}
 
@@ -260,7 +260,7 @@ func TestListingStatsFillsStatusAndURL(t *testing.T) {
 	if stats.ListingID != "listing-1" || stats.Status != "published" {
 		t.Fatalf("stats: %+v", stats)
 	}
-	if stats.PublicURL != "https://Exemplo.imoveis.suitee.com.br/imoveis/apartamento-centro" {
+	if stats.PublicURL != "https://exemplo.imoveis.suitee.com.br/imoveis/apartamento-centro" {
 		t.Fatalf("url: %q", stats.PublicURL)
 	}
 	if stats.PublishedAt == "" {
@@ -300,7 +300,7 @@ func TestListLeadsPassesPaginationToRepository(t *testing.T) {
 func TestFirstEnableTriggersBackfill(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo", Enabled: false,
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo", Enabled: false,
 	}
 	reconciler := &fakeReconciler{done: make(chan struct{})}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https").
@@ -322,7 +322,7 @@ func TestFirstEnableTriggersBackfill(t *testing.T) {
 func TestSaveWithoutEnablingDoesNotBackfill(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo", Enabled: false,
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo", Enabled: false,
 	}
 	reconciler := &fakeReconciler{}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.suitee.com.br", "https").
@@ -339,7 +339,7 @@ func TestSaveWithoutEnablingDoesNotBackfill(t *testing.T) {
 func TestPublicPortAppearsInCanonicalURL(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: testSiteID, TenantID: testTenant, Slug: "Exemplo", Enabled: true,
+		ID: testSiteID, TenantID: testTenant, Slug: "exemplo", Enabled: true,
 	}
 	listings := newFakeListings()
 	listings.byKey[listingKey(testTenant, testProperty)] = &site.Listing{
@@ -352,7 +352,7 @@ func TestPublicPortAppearsInCanonicalURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "http://Exemplo.imoveis.localhost:3002/imoveis/apartamento-centro"
+	want := "http://exemplo.imoveis.localhost:3002/imoveis/apartamento-centro"
 	if out.PublicURL != want {
 		t.Fatalf("url=%q want %q", out.PublicURL, want)
 	}
@@ -364,7 +364,7 @@ func TestSaveSitePersistsContact(t *testing.T) {
 		WithPublicPort("3002")
 	enabled := true
 	out, err := svc.Save(context.Background(), testTenant, SaveSiteInput{
-		Name: "Exemplo", Enabled: &enabled,
+		Name: "exemplo", Enabled: &enabled,
 		Contact: site.Contact{
 			Email: "contato@Exemplo.com.br", Phone: "(11) 3333-0000",
 			WhatsApp: "(11) 99999-0000", CRECI: "CRECI-SP 12345-J",
@@ -381,7 +381,7 @@ func TestSaveSitePersistsContact(t *testing.T) {
 func TestPortalSiteReturnsOnlyEnabledPublicData(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Exemplo",
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "exemplo",
 		Enabled: true, Branding: site.Branding{PrimaryColor: "#1C905B"},
 		Contact: site.Contact{WhatsApp: "(11) 99999-0000"},
 	}
@@ -391,7 +391,7 @@ func TestPortalSiteReturnsOnlyEnabledPublicData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.PublicURL != "http://Exemplo.imoveis.localhost:3002" || out.Name != "Exemplo" {
+	if out.PublicURL != "http://exemplo.imoveis.localhost:3002" || out.Name != "exemplo" {
 		t.Fatalf("portal site: %+v", out)
 	}
 	if out.Branding.PrimaryColor != "#1C905B" || out.ContactPhone == "" {
@@ -401,7 +401,7 @@ func TestPortalSiteReturnsOnlyEnabledPublicData(t *testing.T) {
 
 func TestPortalSiteHidesDisabledSite(t *testing.T) {
 	sites := newFakeSites()
-	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Enabled: false}
+	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "exemplo", Enabled: false}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.localhost", "http")
 	if _, err := svc.PortalSite(context.Background(), testTenant); !errors.Is(err, site.ErrNotFound) {
 		t.Fatalf("esperava ErrNotFound, veio %v", err)
@@ -410,7 +410,7 @@ func TestPortalSiteHidesDisabledSite(t *testing.T) {
 
 func TestReconcileRunsBackfill(t *testing.T) {
 	sites := newFakeSites()
-	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Enabled: true}
+	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "exemplo", Enabled: true}
 	reconciler := &fakeReconciler{done: make(chan struct{})}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.localhost", "http").
 		WithReconciler(reconciler)
@@ -430,7 +430,7 @@ func TestReconcileRunsBackfill(t *testing.T) {
 func TestGetOverviewRefreshesStalePublicBaseURL(t *testing.T) {
 	sites := newFakeSites()
 	sites.byTenant[testTenant] = &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo-imoveis", Name: "Exemplo",
+		ID: "site-1", TenantID: testTenant, Slug: "Exemplo-imoveis", Name: "exemplo",
 		Enabled: true, PublicBaseURL: "https://Exemplo-imoveis.imoveis.suitee.com.br",
 	}
 	svc := NewSiteService(sites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "beta.imoveis.suitee.com.br", "https")
@@ -453,7 +453,7 @@ func TestSiteReadinessStates(t *testing.T) {
 		t.Fatalf("sem site: %+v err=%v", out, err)
 	}
 
-	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Enabled: false}
+	sites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "exemplo", Enabled: false}
 	out, err = svc.Readiness(context.Background(), testTenant)
 	if err != nil || out.Status != "disabled" || out.Ready {
 		t.Fatalf("site desligado: %+v err=%v", out, err)
@@ -461,7 +461,7 @@ func TestSiteReadinessStates(t *testing.T) {
 
 	// No local a URL é HTTP e não há ACME; o link é considerado pronto.
 	localSites := newFakeSites()
-	localSites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Enabled: true}
+	localSites.byTenant[testTenant] = &site.Site{ID: "site-1", TenantID: testTenant, Slug: "exemplo", Enabled: true}
 	localSvc := NewSiteService(localSites, newFakeListings(), &fakeEngagement{}, &fakeProjection{}, "imoveis.localhost", "http")
 	out, err = localSvc.Readiness(context.Background(), testTenant)
 	if err != nil || !out.Ready || out.Status != "ready" {

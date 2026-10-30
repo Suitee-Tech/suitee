@@ -9,7 +9,7 @@ import (
 	"github.com/oginoino/toca/toca-sites/internal/domain/site"
 )
 
-const testHost = "Exemplo.imoveis.suitee.com.br"
+const testHost = "exemplo.imoveis.suitee.com.br"
 
 func newEngagementFixture() (*EngagementService, *fakeSites, *fakeListings, *fakeEngagement, *fakeCRM, *fakeBus) {
 	sites := newFakeSites()
@@ -227,8 +227,8 @@ func TestSessionKeyNeverStoresRawSession(t *testing.T) {
 
 func TestNormalizeHostStripsSchemePortAndPath(t *testing.T) {
 	cases := map[string]string{
-		"https://Exemplo.Imoveis.Suitee.Com.Br:443/imoveis/x?utm=1": "Exemplo.imoveis.suitee.com.br",
-		"Exemplo.IMOVEIS.SUITEE.COM.BR.":                            "Exemplo.imoveis.suitee.com.br",
+		"https://exemplo.imoveis.Suitee.Com.Br:443/imoveis/x?utm=1": "exemplo.imoveis.suitee.com.br",
+		"exemplo.imoveis.SUITEE.COM.BR.":                            "exemplo.imoveis.suitee.com.br",
 	}
 	for in, want := range cases {
 		if got := normalizeHost(in); got != want {

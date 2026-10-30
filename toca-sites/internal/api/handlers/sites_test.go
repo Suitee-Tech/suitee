@@ -73,8 +73,8 @@ func TestSiteHostPrefersExplicitHeader(t *testing.T) {
 	if got := siteHost(c); got != "api.example.com" {
 		t.Fatalf("sem headers de proxy deve usar o Host: %q", got)
 	}
-	c.Request.Header.Set("X-Site-Host", "Exemplo.imoveis.suitee.com.br")
-	if got := siteHost(c); got != "Exemplo.imoveis.suitee.com.br" {
+	c.Request.Header.Set("X-Site-Host", "exemplo.imoveis.suitee.com.br")
+	if got := siteHost(c); got != "exemplo.imoveis.suitee.com.br" {
 		t.Fatalf("X-Site-Host deve vencer: %q", got)
 	}
 }

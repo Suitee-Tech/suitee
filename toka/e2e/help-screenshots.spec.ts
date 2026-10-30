@@ -19,7 +19,7 @@ const ADMIN_USER = {
   functional_role: 'admin',
   account_type: 'individual',
   permission: 'owner',
-  current_company_id: 'mci-company-id',
+  current_company_id: 'exemplo-company-id',
 };
 
 const now = '2026-10-03T10:00:00Z';
@@ -41,7 +41,7 @@ const lead = (n: number, overrides: Record<string, unknown> = {}) => ({
   broker_id: 'broker-1',
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -63,7 +63,7 @@ const property = (n: number, overrides: Record<string, unknown> = {}) => ({
   images: [],
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -81,7 +81,7 @@ const deal = (n: number, overrides: Record<string, unknown> = {}) => ({
   checklist: [],
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -94,7 +94,7 @@ const charge = (n: number, overrides: Record<string, unknown> = {}) => ({
   contract_id: `ctr-${n}`,
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -104,7 +104,7 @@ const charge = (n: number, overrides: Record<string, unknown> = {}) => ({
 const delinquencyCollections = [
   {
     id: 'col-1',
-    tenant_id: 'mci-company-id',
+    tenant_id: 'exemplo-company-id',
     contract_id: 'ctr-2',
     debtor_id: 'lead-3',
     debtor_name: 'Gabriela Prado',
@@ -122,7 +122,7 @@ const delinquencyCollections = [
   },
   {
     id: 'col-2',
-    tenant_id: 'mci-company-id',
+    tenant_id: 'exemplo-company-id',
     contract_id: 'ctr-4',
     debtor_id: 'lead-4',
     debtor_name: 'Diego Santos',
@@ -146,7 +146,7 @@ const delinquencyCollections = [
   },
   {
     id: 'col-3',
-    tenant_id: 'mci-company-id',
+    tenant_id: 'exemplo-company-id',
     contract_id: 'ctr-5',
     debtor_id: 'lead-5',
     debtor_name: 'Eliane Costa',
@@ -182,7 +182,7 @@ const appointment = (n: number, overrides: Record<string, unknown> = {}) => ({
   property_id: '',
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -206,7 +206,7 @@ const contract = (n: number, overrides: Record<string, unknown> = {}) => ({
   client: ['Carla Menezes', 'Fábio Ramos'][n % 2],
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -222,7 +222,7 @@ const rental = (n: number, overrides: Record<string, unknown> = {}) => ({
   end_date: '2027-01-09',
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -235,7 +235,7 @@ const ticket = (n: number, overrides: Record<string, unknown> = {}) => ({
   requester_name: ['Gabriela Prado', 'Carla Menezes'][n % 2],
   created_at: now,
   updated_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   ...overrides,
 });
 
@@ -255,7 +255,7 @@ const member = (n: number, overrides: Record<string, unknown> = {}) => ({
 // As telas desreferenciam campos numéricos/arrays: devolver [] no lugar do
 // objeto derruba a página no ErrorBoundary, então cada rota tem sua forma.
 const financialKpis = {
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   generated_at: now,
   revenue_month_cents: 31800000,
   revenue_last_30_cents: 28900000,
@@ -283,7 +283,7 @@ const financialKpis = {
 };
 
 const financialDre = {
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   from: '2026-08-01',
   to: '2026-10-31',
   generated_at: now,
@@ -300,7 +300,7 @@ const financialDre = {
 };
 
 const financialCashflow = {
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   from: '2026-08-01',
   to: '2026-10-31',
   granularity: 'month',
@@ -313,7 +313,7 @@ const financialCashflow = {
 };
 
 const financialSummary = {
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
   generated_at: now,
   from: '2026-08-01',
   to: '2026-10-31',
@@ -336,12 +336,12 @@ const fiscalDimob = {
   total_amount: 4600000,
   generated_at: now,
   created_at: now,
-  tenant_id: 'mci-company-id',
+  tenant_id: 'exemplo-company-id',
 };
 
 const fiscalInformes = [
-  { id: 'inf-1', year: 2026, owner_id: 'lead-1', owner_name: 'Fábio Ramos', total_gross: 96000, total_admin_fee: 9600, total_intermediation: 0, total_net: 86400, status: 'READY', created_at: now, tenant_id: 'mci-company-id' },
-  { id: 'inf-2', year: 2026, owner_id: 'lead-2', owner_name: 'Carla Menezes', total_gross: 72000, total_admin_fee: 7200, total_intermediation: 0, total_net: 64800, status: 'READY', created_at: now, tenant_id: 'mci-company-id' },
+  { id: 'inf-1', year: 2026, owner_id: 'lead-1', owner_name: 'Fábio Ramos', total_gross: 96000, total_admin_fee: 9600, total_intermediation: 0, total_net: 86400, status: 'READY', created_at: now, tenant_id: 'exemplo-company-id' },
+  { id: 'inf-2', year: 2026, owner_id: 'lead-2', owner_name: 'Carla Menezes', total_gross: 72000, total_admin_fee: 7200, total_intermediation: 0, total_net: 64800, status: 'READY', created_at: now, tenant_id: 'exemplo-company-id' },
 ];
 
 const fiscalHistory = [
@@ -379,7 +379,7 @@ function seedAdmin(page: Page, overrides: Record<string, unknown> = {}) {
     let data: unknown = [];
     if (path === '/auth/refresh') return respond({ access_token: 'fake-token' });
     if (path === '/auth/me') return respond(ADMIN_USER);
-    if (path === '/auth/companies') return respond([{ id: 'mci-company-id', type: 'company', company: { id: 'mci-company-id', name: 'Imobiliária Exemplo', legal_name: 'Imobiliária Exemplo LTDA', tax_id: '11222333000181', email: 'contato@mci.com.br', phone: '11999998888', type: 'imobiliaria', is_active: true, owner_id: ADMIN_USER.id, members: [{ account_id: ADMIN_USER.id, profile: 'owner' }] } }]);
+    if (path === '/auth/companies') return respond([{ id: 'exemplo-company-id', type: 'company', company: { id: 'exemplo-company-id', name: 'Imobiliária Exemplo', legal_name: 'Imobiliária Exemplo LTDA', tax_id: '11222333000181', email: 'contato@exemplo.com.br', phone: '11999998888', type: 'imobiliaria', is_active: true, owner_id: ADMIN_USER.id, members: [{ account_id: ADMIN_USER.id, profile: 'owner' }] } }]);
     if (/^\/auth\/switch-/.test(path)) return respond({ access_token: 'fake-tenant-scoped' });
     if (path === '/me/permissions') return respond({
       functional_role: 'admin',
@@ -423,7 +423,7 @@ function seedAdmin(page: Page, overrides: Record<string, unknown> = {}) {
       ['/reports/financial/cashflow', financialCashflow],
       ['/reports/financial/summary', financialSummary],
       ['/reports/financial/chart-of-accounts', { version: '1', accounts: [] }],
-      ['/reports/financial/reconciliation', { tenant_id: 'mci-company-id', generated_at: now, dry_run: true, summary: { total_findings: 0, errors: 0, warnings: 0, duplicates: 0, orphans: 0, excess_alloc: 0, sub_alloc: 0, consistency: 0 }, findings: [] }],
+      ['/reports/financial/reconciliation', { tenant_id: 'exemplo-company-id', generated_at: now, dry_run: true, summary: { total_findings: 0, errors: 0, warnings: 0, duplicates: 0, orphans: 0, excess_alloc: 0, sub_alloc: 0, consistency: 0 }, findings: [] }],
       ['/fiscal/calendar', fiscalDeadlines],
       ['/fiscal/informes', fiscalInformes],
       ['/fiscal/reports', fiscalHistory],
@@ -480,15 +480,15 @@ function seedAdmin(page: Page, overrides: Record<string, unknown> = {}) {
 
     // Mensagens: o serviço usa /channels (+ /channels/:id/messages).
     if (path === '/channels') return respond([
-      { id: 'ch-1', tenant_id: 'mci-company-id', name: 'Carla Menezes', description: 'Lead — Vila Mariana', type: 'lead', status: 'active', participants: [], entity_id: 'lead-1', entity_type: 'lead', created_by: 'member-1', created_at: now, updated_at: now },
-      { id: 'ch-2', tenant_id: 'mci-company-id', name: 'Suporte — Apto Vila Olímpia', description: 'Chamado do portal', type: 'support', status: 'active', participants: [], entity_id: 'ticket-1', entity_type: 'ticket', created_by: 'member-1', created_at: now, updated_at: now },
-      { id: 'ch-3', tenant_id: 'mci-company-id', name: 'Equipe Comercial', description: 'Canal interno', type: 'group', status: 'active', participants: [], created_by: 'member-1', created_at: now, updated_at: now },
+      { id: 'ch-1', tenant_id: 'exemplo-company-id', name: 'Carla Menezes', description: 'Lead — Vila Mariana', type: 'lead', status: 'active', participants: [], entity_id: 'lead-1', entity_type: 'lead', created_by: 'member-1', created_at: now, updated_at: now },
+      { id: 'ch-2', tenant_id: 'exemplo-company-id', name: 'Suporte — Apto Vila Olímpia', description: 'Chamado do portal', type: 'support', status: 'active', participants: [], entity_id: 'ticket-1', entity_type: 'ticket', created_by: 'member-1', created_at: now, updated_at: now },
+      { id: 'ch-3', tenant_id: 'exemplo-company-id', name: 'Equipe Comercial', description: 'Canal interno', type: 'group', status: 'active', participants: [], created_by: 'member-1', created_at: now, updated_at: now },
     ]);
     if (/^\/channels\/[^/]+\/messages/.test(path)) return respond({
       messages: [
-        { id: 'msg-1', channel_id: 'ch-1', tenant_id: 'mci-company-id', sender_id: 'lead-1', sender_name: 'Carla Menezes', content: 'Olá! O apartamento da Vila Mariana ainda está disponível?', content_type: 'text', created_at: now },
-        { id: 'msg-2', channel_id: 'ch-1', tenant_id: 'mci-company-id', sender_id: 'member-1', sender_name: 'Bruno Teles', content: 'Oi, Carla! Está sim. Posso agendar uma visita para quinta às 10h?', content_type: 'text', created_at: now },
-        { id: 'msg-3', channel_id: 'ch-1', tenant_id: 'mci-company-id', sender_id: 'lead-1', sender_name: 'Carla Menezes', content: 'Perfeito, quinta às 10h funciona.', content_type: 'text', created_at: now },
+        { id: 'msg-1', channel_id: 'ch-1', tenant_id: 'exemplo-company-id', sender_id: 'lead-1', sender_name: 'Carla Menezes', content: 'Olá! O apartamento da Vila Mariana ainda está disponível?', content_type: 'text', created_at: now },
+        { id: 'msg-2', channel_id: 'ch-1', tenant_id: 'exemplo-company-id', sender_id: 'member-1', sender_name: 'Bruno Teles', content: 'Oi, Carla! Está sim. Posso agendar uma visita para quinta às 10h?', content_type: 'text', created_at: now },
+        { id: 'msg-3', channel_id: 'ch-1', tenant_id: 'exemplo-company-id', sender_id: 'lead-1', sender_name: 'Carla Menezes', content: 'Perfeito, quinta às 10h funciona.', content_type: 'text', created_at: now },
       ],
       total: 3,
     });
@@ -570,7 +570,7 @@ function seedAdmin(page: Page, overrides: Record<string, unknown> = {}) {
     if (/^\/fiscal\b/.test(path)) return respond([]);
 
     if (/^\/company\/members/.test(path) || /^\/companies\/members/.test(path) || /^\/company-members/.test(path)) return respond([member(1), member(2), member(3), member(4)]);
-    if (/^\/companies\b/.test(path)) return respond([{ id: 'mci-company-id', name: 'Imobiliária Exemplo', members: [member(1), member(2), member(3), member(4)] }]);
+    if (/^\/companies\b/.test(path)) return respond([{ id: 'exemplo-company-id', name: 'Imobiliária Exemplo', members: [member(1), member(2), member(3), member(4)] }]);
 
     return respond(data);
   });

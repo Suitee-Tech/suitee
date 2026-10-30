@@ -7,7 +7,7 @@ import (
 )
 
 func TestValidateSlug(t *testing.T) {
-	valid := []string{"Exemplo", "imobiliaria-Exemplo", "a1b", "casa-2", "x9y"}
+	valid := []string{"exemplo", "imobiliaria-exemplo", "a1b", "casa-2", "x9y"}
 	for _, slug := range valid {
 		if err := ValidateSlug(slug); err != nil {
 			t.Errorf("ValidateSlug(%q) = %v, quer nil", slug, err)
@@ -15,8 +15,8 @@ func TestValidateSlug(t *testing.T) {
 	}
 
 	invalid := []string{
-		"ab", "Exemplo-", "-Exemplo", "ca--riri", "Exemplo", "cariri_2",
-		"Exemplo.imoveis", "Exemplo ", "www", "app", "api", "admin", "portal",
+		"ab", "exemplo-", "-exemplo", "ca--riri", "cariri_2",
+		"exemplo.imoveis", "Exemplo ", "www", "app", "api", "admin", "portal",
 		"sites", "mail", "cdn", "imoveis", "suitee", "login", "painel", "teste",
 		"demo", "imobiliaria", "imovel", "123", "2026",
 		strings.Repeat("a", 49),
@@ -32,7 +32,7 @@ func TestValidateSlug(t *testing.T) {
 
 func TestSlugifyFoldsPortugueseAndSymbols(t *testing.T) {
 	cases := map[string]string{
-		"Imobiliária Exemplo":      "imobiliaria-Exemplo",
+		"Imobiliária Exemplo":      "imobiliaria-exemplo",
 		"  Ção & Cia Imóveis  ":   "cao-cia-imoveis",
 		"João's Imóveis!!":        "joao-s-imoveis",
 		"---já---":                "ja",
@@ -46,17 +46,17 @@ func TestSlugifyFoldsPortugueseAndSymbols(t *testing.T) {
 }
 
 func TestBuildPublicBaseURLUsesSingleSuffix(t *testing.T) {
-	got := BuildPublicBaseURL("https", "imoveis.suitee.com.br", "Exemplo")
-	if got != "https://Exemplo.imoveis.suitee.com.br" {
+	got := BuildPublicBaseURL("https", "imoveis.suitee.com.br", "exemplo")
+	if got != "https://exemplo.imoveis.suitee.com.br" {
 		t.Fatalf("got %q", got)
 	}
-	if BuildPublicBaseURL("", "", "Exemplo") != "" {
+	if BuildPublicBaseURL("", "", "exemplo") != "" {
 		t.Fatal("sem sufixo não há URL pública")
 	}
-	if got := BuildPublicBaseURLWithPort("http", "imoveis.localhost", "Exemplo", "3002"); got != "http://Exemplo.imoveis.localhost:3002" {
+	if got := BuildPublicBaseURLWithPort("http", "imoveis.localhost", "exemplo", "3002"); got != "http://exemplo.imoveis.localhost:3002" {
 		t.Fatalf("porta local: %q", got)
 	}
-	if got := BuildPublicBaseURLWithPort("https", "imoveis.suitee.com.br", "Exemplo", ""); got != "https://Exemplo.imoveis.suitee.com.br" {
+	if got := BuildPublicBaseURLWithPort("https", "imoveis.suitee.com.br", "exemplo", ""); got != "https://exemplo.imoveis.suitee.com.br" {
 		t.Fatalf("produção sem porta: %q", got)
 	}
 }
@@ -89,14 +89,14 @@ func TestSlugFromHost(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"Exemplo.imoveis.suitee.com.br", "Exemplo", false},
-		{"Exemplo.Imoveis.Suitee.Com.Br:443", "Exemplo", false},
-		{"Exemplo.imoveis.suitee.com.br.", "Exemplo", false},
-		{"https://Exemplo.imoveis.suitee.com.br/imoveis/x", "Exemplo", false},
+		{"exemplo.imoveis.suitee.com.br", "exemplo", false},
+		{"exemplo.imoveis.Suitee.Com.Br:443", "exemplo", false},
+		{"exemplo.imoveis.suitee.com.br.", "exemplo", false},
+		{"https://exemplo.imoveis.suitee.com.br/imoveis/x", "exemplo", false},
 		{"imoveis.suitee.com.br", "", true},
 		{"a.b.imoveis.suitee.com.br", "", true},
 		{"Exemplo.sites.suitee.com.br", "", true},
-		{"Exemplo.imoveis.suitee.com.br.evil.com", "", true},
+		{"exemplo.imoveis.suitee.com.br.evil.com", "", true},
 		{"admin.imoveis.suitee.com.br", "", true},
 		{"", "", true},
 	}
@@ -113,7 +113,7 @@ func TestSlugFromHost(t *testing.T) {
 		}
 	}
 
-	if got, err := SlugFromHost("Exemplo.imoveis.localhost:3000", "imoveis.localhost"); err != nil || got != "Exemplo" {
+	if got, err := SlugFromHost("exemplo.imoveis.localhost:3000", "imoveis.localhost"); err != nil || got != "exemplo" {
 		t.Fatalf("local dev: got %q err %v", got, err)
 	}
 }

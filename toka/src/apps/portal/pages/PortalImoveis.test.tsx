@@ -53,7 +53,7 @@ describe("PortalImoveis", () => {
     mocks.getSiteListingUrl.mockReset();
     mocks.getSiteListingUrl.mockResolvedValue({
       published: true,
-      public_url: "https://Exemplo.imoveis.suitee.com.br/imoveis/casa-do-site",
+      public_url: "https://exemplo.imoveis.suitee.com.br/imoveis/casa-do-site",
       status: "published",
     });
   });
@@ -66,7 +66,7 @@ describe("PortalImoveis", () => {
     expect(screen.getByText("Sugestão do corretor")).toBeInTheDocument();
     expect(await screen.findByRole("link", { name: /ver anúncio no site/i })).toHaveAttribute(
       "href",
-      "https://Exemplo.imoveis.suitee.com.br/imoveis/casa-do-site",
+      "https://exemplo.imoveis.suitee.com.br/imoveis/casa-do-site",
     );
     expect(mocks.getSiteListingUrl).toHaveBeenCalledWith(
       "property-1",

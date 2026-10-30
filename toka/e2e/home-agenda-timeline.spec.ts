@@ -12,12 +12,12 @@ import { test, expect, type Page } from '@playwright/test';
 const TEST_USER = {
   id: 'fake-user-id', email: 'maria@example.com', firstname: 'Caua', lastname: 'Teste',
   role: 'user', functional_role: 'admin', account_type: 'individual',
-  permission: 'owner', current_company_id: 'mci-company-id',
+  permission: 'owner', current_company_id: 'exemplo-company-id',
 };
 const TEST_COMPANY = {
-  id: 'mci-company-id', type: 'company', company: {
-    id: 'mci-company-id', name: 'Exemplo Imóveis', legal_name: 'Exemplo Imóveis LTDA',
-    tax_id: '11222333000181', email: 'contato@Exemplo.com.br', phone: '11999998888',
+  id: 'exemplo-company-id', type: 'company', company: {
+    id: 'exemplo-company-id', name: 'Exemplo Imóveis', legal_name: 'Exemplo Imóveis LTDA',
+    tax_id: '11222333000181', email: 'contato@exemplo.com.br', phone: '11999998888',
     type: 'imobiliaria', is_active: true, owner_id: TEST_USER.id,
     members: [{ account_id: TEST_USER.id, profile: 'owner' }],
   },

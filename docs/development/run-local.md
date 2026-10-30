@@ -19,7 +19,7 @@ curl http://localhost:8080/health
 A stack local já inclui `toca-sites`, `toca-web` e o one-shot de migrations do
 Payload. Portas: Toka em `3000`, **Payload/Next em `3002`**, `toca-sites` em
 `8094`. A marca usada nos exemplos é `Exemplo`, então o host público local é
-`Exemplo.imoveis.localhost:3002`.
+`exemplo.imoveis.localhost:3002`.
 
 ```bash
 cp .env.example .env          # se ainda não existir (WEB_PORT=3002)
@@ -56,7 +56,7 @@ Primeiro acesso:
    (e-mail, telefone, WhatsApp, endereço e CRECI), ajuste se necessário e salve.
    Eles aparecem no rodapé, no card da imobiliária e nos CTAs de WhatsApp.
 4. Publique um imóvel em `/imoveis`; o evento chega pelo RabbitMQ e a vitrine
-   aparece em `http://Exemplo.imoveis.localhost:3002/imoveis`.
+   aparece em `http://exemplo.imoveis.localhost:3002/imoveis`.
 5. O link **Área do cliente** do site aponta para `PORTAL_PUBLIC_URL`
    (`http://localhost:3000/portal` no local). No portal, o deal mostra o cartão
    **Site da imobiliária** com o link de volta para a vitrine.

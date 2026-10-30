@@ -12,10 +12,10 @@ func TestOriginAllowedExactAndWildcard(t *testing.T) {
 		want   bool
 	}{
 		{"http://localhost:5173", true},
-		{"https://imobiliaria-Exemplo.imoveis.suitee.com.br", true},
+		{"https://imobiliaria-exemplo.imoveis.suitee.com.br", true},
 		{"https://a.b.imoveis.suitee.com.br", true},
-		{"https://IMOBILIARIA-Exemplo.IMOVEIS.SUITEE.COM.BR", true},
-		{"http://imobiliaria-Exemplo.imoveis.suitee.com.br", false}, // scheme
+		{"https://IMOBILIARIA-exemplo.imoveis.SUITEE.COM.BR", true},
+		{"http://imobiliaria-exemplo.imoveis.suitee.com.br", false}, // scheme
 		{"https://imoveis.suitee.com.br", false},                   // apex
 		{"https://evil-imoveis.suitee.com.br", false},
 		{"https://a.imoveis.suitee.com.br.evil.com", false},

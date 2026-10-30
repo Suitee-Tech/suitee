@@ -19,7 +19,7 @@ continua em **Imóveis**.
 Menu **Portfólio & Negócios → Site de imóveis**, rota `/site`.
 
 O endereço público é formado pela marca escolhida + domínio da Suitee, por
-exemplo `https://imobiliaria-Exemplo.imoveis.suitee.com.br`.
+exemplo `https://imobiliaria-exemplo.imoveis.suitee.com.br`.
 
 ## Passo a passo: ativar o site
 
@@ -85,7 +85,7 @@ do painel.
 ## Exemplo prático
 
 > Ana é `admin` da Imobiliária Exemplo. Ela abre **Site de imóveis**, define a
-> marca `imobiliaria-Exemplo`, reaproveita o logo e as cores do painel e publica
+> marca `imobiliaria-exemplo`, reaproveita o logo e as cores do painel e publica
 > as páginas **Sobre** e **Contato**. Enquanto o certificado é emitido, o painel
 > mostra “Publicando seu site com segurança” e mantém o link bloqueado. Pouco
 > depois, o endereço fica verde e ela copia o link para divulgar. Os imóveis

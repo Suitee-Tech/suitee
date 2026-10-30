@@ -15,7 +15,7 @@ const testTenant = "11111111-1111-4111-8111-111111111111"
 
 func testSite() *site.Site {
 	return &site.Site{
-		ID: "site-1", TenantID: testTenant, Slug: "Exemplo", Name: "Imobiliária Exemplo", Enabled: true,
+		ID: "site-1", TenantID: testTenant, Slug: "exemplo", Name: "Imobiliária Exemplo", Enabled: true,
 		Branding: site.Branding{PrimaryColor: "#111111"},
 	}
 }
@@ -48,11 +48,11 @@ func TestEnsureTenantCreatesWhenMissing(t *testing.T) {
 	if id != "tenant-doc-1" {
 		t.Fatalf("id=%q", id)
 	}
-	if created["slug"] != "Exemplo" || created["name"] != "Imobiliária Exemplo" {
+	if created["slug"] != "exemplo" || created["name"] != "Imobiliária Exemplo" {
 		t.Fatalf("body: %+v", created)
 	}
 	domains := created["domains"].([]interface{})
-	if domains[0].(map[string]interface{})["domain"] != "Exemplo.imoveis.suitee.com.br" {
+	if domains[0].(map[string]interface{})["domain"] != "exemplo.imoveis.suitee.com.br" {
 		t.Fatalf("domains: %+v", domains)
 	}
 }
@@ -179,7 +179,7 @@ func TestRevalidateSendsInternalKey(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	err := New(srv.URL, "secret", "imoveis.suitee.com.br").Revalidate(context.Background(), "Exemplo", []string{"/imoveis"})
+	err := New(srv.URL, "secret", "imoveis.suitee.com.br").Revalidate(context.Background(), "exemplo", []string{"/imoveis"})
 	if err != nil {
 		t.Fatal(err)
 	}
