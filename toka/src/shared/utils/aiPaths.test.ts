@@ -15,8 +15,8 @@ describe("normalizeAiPath", () => {
   });
 
   it("normaliza URLs internas da Suitee e preserva links externos", () => {
-    expect(normalizeAiPath("https://app.example.com/properties/abc")).toBe("/imoveis/abc");
-    expect(normalizeAiPath("https://app.example.com/transfers/abc")).toBe("/financeiro/repasses");
+    expect(normalizeAiPath("https://app.suitee.com.br/properties/abc")).toBe("/imoveis/abc");
+    expect(normalizeAiPath("https://app.suitee.com.br/transfers/abc")).toBe("/financeiro/repasses");
     expect(normalizeAiPath("https://example.com/properties/abc")).toBe("https://example.com/properties/abc");
   });
 });

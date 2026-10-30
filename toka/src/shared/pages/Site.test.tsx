@@ -176,19 +176,19 @@ describe("Site (painel)", () => {
   it("salva a marca editada e o toggle do site", async () => {
     mocks.getOverview.mockResolvedValue(overview);
     mocks.leads.mockResolvedValue({ leads: [], total: 0 });
-    mocks.save.mockResolvedValue({ ...overview, site: { ...overview.site, enabled: false, slug: "Exemplo-novo" } });
+    mocks.save.mockResolvedValue({ ...overview, site: { ...overview.site, enabled: false, slug: "exemplo-novo" } });
     renderPage();
 
     const slug = await screen.findByLabelText(/marca do endereço/i);
     await userEvent.clear(slug);
-    await userEvent.type(slug, "Exemplo-novo");
+    await userEvent.type(slug, "exemplo-novo");
     await userEvent.click(screen.getByRole("switch", { name: /ativar site de imóveis/i }));
     await userEvent.click(screen.getByRole("button", { name: /salvar site/i }));
 
     await waitFor(() => expect(mocks.save).toHaveBeenCalled());
     expect(mocks.save).toHaveBeenCalledWith(
       expect.objectContaining({
-        slug: "Exemplo-novo",
+        slug: "exemplo-novo",
         enabled: false,
         name: "Imobiliária Exemplo",
         contact: expect.objectContaining({ creci: "CRECI-SP 12345-J" }),

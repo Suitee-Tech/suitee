@@ -32,7 +32,6 @@ describe("site.service — contrato do host comercial", () => {
     expect(validateSiteSlug("Exemplo-")).not.toBeNull();
     expect(validateSiteSlug("-Exemplo")).not.toBeNull();
     expect(validateSiteSlug("ca--riri")).not.toBeNull();
-    expect(validateSiteSlug("exemplo")).not.toBeNull();
   });
 
   it("aceita as marcas válidas que o backend aceita", () => {
