@@ -60,6 +60,21 @@ func (h *PublicHandler) CreateLead(c *gin.Context) {
 		writeError(c, err)
 		return
 	}
+	// O lead local é preservado mesmo quando o CRM recusa/está indisponível,
+	// mas a resposta não pode dizer "sucesso" se ele não chegou ao CRM. Antes
+	// o comprador via "Recebemos seu contato" com `status: failed` no corpo.
+	if lead.Status == site.LeadFailed {
+		c.JSON(http.StatusBadGateway, gin.H{
+			"success": false,
+			"message": "Não foi possível encaminhar seu contato à imobiliária agora. Tente novamente em instantes.",
+			"data": gin.H{
+				"lead_id": lead.ID,
+				"status":  lead.Status,
+			},
+		})
+		return
+	}
+
 	status := http.StatusCreated
 	message := "Recebemos seu contato. A imobiliária falará com você."
 	if lead.Status == site.LeadDuplicate {

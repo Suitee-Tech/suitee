@@ -129,9 +129,18 @@ func (s *EngagementService) CreateLead(ctx context.Context, host string, in site
 	if email != "" && !validEmail(email) {
 		return nil, invalid("email", "e-mail inválido")
 	}
-	phoneDigits := digitsOnly(phone)
-	if phone != "" && (len(phoneDigits) < 8 || len(phoneDigits) > 15) {
-		return nil, invalid("phone", "telefone inválido")
+	// A borda do site usa a MESMA regra do CRM (`pkg/validation`). Antes
+	// aceitávamos qualquer coisa entre 8 e 15 dígitos; um celular de 11
+	// dígitos sem o 9 passava aqui, era gravado como `failed` e só o CRM
+	// recusava. Normalizar antes de persistir evita lead órfão e resposta
+	// enganosa de sucesso.
+	phoneDigits := ""
+	if phone != "" {
+		normalized, err := validation.NormalizeBRPhone(phone)
+		if err != nil {
+			return nil, invalid("phone", "telefone inválido: informe DDD + número; celular deve começar com 9")
+		}
+		phoneDigits = strings.TrimPrefix(normalized, "+55")
 	}
 	message := truncate(strings.TrimSpace(in.Message), maxMessageLen)
 
@@ -165,7 +174,11 @@ func (s *EngagementService) CreateLead(ctx context.Context, host string, in site
 			return nil, wrap("verificar lead duplicado", err)
 		}
 		if dup != nil {
-			dup.Status = site.LeadDuplicate
+			// Não transforme um failed em duplicate: o comprador precisa
+			// saber que o contato ainda não chegou ao CRM.
+			if dup.Status != site.LeadFailed {
+				dup.Status = site.LeadDuplicate
+			}
 			return dup, nil
 		}
 	}

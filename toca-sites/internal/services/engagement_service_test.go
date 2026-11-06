@@ -103,6 +103,27 @@ func TestCreateLeadPersistsThenCallsCRMAndPublishes(t *testing.T) {
 	}
 }
 
+func TestCreateLeadRejectsInvalidBrazilianPhoneBeforePersisting(t *testing.T) {
+	svc, _, _, repo, crm, _ := newEngagementFixture()
+	_, err := svc.CreateLead(context.Background(), testHost, site.LeadInput{
+		Name: "Ana Souza", Email: "ana@example.com", Phone: "11239837834",
+		AcceptedContact: true,
+	}, RequestMeta{})
+	if !errors.Is(err, ErrValidation) {
+		t.Fatalf("celular sem 9 deveria ser ErrValidation, veio %v", err)
+	}
+	var validationErr ValidationError
+	if !errors.As(err, &validationErr) || validationErr.Field != "phone" {
+		t.Fatalf("erro deveria apontar o campo phone, veio %#v", err)
+	}
+	if len(repo.leads) != 0 {
+		t.Fatalf("telefone inválido não pode gravar lead local: %d", len(repo.leads))
+	}
+	if crm.calls != 0 {
+		t.Fatalf("telefone inválido não pode chamar o CRM: %d", crm.calls)
+	}
+}
+
 func TestCreateLeadSurvivesCRMOutage(t *testing.T) {
 	svc, _, _, repo, crm, bus := newEngagementFixture()
 	crm.err = errors.New("crm down")
