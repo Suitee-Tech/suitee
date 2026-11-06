@@ -105,7 +105,7 @@ func TestRequireActiveSubscription_AllowsEntitledWritesAndSkipsExemptPaths(t *te
 	}
 	// Assinatura, sessão e portal ficam fora do bloqueio de gravação: é por onde
 	// o cliente regulariza e por onde o portal do cliente continua funcionando.
-	for _, path := range []string{"/api/v1/platform-subscription/checkout", "/api/v1/auth/refresh", "/api/v1/client-portal/invites"} {
+	for _, path := range []string{"/api/v1/platform-subscription/checkout", "/api/v1/auth/refresh", "/api/v1/client-portal/invites", "/api/v1/settings/preferences"} {
 		if recorder := runRequest(t, middleware, http.MethodPost, path, map[string]string{"Authorization": "Bearer t"}); recorder.Code != http.StatusOK {
 			t.Errorf("%s deveria passar sem consultar o plano, veio %d", path, recorder.Code)
 		}

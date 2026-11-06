@@ -240,6 +240,11 @@ func skipPlanAccess(path string) bool {
 		"/api/v1/auth",
 		"/api/v1/health",
 		"/api/v1/me/permissions",
+		// Preferências pessoais e consentimento (LGPD) não são dado de
+		// negócio. O usuário de um plano vencido precisa aceitar os Termos
+		// para continuar e escolher o novo plano; bloquear este PATCH criava
+		// um ciclo em que o modal de termos não conseguia ser concluído.
+		"/api/v1/settings/preferences",
 		"/api/v1/platform-subscription",
 		"/api/v1/client-portal",
 		"/api/v1/portal",
