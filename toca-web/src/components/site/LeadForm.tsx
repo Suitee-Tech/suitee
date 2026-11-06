@@ -7,6 +7,7 @@ import {
   publicSiteApiEndpoint,
 } from '@/lib/public-api'
 import { ArrowIcon, ShieldIcon } from './icons'
+import { nationalPhoneDigits, validateBrazilianPhone } from '@/lib/phone'
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error'
 type FieldErrors = Partial<Record<'name' | 'email' | 'phone' | 'consent', string>>
@@ -18,7 +19,7 @@ interface LeadFormProps {
 }
 
 function maskPhone(input: string): string {
-  const digits = input.replace(/\D/g, '').slice(0, 11)
+  const digits = nationalPhoneDigits(input)
   if (!digits) return ''
   if (digits.length <= 2) return `(${digits}`
   const area = digits.slice(0, 2)
@@ -49,10 +50,8 @@ function validate(values: {
     errors.email = 'Informe um e-mail válido, como nome@exemplo.com.'
   }
 
-  const digits = values.phone.replace(/\D/g, '')
-  if (digits.length !== 10 && digits.length !== 11) {
-    errors.phone = 'Informe DDD + telefone, com 10 ou 11 números.'
-  }
+  const phoneError = validateBrazilianPhone(values.phone)
+  if (phoneError) errors.phone = phoneError
 
   if (!values.consent) {
     errors.consent = 'Autorize o contato para enviar a mensagem.'
@@ -126,18 +125,16 @@ export function LeadForm({ propertyId, siteSlug, propertyTitle }: LeadFormProps)
         cache: 'no-store',
       })
 
+      const responseBody = await response.json().catch(() => null)
       if (!response.ok) {
-        let message = ''
-        let field = ''
-        try {
-          const body = await response.json()
-          const firstField = body?.data?.fields?.[0]
-          message = firstField?.message || body?.message || ''
-          field = firstField?.field || ''
-        } catch {}
+        const firstField = responseBody?.data?.fields?.[0]
+        const message = firstField?.message || responseBody?.message || ''
         const error = new Error(message || `lead request failed with ${response.status}`)
-        ;(error as Error & { field?: string }).field = field
+        ;(error as Error & { field?: string }).field = firstField?.field || ''
         throw error
+      }
+      if (responseBody?.data?.status === 'failed') {
+        throw new Error('Não foi possível entregar seu contato à imobiliária agora. Tente novamente em instantes.')
       }
 
       form.reset()
@@ -147,8 +144,8 @@ export function LeadForm({ propertyId, siteSlug, propertyTitle }: LeadFormProps)
     } catch (error) {
       setState('error')
       const field = (error as Error & { field?: string }).field
-      if (field === 'name') {
-        setErrors((previous) => ({ ...previous, name: (error as Error).message }))
+      if (field === 'name' || field === 'phone') {
+        setErrors((previous) => ({ ...previous, [field]: (error as Error).message }))
       }
       const message = (error as Error).message
       setErrorMessage(
@@ -265,13 +262,8 @@ export function LeadForm({ propertyId, siteSlug, propertyTitle }: LeadFormProps)
               clearError('phone')
             }}
             onBlur={() => {
-              const digits = phone.replace(/\D/g, '')
-              if (digits.length !== 10 && digits.length !== 11) {
-                setErrors((previous) => ({
-                  ...previous,
-                  phone: 'Informe DDD + telefone, com 10 ou 11 números.',
-                }))
-              }
+              const error = validateBrazilianPhone(phone)
+              if (error) setErrors((previous) => ({ ...previous, phone: error }))
             }}
           />
           {errors.phone ? (
