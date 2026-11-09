@@ -97,6 +97,8 @@ supabase stop && supabase start
 make sites-up
 ```
 
+Veja a matriz completa em [Fluxos de e-mail](email-flows.md).
+
 Migrações do Payload rodam automaticamente no `up` (serviço
 `toca-web-migrate`, dependência de `toca-web`). Para rodar manualmente:
 
