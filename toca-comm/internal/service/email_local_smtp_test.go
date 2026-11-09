@@ -128,4 +128,20 @@ func TestLocalSMTP_WelcomePasswordResetAndInvitation(t *testing.T) {
 		}
 		assertLocalMessage(t, messages, "Convite", "Imobiliária Exemplo")
 	})
+
+	t.Run("otp", func(t *testing.T) {
+		svc, messages := localEmailService(t)
+		if err := svc.SendOTPEmail(context.Background(), "ana@example.com", "123456"); err != nil {
+			t.Fatalf("SendOTPEmail: %v", err)
+		}
+		assertLocalMessage(t, messages, "Seu código de acesso", "123456")
+	})
+
+	t.Run("client invitation", func(t *testing.T) {
+		svc, messages := localEmailService(t)
+		if err := svc.SendClientInvitationEmail(context.Background(), "cliente@example.com", "Ana"); err != nil {
+			t.Fatalf("SendClientInvitationEmail: %v", err)
+		}
+		assertLocalMessage(t, messages, "Portal do Cliente", "/portal/login")
+	})
 }

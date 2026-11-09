@@ -90,6 +90,45 @@ func TestResendContract_SendTemplateEmail(t *testing.T) {
 	}
 }
 
+func TestResendContract_PasswordResetAndInvitationTemplates(t *testing.T) {
+	var templates []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			To       []string `json:"to"`
+			Template struct {
+				ID string `json:"id"`
+			} `json:"template"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		templates = append(templates, body.Template.ID)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"email_sandbox_3"}`))
+	}))
+	defer server.Close()
+
+	service := newResendContractService(server)
+	if err := service.SendPasswordResetEmail(context.Background(), "ana@example.com", "https://sandbox.example/reset"); err != nil {
+		t.Fatalf("SendPasswordResetEmail: %v", err)
+	}
+	if err := service.SendInvitationEmail(context.Background(), "ana@example.com", "Imobiliária Exemplo", "https://sandbox.example/invite"); err != nil {
+		t.Fatalf("SendInvitationEmail: %v", err)
+	}
+	want := []string{
+		"91bf153d-a3d5-4f84-af68-9e49ee710613",
+		"0551da37-6822-4675-b08f-9d2b9d0ee87b",
+	}
+	if len(templates) != len(want) {
+		t.Fatalf("templates = %v, want %v", templates, want)
+	}
+	for i := range want {
+		if templates[i] != want[i] {
+			t.Fatalf("template[%d] = %q, want %q", i, templates[i], want[i])
+		}
+	}
+}
+
 func TestResendContract_MapsErrorAndEnforcesTimeout(t *testing.T) {
 	t.Run("error body", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
