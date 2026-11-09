@@ -629,6 +629,7 @@ services:
       - COMM_EMAIL_CHAT_REMINDERS=true
       - COMM_EMAIL_COOLDOWN_MINUTES=0
       - COMM_EMAIL_CHAT_REMINDER_AFTER_MINUTES=1
+      - COMM_EMAIL_IGNORE_PRESENCE=true
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-3000}}
       - GATEWAY_URL=${PUBLIC_GATEWAY_URL:-http://localhost:8080}
     depends_on:
