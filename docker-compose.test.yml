@@ -116,6 +116,7 @@ services:
       - APP_ENV=test
       - SMTP_HOST=
       - SMTP_PORT=
+      - COMM_EMAIL_ENABLED=false
     depends_on:
       postgres:
         condition: service_healthy

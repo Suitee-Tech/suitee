@@ -76,6 +76,14 @@ func (s *EmailService) sendEmail(ctx context.Context, payload resendEmailRequest
 	return s.sendResendEmail(ctx, payload)
 }
 
+// smtpEnabled is the local-development transport switch. It is set by the
+// local compose (Inbucket/Mailpit); production leaves it empty and keeps the
+// Resend templates. Welcome/reset/invitation templates do not exist in SMTP,
+// so those flows build the same HTML locally and deliver to Mailpit.
+func (s *EmailService) smtpEnabled() bool {
+	return strings.TrimSpace(s.cfg.SMTPHost) != ""
+}
+
 func (s *EmailService) sendSMTPEmail(ctx context.Context, payload resendEmailRequest) error {
 	port := strings.TrimSpace(s.cfg.SMTPPort)
 	if port == "" {
@@ -191,6 +199,20 @@ func (s *EmailService) sendTemplateEmail(ctx context.Context, to, templateID str
 }
 
 func (s *EmailService) SendWelcomeEmail(ctx context.Context, email, name, appURL string) error {
+	// O template do Resend não existe no SMTP local. No compose local
+	// (SMTP_HOST=host.docker.internal) o fluxo de cadastro também precisa
+	// aparecer no Mailpit.
+	if s.smtpEnabled() {
+		htmlContent := s.buildEmailHTML(
+			"Bem-vindo à Suitee",
+			fmt.Sprintf("<p style='margin: 0 0 24px 0; font-size: 16px; color: #4b5563; line-height: 1.6;'>Olá <strong>%s</strong>,</p><p style='margin: 0 0 32px 0; font-size: 16px; color: #4b5563; line-height: 1.6;'>Sua conta está pronta. Use o botão abaixo para acessar a plataforma.</p>", name),
+			"Acessar Suitee",
+			appURL,
+			"Este é um e-mail automático de boas-vindas.",
+		)
+		return s.SendRawEmail(ctx, email, "Bem-vindo à Suitee", htmlContent)
+	}
+
 	// Template ID: fc0c800d-ebad-46bf-96f5-279b9f08ef5b
 	variables := map[string]interface{}{
 		"NAME":       name,
@@ -201,6 +223,17 @@ func (s *EmailService) SendWelcomeEmail(ctx context.Context, email, name, appURL
 }
 
 func (s *EmailService) SendPasswordResetEmail(ctx context.Context, email, resetURL string) error {
+	htmlContent := s.buildEmailHTML(
+		"Recuperação de senha",
+		"<p style='margin: 0 0 24px 0; font-size: 16px; color: #4b5563; line-height: 1.6;'>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha.</p>",
+		"Redefinir senha",
+		resetURL,
+		"Se você não solicitou a redefinição de senha, ignore este e-mail.",
+	)
+	if s.smtpEnabled() {
+		return s.SendRawEmail(ctx, email, "Recuperação de senha", htmlContent)
+	}
+
 	// Template ID: 91bf153d-a3d5-4f84-af68-9e49ee710613
 	variables := map[string]interface{}{
 		"SUITEE_URL": resetURL,
@@ -209,18 +242,21 @@ func (s *EmailService) SendPasswordResetEmail(ctx context.Context, email, resetU
 	if err := s.sendTemplateEmail(ctx, email, "91bf153d-a3d5-4f84-af68-9e49ee710613", variables); err == nil {
 		return nil
 	}
-
-	htmlContent := s.buildEmailHTML(
-		"Recuperação de senha",
-		"<p style='margin: 0 0 24px 0; font-size: 16px; color: #4b5563; line-height: 1.6;'>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha.</p>",
-		"Redefinir senha",
-		resetURL,
-		"Se você não solicitou a redefinição de senha, ignore este e-mail.",
-	)
 	return s.SendRawEmail(ctx, email, "Recuperação de senha", htmlContent)
 }
 
 func (s *EmailService) SendInvitationEmail(ctx context.Context, email, companyName, inviteURL string) error {
+	if s.smtpEnabled() {
+		htmlContent := s.buildEmailHTML(
+			"Convite para a Suitee",
+			fmt.Sprintf("<p style='margin: 0 0 24px 0; font-size: 16px; color: #4b5563; line-height: 1.6;'>Você foi convidado(a) para participar da operação da <strong>%s</strong> na Suitee.</p>", companyName),
+			"Aceitar convite",
+			inviteURL,
+			"Se você não esperava este convite, ignore esta mensagem.",
+		)
+		return s.SendRawEmail(ctx, email, "Convite para a Suitee", htmlContent)
+	}
+
 	// Template ID: 0551da37-6822-4675-b08f-9d2b9d0ee87b
 	variables := map[string]interface{}{
 		"NAME":         "Convidado(a)",

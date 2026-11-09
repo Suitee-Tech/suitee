@@ -52,7 +52,8 @@ type NotifyOptions struct {
 
 // EmailNotifier aplica as regras transversais do beta
 // (docs/features/comunicacao/notificacoes-email-beta.md §3) e dispara o
-// e-mail via Resend. Nunca retorna erro de ENVIO para o chamador — falha é
+// e-mail pelo transporte configurado: Resend em produção ou SMTP do Mailpit
+// no ambiente local. Nunca retorna erro de ENVIO para o chamador — falha é
 // logada e o pipeline do evento segue (a notificação in-app é o caminho
 // primário; e-mail é reforço).
 type EmailNotifier struct {
@@ -123,9 +124,10 @@ func (n *EmailNotifier) FrontendLink(path string) string {
 }
 
 // Notify envia um e-mail transacional passando por todos os gates. Devolve
-// dispatched=true apenas quando o envio foi realmente submetido ao Resend
-// (supressões por flag/opt-out/presença/cooldown/dedup devolvem false sem
-// erro). Erro só para opts inválidas (identidade obrigatória).
+// dispatched=true apenas quando o envio foi realmente submetido ao transporte
+// configurado (Resend ou SMTP local); supressões por
+// flag/opt-out/presença/cooldown/dedup devolvem false sem erro. Erro só para
+// opts inválidas (identidade obrigatória).
 func (n *EmailNotifier) Notify(ctx context.Context, opts NotifyOptions) (bool, error) {
 	if n == nil || n.emailService == nil {
 		return false, nil
