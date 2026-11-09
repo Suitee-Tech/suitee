@@ -61,12 +61,30 @@ Primeiro acesso:
    (`http://localhost:3000/portal` no local). No portal, o deal mostra o cartão
    **Site da imobiliária** com o link de volta para a vitrine.
 
-**Convites e OTP no local.** O `toca-comm` usa o SMTP do Mailpit do Supabase
-(`host.docker.internal:54325`) em vez do Resend. Abra `make sites-mail`
-(http://localhost:54324), convide o lead em **Leads → Convidar para Portal** e
-use o código de acesso que chega na caixa. O convite também preenche o e-mail em
-`/portal/login`. Sem esse SMTP local, o Resend rejeita domínios não verificados
-e o cliente não recebe nem o convite nem o código.
+**Todos os e‑mails transacionais no Mailpit.** No ambiente local, o
+`toca-comm` envia pelo SMTP do Mailpit do Supabase
+(`host.docker.internal:54325`) em vez do Resend, e o `docker-compose.yml`
+ativa o kill-switch e todas as categorias com cooldown zero. Abra a caixa com:
+
+```bash
+make sites-mail
+# http://localhost:54324
+```
+
+Fluxos visíveis na caixa:
+
+| Fluxo | Como disparar no local |
+|---|---|
+| Boas-vindas / cadastro | Criar uma conta em `/signup` ou via `POST /api/v1/auth/register`. |
+| Esqueceu a senha | `POST /api/v1/auth/forgot-password` ou **Entrar → Esqueci minha senha**. |
+| Convite de equipe | **Configurações → Equipe → Convidar** (ou reenviar convite). |
+| Convite do portal + OTP | **Leads → Convidar para Portal**; use o código que chega na caixa. |
+| Notificações | Lead atribuído, mudança de negócio, proposta, agendamento, recomendação e lembrete de chat, conforme as categorias `COMM_EMAIL_*`. |
+
+O convite do portal também preenche o e-mail em `/portal/login`. Sem esse SMTP
+local, o Resend rejeita domínios não verificados e o cliente não recebe nem o
+convite nem o código. Essas flags são exclusivas do compose local; o compose de
+produção não as recebe e continua usando o Resend.
 
 Se o Mailpit estiver sem a porta SMTP `54325` (volume/config antigo), reinicie o
 Supabase uma vez para aplicar `smtp_port = 54325`:
