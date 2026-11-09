@@ -58,6 +58,10 @@ type EmailConfig struct {
 	// EmailChatReminderAfterMinutes é a idade mínima de uma mensagem não lida
 	// para o lembrete de chat disparar (beta F3). 0 usa o default do motor.
 	EmailChatReminderAfterMinutes int
+	// EmailIgnorePresence é exclusivo do desenvolvimento local: permite ver no
+	// Mailpit os fluxos que, em produção, são suprimidos quando o usuário está
+	// online no app. Produção mantém false.
+	EmailIgnorePresence bool
 }
 
 type DatabaseConfig struct {
@@ -209,6 +213,7 @@ func LoadBaseConfig() BaseConfig {
 			EmailChatReminders:            GetEnvBool("COMM_EMAIL_CHAT_REMINDERS", true),
 			EmailCooldownMinutes:          GetEnvInt("COMM_EMAIL_COOLDOWN_MINUTES", 60),
 			EmailChatReminderAfterMinutes: GetEnvInt("COMM_EMAIL_CHAT_REMINDER_AFTER_MINUTES", 30),
+			EmailIgnorePresence:           GetEnvBool("COMM_EMAIL_IGNORE_PRESENCE", false),
 		},
 	}
 }

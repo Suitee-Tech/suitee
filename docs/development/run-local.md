@@ -83,8 +83,11 @@ Fluxos visíveis na caixa:
 
 O convite do portal também preenche o e-mail em `/portal/login`. Sem esse SMTP
 local, o Resend rejeita domínios não verificados e o cliente não recebe nem o
-convite nem o código. Essas flags são exclusivas do compose local; o compose de
-produção não as recebe e continua usando o Resend.
+convite nem o código. O compose local também usa
+`COMM_EMAIL_IGNORE_PRESENCE=true`: assim, notificações não são suprimidas pelo
+fato de o painel estar aberto. Essas flags são exclusivas do compose local; o
+compose de produção não as recebe e continua usando o Resend, com presença e
+cooldown normais.
 
 Se o Mailpit estiver sem a porta SMTP `54325` (volume/config antigo), reinicie o
 Supabase uma vez para aplicar `smtp_port = 54325`:

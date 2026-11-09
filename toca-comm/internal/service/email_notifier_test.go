@@ -195,6 +195,24 @@ func TestEmailNotifier_OnlineSuppression(t *testing.T) {
 	}
 }
 
+func TestEmailNotifier_LocalIgnorePresence(t *testing.T) {
+	cfg := enabledAllConfig()
+	cfg.EmailIgnorePresence = true
+	h := newNotifierHarness(t, cfg)
+	h.markOnline("tenant-1", "user-1")
+
+	dispatched, err := h.notifier.Notify(context.Background(), baseOpts())
+	if err != nil {
+		t.Fatalf("Notify: %v", err)
+	}
+	if !dispatched {
+		t.Fatal("com EmailIgnorePresence=true o e-mail local deve ser enviado mesmo com o usuário online")
+	}
+	if got := h.sendCount.Load(); got != 1 {
+		t.Fatalf("sends = %d, want 1", got)
+	}
+}
+
 func TestEmailNotifier_Cooldown(t *testing.T) {
 	h := newNotifierHarness(t, enabledAllConfig())
 	h.sentExternals.mu.Lock()

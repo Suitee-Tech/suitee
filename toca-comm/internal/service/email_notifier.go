@@ -161,7 +161,7 @@ func (n *EmailNotifier) Notify(ctx context.Context, opts NotifyOptions) (bool, e
 	}
 
 	// Gate 2 — presença. Usuário online recebe em tempo real no app.
-	if !opts.Force && opts.SkipIfOnline && n.hub != nil && n.hub.IsUserOnline(opts.TenantID, opts.UserID) {
+	if !opts.Force && opts.SkipIfOnline && !n.cfg.EmailIgnorePresence && n.hub != nil && n.hub.IsUserOnline(opts.TenantID, opts.UserID) {
 		metrics.IncEmailSkipped("online")
 		logger.Info("email suppressed: user online",
 			"category", string(opts.Category), "tenant_id", opts.TenantID, "user_id", opts.UserID)
